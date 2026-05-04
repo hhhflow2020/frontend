@@ -395,6 +395,14 @@ declare namespace API {
     subscribe_id: number;
   };
 
+  type CreateXrayTemplateRequest = {
+    name: string;
+    type: "inbound" | "outbound" | "dns";
+    config: Record<string, any>;
+    description?: string;
+    enabled?: boolean;
+  };
+
   type CurrencyConfig = {
     access_key: string;
     currency_unit: string;
@@ -458,6 +466,10 @@ declare namespace API {
     user_subscribe_id: number;
   };
 
+  type DeleteXrayTemplateRequest = {
+    id: number;
+  };
+
   type DeviceAuthticateConfig = {
     enable: boolean;
     show_ads: boolean;
@@ -518,6 +530,19 @@ declare namespace API {
     date?: string;
     search?: string;
     user_id?: number;
+  };
+
+  type FilterXrayTemplateListParams = {
+    page: number;
+    size: number;
+    type?: "inbound" | "outbound" | "dns";
+    search?: string;
+    enabled?: boolean;
+  };
+
+  type FilterXrayTemplateListResponse = {
+    total: number;
+    list: XrayTemplate[];
   };
 
   type FilterBalanceLogResponse = {
@@ -1888,6 +1913,36 @@ declare namespace API {
     updated_at: number;
   };
 
+  type ServerXrayTemplateBinding = {
+    template_id: number;
+    sort?: number;
+    enabled?: boolean;
+  };
+
+  type BindServerXrayTemplatesRequest = {
+    server_id: number;
+    bindings: ServerXrayTemplateBinding[];
+  };
+
+  type QueryServerXrayTemplateListParams = {
+    server_id: number;
+  };
+
+  type ServerXrayTemplate = {
+    id: number;
+    server_id: number;
+    template_id: number;
+    sort: number;
+    enabled: boolean;
+    template: XrayTemplate;
+    created_at: number;
+    updated_at: number;
+  };
+
+  type QueryServerXrayTemplateListResponse = {
+    list: ServerXrayTemplate[];
+  };
+
   type ServerGroup = {
     id: number;
     name: string;
@@ -2401,6 +2456,15 @@ declare namespace API {
     download: number;
   };
 
+  type UpdateXrayTemplateRequest = {
+    id: number;
+    name: string;
+    type: "inbound" | "outbound" | "dns";
+    config: Record<string, any>;
+    description?: string;
+    enabled?: boolean;
+  };
+
   type User = {
     id: number;
     avatar: string;
@@ -2578,5 +2642,20 @@ declare namespace API {
     transport_config: TransportConfig;
     security: string;
     security_config: SecurityConfig;
+  };
+
+  type GetXrayTemplateDetailParams = {
+    id: number;
+  };
+
+  type XrayTemplate = {
+    id: number;
+    name: string;
+    type: "inbound" | "outbound" | "dns";
+    config: Record<string, any>;
+    description: string;
+    enabled: boolean;
+    created_at: number;
+    updated_at: number;
   };
 }
