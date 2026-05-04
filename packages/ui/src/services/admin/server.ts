@@ -230,3 +230,128 @@ export async function updateServer(
     }
   );
 }
+
+/** Create Xray Template POST /v1/admin/server/xray-template/create */
+export async function createXrayTemplate(
+  body: API.CreateXrayTemplateRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.Response & { data?: any }>(
+    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/create`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** Update Xray Template POST /v1/admin/server/xray-template/update */
+export async function updateXrayTemplate(
+  body: API.UpdateXrayTemplateRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.Response & { data?: any }>(
+    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/update`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** Delete Xray Template POST /v1/admin/server/xray-template/delete */
+export async function deleteXrayTemplate(
+  body: API.DeleteXrayTemplateRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.Response & { data?: any }>(
+    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/delete`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** Get Xray Template Detail GET /v1/admin/server/xray-template/detail */
+export async function getXrayTemplateDetail(
+  params: API.GetXrayTemplateDetailParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.Response & { data?: API.XrayTemplate }>(
+    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/detail`,
+    {
+      method: "GET",
+      params: {
+        ...params,
+      },
+      ...(options || {}),
+    }
+  );
+}
+
+/** Filter Xray Template List GET /v1/admin/server/xray-template/list */
+export async function filterXrayTemplateList(
+  params: API.FilterXrayTemplateListParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.Response & { data?: API.FilterXrayTemplateListResponse }>(
+    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/list`,
+    {
+      method: "GET",
+      params: {
+        ...params,
+      },
+      ...(options || {}),
+    }
+  );
+}
+
+/** Bind Xray Templates To Server POST /v1/admin/server/xray-template/bind */
+export async function bindServerXrayTemplates(
+  body: API.BindServerXrayTemplatesRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.Response & { data?: any }>(
+    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/bind`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** Query Server Xray Templates GET /v1/admin/server/xray-template/server */
+export async function queryServerXrayTemplateList(
+  params: API.QueryServerXrayTemplateListParams,
+  options?: { [key: string]: any }
+) {
+  return request<
+    API.Response & { data?: API.QueryServerXrayTemplateListResponse }
+  >(
+    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/server`,
+    {
+      method: "GET",
+      params: {
+        ...params,
+      },
+      ...(options || {}),
+    }
+  );
+}

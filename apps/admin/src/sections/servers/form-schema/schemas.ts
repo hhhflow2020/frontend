@@ -16,8 +16,8 @@ import {
 
 const nullableString = z.string().nullish();
 const nullableBool = z.boolean().nullish();
-const nullablePort = z.number().int().min(0).max(65_535).nullish();
-const nullableRatio = z.number().min(0).nullish();
+const nullablePort = z.number().int().min(1).max(65_535).nullish();
+const nullableRatio = z.number().min(0).max(1_000_000).nullish();
 
 const ss = z.object({
   ratio: nullableRatio,

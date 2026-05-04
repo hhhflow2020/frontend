@@ -49,6 +49,7 @@ initializeI18n({
     "tool",
     "translation",
     "user",
+    "xray-templates",
   ],
 });
 

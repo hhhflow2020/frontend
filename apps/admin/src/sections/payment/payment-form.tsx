@@ -77,8 +77,8 @@ export default function PaymentForm<T extends { platform?: string }>({
     domain: z.string().optional(),
     config: z.any(),
     fee_mode: z.number().min(0).max(2),
-    fee_percent: z.number().optional(),
-    fee_amount: z.number().optional(),
+    fee_percent: z.number().min(0).max(100).optional(),
+    fee_amount: z.number().min(0).optional(),
     description: z.string().optional(),
   });
 
@@ -285,6 +285,8 @@ export default function PaymentForm<T extends { platform?: string }>({
                           </FormLabel>
                           <FormControl>
                             <EnhancedInput
+                              max={100}
+                              min={0}
                               onValueChange={field.onChange}
                               step="0.01"
                               suffix="%"
@@ -311,19 +313,19 @@ export default function PaymentForm<T extends { platform?: string }>({
                           </FormLabel>
                           <FormControl>
                             <EnhancedInput
-                              onValueChange={(value) =>
-                                field.onChange(
-                                  unitConversion("dollarsToCents", value)
-                                )
+                              formatInput={(value) =>
+                                unitConversion("centsToDollars", value)
                               }
+                              formatOutput={(value) =>
+                                unitConversion("dollarsToCents", value)
+                              }
+                              min={0}
+                              onValueChange={(value) => field.onChange(value)}
                               prefix={currency.currency_symbol}
                               step="0.01"
                               suffix={currency.currency_unit}
                               type="number"
-                              value={unitConversion(
-                                "centsToDollars",
-                                field.value
-                              )}
+                              value={field.value}
                             />
                           </FormControl>
                           <FormMessage />

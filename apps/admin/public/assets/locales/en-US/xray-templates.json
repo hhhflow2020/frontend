@@ -1,0 +1,94 @@
+{
+  "title": "Xray Templates",
+  "type": {
+    "inbound": "Inbound",
+    "outbound": "Outbound",
+    "dns": "DNS"
+  },
+  "state": {
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "action": {
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "column": {
+    "id": "ID",
+    "enabled": "Enabled",
+    "type": "Type",
+    "name": "Name",
+    "description": "Description",
+    "config": "Config",
+    "updatedAt": "Updated At"
+  },
+  "filter": {
+    "type": "Type",
+    "enabled": "Enabled"
+  },
+  "message": {
+    "created": "Created",
+    "updated": "Updated",
+    "deleted": "Deleted",
+    "bound": "Saved",
+    "deleteTitle": "Delete this template?",
+    "deleteDescription": "This action cannot be undone."
+  },
+  "tabs": {
+    "form": "Form",
+    "advanced": "Advanced JSON"
+  },
+  "form": {
+    "createTitle": "Create Xray Template",
+    "editTitle": "Edit Xray Template",
+    "name": "Name",
+    "namePlaceholder": "Template name",
+    "type": "Type",
+    "description": "Description",
+    "descriptionPlaceholder": "Optional note",
+    "enabled": "Enabled",
+    "protocol": "Protocol",
+    "tag": "Tag",
+    "port": "Port",
+    "listen": "Listen",
+    "network": "Network",
+    "security": "Security",
+    "host": "Host",
+    "path": "Path",
+    "serviceName": "Service Name",
+    "sni": "SNI",
+    "fingerprint": "Fingerprint",
+    "allowInsecure": "Allow Insecure",
+    "realityDest": "Reality Dest",
+    "realityShortIds": "Short IDs",
+    "realityPrivateKey": "Private Key",
+    "sniffing": "Sniffing",
+    "destOverride": "Dest Override",
+    "domainStrategy": "Domain Strategy",
+    "redirect": "Redirect",
+    "responseType": "Response Type",
+    "settingsJson": "Settings JSON",
+    "settingsJsonDesc": "Protocol-specific Xray settings. These fields are kept as JSON so advanced protocol details are not lost.",
+    "dnsServers": "DNS Servers",
+    "dnsServersDesc": "One server per line. Plain strings are supported, e.g. 1.1.1.1, https://dns.google/dns-query.",
+    "queryStrategy": "Query Strategy",
+    "clientIp": "Client IP",
+    "disableCache": "Disable Cache",
+    "disableFallback": "Disable Fallback",
+    "disableFallbackIfMatch": "Disable Fallback If Match",
+    "hostsJson": "Hosts JSON",
+    "syncJson": "Sync from form",
+    "advancedJson": "Advanced JSON",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "bind": {
+    "title": "Bind Xray Templates",
+    "preview": "Preview",
+    "empty": "No templates"
+  }
+}

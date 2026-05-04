@@ -163,7 +163,7 @@ export default function CouponForm<T extends Record<string, any>>({
                         defaultValue={String(field.value)}
                         onValueChange={(value) => {
                           form.setValue(field.name, Number(value));
-                          form.setValue("discount", "");
+                          form.setValue("discount", undefined);
                         }}
                       >
                         <FormItem className="flex items-center space-x-3 space-y-0">

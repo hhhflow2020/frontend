@@ -35,6 +35,11 @@ export function useNavs() {
             icon: "flat-color-icons:mind-map",
           },
           {
+            title: t("Xray Templates", "Xray Templates"),
+            url: "/dashboard/xray-templates",
+            icon: "flat-color-icons:settings",
+          },
+          {
             title: t("Subscribe Config", "Subscribe Config"),
             url: "/dashboard/subscribe",
             icon: "flat-color-icons:ruler",

@@ -63,7 +63,7 @@ interface SubscribeFormProps<T> {
 }
 
 const defaultValues = {
-  inventory: -1,
+  inventory: undefined,
   speed_limit: 0,
   device_limit: 0,
   traffic: 0,
@@ -446,13 +446,22 @@ export default function SubscribeForm<T extends Record<string, any>>({
                             <FormLabel>{t("form.inventory")}</FormLabel>
                             <FormControl>
                               <EnhancedInput
+                                {...field}
+                                formatInput={(value) =>
+                                  value === -1 ? "" : value
+                                }
+                                formatOutput={(value) =>
+                                  value === "" || value === undefined
+                                    ? -1
+                                    : Number(value)
+                                }
+                                min={-1}
                                 onValueChange={(value) => {
                                   form.setValue(field.name, value);
                                 }}
                                 placeholder={t("form.unlimitedInventory")}
                                 step={1}
                                 type="number"
-                                value={field.value}
                               />
                             </FormControl>
                             <FormMessage />
@@ -718,10 +727,9 @@ export default function SubscribeForm<T extends Record<string, any>>({
                                   formatInput: (value) =>
                                     unitConversion("centsToDollars", value),
                                   formatOutput: (value) =>
-                                    unitConversion(
-                                      "dollarsToCents",
-                                      value
-                                    ).toString(),
+                                    String(
+                                      unitConversion("dollarsToCents", value)
+                                    ),
                                 },
                               ]}
                               onChange={(

@@ -1,0 +1,94 @@
+{
+  "title": "Xray 模版",
+  "type": {
+    "inbound": "入站",
+    "outbound": "出站",
+    "dns": "DNS"
+  },
+  "state": {
+    "enabled": "启用",
+    "disabled": "禁用"
+  },
+  "action": {
+    "create": "创建",
+    "edit": "编辑",
+    "delete": "删除",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认"
+  },
+  "column": {
+    "id": "ID",
+    "enabled": "启用",
+    "type": "类型",
+    "name": "名称",
+    "description": "描述",
+    "config": "配置",
+    "updatedAt": "更新时间"
+  },
+  "filter": {
+    "type": "类型",
+    "enabled": "启用状态"
+  },
+  "message": {
+    "created": "已创建",
+    "updated": "已更新",
+    "deleted": "已删除",
+    "bound": "已保存",
+    "deleteTitle": "删除该模版？",
+    "deleteDescription": "此操作不可撤销。"
+  },
+  "tabs": {
+    "form": "表单",
+    "advanced": "高级 JSON"
+  },
+  "form": {
+    "createTitle": "创建 Xray 模版",
+    "editTitle": "编辑 Xray 模版",
+    "name": "名称",
+    "namePlaceholder": "模版名称",
+    "type": "类型",
+    "description": "描述",
+    "descriptionPlaceholder": "可选备注",
+    "enabled": "启用",
+    "protocol": "协议",
+    "tag": "标签",
+    "port": "端口",
+    "listen": "监听地址",
+    "network": "传输",
+    "security": "安全",
+    "host": "Host",
+    "path": "路径",
+    "serviceName": "服务名",
+    "sni": "SNI",
+    "fingerprint": "指纹",
+    "allowInsecure": "允许不安全",
+    "realityDest": "Reality 目标",
+    "realityShortIds": "Short IDs",
+    "realityPrivateKey": "私钥",
+    "sniffing": "流量探测",
+    "destOverride": "探测协议",
+    "domainStrategy": "域名策略",
+    "redirect": "重定向",
+    "responseType": "响应类型",
+    "settingsJson": "Settings JSON",
+    "settingsJsonDesc": "协议细节以 JSON 保留，避免丢失 Xray 的高级字段。",
+    "dnsServers": "DNS 服务器",
+    "dnsServersDesc": "每行一个服务器，例如 1.1.1.1、https://dns.google/dns-query。",
+    "queryStrategy": "查询策略",
+    "clientIp": "客户端 IP",
+    "disableCache": "禁用缓存",
+    "disableFallback": "禁用回退",
+    "disableFallbackIfMatch": "命中时禁用回退",
+    "hostsJson": "Hosts JSON",
+    "syncJson": "从表单同步",
+    "advancedJson": "高级 JSON",
+    "cancel": "取消",
+    "confirm": "确认"
+  },
+  "bind": {
+    "title": "绑定 Xray 模版",
+    "preview": "预览",
+    "empty": "暂无模版"
+  }
+}

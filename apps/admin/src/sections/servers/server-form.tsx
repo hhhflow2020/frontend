@@ -385,6 +385,7 @@ export default function ServerForm(props: {
 
   const { isProtocolUsedInNodes } = useNode();
   const PROTOCOL_FIELDS = useProtocolFields();
+  const showLegacyProtocolConfig = false;
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -447,17 +448,23 @@ export default function ServerForm(props: {
             field.max === undefined || numericValue <= field.max;
 
           if (!(hasValue && inMinRange && inMaxRange)) {
+            const min = field.min ?? 0;
+            const max = field.max;
+            const rangeMsg =
+              max !== undefined
+                ? t(
+                    "validation.requiredNumberFieldRange",
+                    "{{field}} is required and must be between {{min}} and {{max}}",
+                    { field: field.label, min, max }
+                  )
+                : t(
+                    "validation.requiredNumberFieldMin",
+                    "{{field}} is required and must be at least {{min}}",
+                    { field: field.label, min }
+                  );
             form.setError(fieldPath, {
               type: "manual",
-              message: t(
-                "validation.requiredNumberField",
-                "{{field}} is required and must be between {{min}} and {{max}}",
-                {
-                  field: field.label,
-                  min: field.min ?? 0,
-                  max: field.max ?? 65_535,
-                }
-              ),
+              message: rangeMsg,
             });
             firstInvalidProtocol ??= protocolType;
           }
@@ -511,7 +518,7 @@ export default function ServerForm(props: {
   async function handleSubmit(values: Record<string, any>) {
     form.clearErrors();
 
-    if (!validateEnabledProtocols(values)) {
+    if (showLegacyProtocolConfig && !validateEnabledProtocols(values)) {
       return;
     }
 
@@ -632,167 +639,180 @@ export default function ServerForm(props: {
                   )}
                 />
               </div>
-              <div className="my-3">
-                <h3 className="font-semibold text-foreground text-sm">
-                  {t("protocol_configurations", "Protocol Configurations")}
-                </h3>
-                <p className="mt-1 text-muted-foreground text-xs">
-                  {t(
-                    "protocol_configurations_desc",
-                    "Enable and configure the required protocol types"
-                  )}
-                </p>
-              </div>
+              {showLegacyProtocolConfig ? (
+                <>
+                  <div className="my-3">
+                    <h3 className="font-semibold text-foreground text-sm">
+                      {t("protocol_configurations", "Protocol Configurations")}
+                    </h3>
+                    <p className="mt-1 text-muted-foreground text-xs">
+                      {t(
+                        "protocol_configurations_desc",
+                        "Enable and configure the required protocol types"
+                      )}
+                    </p>
+                  </div>
 
-              <Accordion
-                className="w-full space-y-3"
-                collapsible
-                onValueChange={setAccordionValue}
-                type="single"
-                value={accordionValue}
-              >
-                {PROTOCOLS.map((type) => {
-                  const i = Math.max(0, PROTOCOLS.indexOf(type));
-                  const current = (protocolsValues[i] || {}) as Record<
-                    string,
-                    any
-                  >;
-                  const isEnabled = current?.enable;
-                  const fields = PROTOCOL_FIELDS[type] || [];
-                  return (
-                    <AccordionItem
-                      className="mb-2 rounded-lg border"
-                      key={type}
-                      value={type}
-                    >
-                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                        <div className="flex w-full items-center justify-between">
-                          <div className="flex flex-col items-start gap-1">
-                            <div className="flex items-center gap-1">
-                              <span className="font-medium capitalize">
-                                {type}
-                              </span>
-                              {current.transport && (
-                                <Badge className="text-xs" variant="secondary">
-                                  {current.transport.toUpperCase()}
-                                </Badge>
-                              )}
-                              {current.security &&
-                                current.security !== "none" && (
-                                  <Badge className="text-xs" variant="outline">
-                                    {current.security.toUpperCase()}
-                                  </Badge>
+                  <Accordion
+                    className="w-full space-y-3"
+                    collapsible
+                    onValueChange={setAccordionValue}
+                    type="single"
+                    value={accordionValue}
+                  >
+                    {PROTOCOLS.map((type) => {
+                      const i = Math.max(0, PROTOCOLS.indexOf(type));
+                      const current = (protocolsValues[i] || {}) as Record<
+                        string,
+                        any
+                      >;
+                      const isEnabled = current?.enable;
+                      const fields = PROTOCOL_FIELDS[type] || [];
+                      return (
+                        <AccordionItem
+                          className="mb-2 rounded-lg border"
+                          key={type}
+                          value={type}
+                        >
+                          <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                            <div className="flex w-full items-center justify-between">
+                              <div className="flex flex-col items-start gap-1">
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium capitalize">
+                                    {type}
+                                  </span>
+                                  {current.transport && (
+                                    <Badge
+                                      className="text-xs"
+                                      variant="secondary"
+                                    >
+                                      {current.transport.toUpperCase()}
+                                    </Badge>
+                                  )}
+                                  {current.security &&
+                                    current.security !== "none" && (
+                                      <Badge
+                                        className="text-xs"
+                                        variant="outline"
+                                      >
+                                        {current.security.toUpperCase()}
+                                      </Badge>
+                                    )}
+                                  {current.port && (
+                                    <Badge className="text-xs">
+                                      {current.port}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <span
+                                    className={cn(
+                                      "text-xs",
+                                      isEnabled
+                                        ? "text-green-500"
+                                        : "text-muted-foreground"
+                                    )}
+                                  >
+                                    {isEnabled
+                                      ? t("enabled", "Enabled")
+                                      : t("disabled", "Disabled")}
+                                  </span>
+                                </div>
+                              </div>
+                              <Switch
+                                checked={!!isEnabled}
+                                className="mr-2"
+                                disabled={Boolean(
+                                  initialValues?.id &&
+                                    isProtocolUsedInNodes(
+                                      initialValues?.id || 0,
+                                      type
+                                    ) &&
+                                    isEnabled
                                 )}
-                              {current.port && (
-                                <Badge className="text-xs">
-                                  {current.port}
-                                </Badge>
+                                onCheckedChange={(checked) => {
+                                  form.setValue(
+                                    `protocols.${i}.enable`,
+                                    checked
+                                  );
+                                  if (checked) {
+                                    setAccordionValue(type);
+                                    return;
+                                  }
+
+                                  if (accordionValue === type) {
+                                    setAccordionValue(undefined);
+                                  }
+                                  form.clearErrors(`protocols.${i}` as any);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 pt-0 pb-4">
+                            <div className="-mx-4 space-y-4 rounded-b-lg border-t px-4 pt-4">
+                              {renderGroupCard(
+                                t("basic", "Basic Configuration"),
+                                fields,
+                                "basic",
+                                control,
+                                form,
+                                i,
+                                current
+                              )}
+                              {renderGroupCard(
+                                t("obfs", "Obfuscation"),
+                                fields,
+                                "obfs",
+                                control,
+                                form,
+                                i,
+                                current
+                              )}
+                              {renderGroupCard(
+                                t("transport", "Transport"),
+                                fields,
+                                "transport",
+                                control,
+                                form,
+                                i,
+                                current
+                              )}
+                              {renderGroupCard(
+                                t("security", "Security"),
+                                fields,
+                                "security",
+                                control,
+                                form,
+                                i,
+                                current
+                              )}
+                              {renderGroupCard(
+                                t("reality", "Reality"),
+                                fields,
+                                "reality",
+                                control,
+                                form,
+                                i,
+                                current
+                              )}
+                              {renderGroupCard(
+                                t("encryption", "Encryption"),
+                                fields,
+                                "encryption",
+                                control,
+                                form,
+                                i,
+                                current
                               )}
                             </div>
-                            <div className="flex items-center gap-1">
-                              <span
-                                className={cn(
-                                  "text-xs",
-                                  isEnabled
-                                    ? "text-green-500"
-                                    : "text-muted-foreground"
-                                )}
-                              >
-                                {isEnabled
-                                  ? t("enabled", "Enabled")
-                                  : t("disabled", "Disabled")}
-                              </span>
-                            </div>
-                          </div>
-                          <Switch
-                            checked={!!isEnabled}
-                            className="mr-2"
-                            disabled={Boolean(
-                              initialValues?.id &&
-                                isProtocolUsedInNodes(
-                                  initialValues?.id || 0,
-                                  type
-                                ) &&
-                                isEnabled
-                            )}
-                            onCheckedChange={(checked) => {
-                              form.setValue(`protocols.${i}.enable`, checked);
-                              if (checked) {
-                                setAccordionValue(type);
-                                return;
-                              }
-
-                              if (accordionValue === type) {
-                                setAccordionValue(undefined);
-                              }
-                              form.clearErrors(`protocols.${i}` as any);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-4 pt-0 pb-4">
-                        <div className="-mx-4 space-y-4 rounded-b-lg border-t px-4 pt-4">
-                          {renderGroupCard(
-                            t("basic", "Basic Configuration"),
-                            fields,
-                            "basic",
-                            control,
-                            form,
-                            i,
-                            current
-                          )}
-                          {renderGroupCard(
-                            t("obfs", "Obfuscation"),
-                            fields,
-                            "obfs",
-                            control,
-                            form,
-                            i,
-                            current
-                          )}
-                          {renderGroupCard(
-                            t("transport", "Transport"),
-                            fields,
-                            "transport",
-                            control,
-                            form,
-                            i,
-                            current
-                          )}
-                          {renderGroupCard(
-                            t("security", "Security"),
-                            fields,
-                            "security",
-                            control,
-                            form,
-                            i,
-                            current
-                          )}
-                          {renderGroupCard(
-                            t("reality", "Reality"),
-                            fields,
-                            "reality",
-                            control,
-                            form,
-                            i,
-                            current
-                          )}
-                          {renderGroupCard(
-                            t("encryption", "Encryption"),
-                            fields,
-                            "encryption",
-                            control,
-                            form,
-                            i,
-                            current
-                          )}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
+                          </AccordionContent>
+                        </AccordionItem>
+                      );
+                    })}
+                  </Accordion>
+                </>
+              ) : null}
             </form>
           </Form>
         </ScrollArea>

@@ -15,6 +15,9 @@ import { Route as rootRouteImport } from './routes/__root'
 const DashboardRouteLazyRouteImport = createFileRoute('/dashboard')()
 const IndexLazyRouteImport = createFileRoute('/')()
 const DashboardIndexLazyRouteImport = createFileRoute('/dashboard/')()
+const DashboardXrayTemplatesLazyRouteImport = createFileRoute(
+  '/dashboard/xray-templates',
+)()
 const DashboardServersLazyRouteImport = createFileRoute('/dashboard/servers')()
 const DashboardNodesLazyRouteImport = createFileRoute('/dashboard/nodes')()
 const DashboardUserIndexLazyRouteImport = createFileRoute('/dashboard/user/')()
@@ -102,6 +105,14 @@ const DashboardIndexLazyRoute = DashboardIndexLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/dashboard/index.lazy').then((d) => d.Route),
 )
+const DashboardXrayTemplatesLazyRoute =
+  DashboardXrayTemplatesLazyRouteImport.update({
+    id: '/xray-templates',
+    path: '/xray-templates',
+    getParentRoute: () => DashboardRouteLazyRoute,
+  } as any).lazy(() =>
+    import('./routes/dashboard/xray-templates.lazy').then((d) => d.Route),
+  )
 const DashboardServersLazyRoute = DashboardServersLazyRouteImport.update({
   id: '/servers',
   path: '/servers',
@@ -316,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteLazyRouteWithChildren
   '/dashboard/nodes': typeof DashboardNodesLazyRoute
   '/dashboard/servers': typeof DashboardServersLazyRoute
+  '/dashboard/xray-templates': typeof DashboardXrayTemplatesLazyRoute
   '/dashboard/': typeof DashboardIndexLazyRoute
   '/dashboard/log/balance': typeof DashboardLogBalanceLazyRoute
   '/dashboard/log/commission': typeof DashboardLogCommissionLazyRoute
@@ -347,6 +359,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexLazyRoute
   '/dashboard/nodes': typeof DashboardNodesLazyRoute
   '/dashboard/servers': typeof DashboardServersLazyRoute
+  '/dashboard/xray-templates': typeof DashboardXrayTemplatesLazyRoute
   '/dashboard': typeof DashboardIndexLazyRoute
   '/dashboard/log/balance': typeof DashboardLogBalanceLazyRoute
   '/dashboard/log/commission': typeof DashboardLogCommissionLazyRoute
@@ -380,6 +393,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteLazyRouteWithChildren
   '/dashboard/nodes': typeof DashboardNodesLazyRoute
   '/dashboard/servers': typeof DashboardServersLazyRoute
+  '/dashboard/xray-templates': typeof DashboardXrayTemplatesLazyRoute
   '/dashboard/': typeof DashboardIndexLazyRoute
   '/dashboard/log/balance': typeof DashboardLogBalanceLazyRoute
   '/dashboard/log/commission': typeof DashboardLogCommissionLazyRoute
@@ -414,6 +428,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/nodes'
     | '/dashboard/servers'
+    | '/dashboard/xray-templates'
     | '/dashboard/'
     | '/dashboard/log/balance'
     | '/dashboard/log/commission'
@@ -445,6 +460,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard/nodes'
     | '/dashboard/servers'
+    | '/dashboard/xray-templates'
     | '/dashboard'
     | '/dashboard/log/balance'
     | '/dashboard/log/commission'
@@ -477,6 +493,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/nodes'
     | '/dashboard/servers'
+    | '/dashboard/xray-templates'
     | '/dashboard/'
     | '/dashboard/log/balance'
     | '/dashboard/log/commission'
@@ -531,6 +548,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexLazyRouteImport
+      parentRoute: typeof DashboardRouteLazyRoute
+    }
+    '/dashboard/xray-templates': {
+      id: '/dashboard/xray-templates'
+      path: '/xray-templates'
+      fullPath: '/dashboard/xray-templates'
+      preLoaderRoute: typeof DashboardXrayTemplatesLazyRouteImport
       parentRoute: typeof DashboardRouteLazyRoute
     }
     '/dashboard/servers': {
@@ -728,6 +752,7 @@ declare module '@tanstack/react-router' {
 interface DashboardRouteLazyRouteChildren {
   DashboardNodesLazyRoute: typeof DashboardNodesLazyRoute
   DashboardServersLazyRoute: typeof DashboardServersLazyRoute
+  DashboardXrayTemplatesLazyRoute: typeof DashboardXrayTemplatesLazyRoute
   DashboardIndexLazyRoute: typeof DashboardIndexLazyRoute
   DashboardLogBalanceLazyRoute: typeof DashboardLogBalanceLazyRoute
   DashboardLogCommissionLazyRoute: typeof DashboardLogCommissionLazyRoute
@@ -759,6 +784,7 @@ interface DashboardRouteLazyRouteChildren {
 const DashboardRouteLazyRouteChildren: DashboardRouteLazyRouteChildren = {
   DashboardNodesLazyRoute: DashboardNodesLazyRoute,
   DashboardServersLazyRoute: DashboardServersLazyRoute,
+  DashboardXrayTemplatesLazyRoute: DashboardXrayTemplatesLazyRoute,
   DashboardIndexLazyRoute: DashboardIndexLazyRoute,
   DashboardLogBalanceLazyRoute: DashboardLogBalanceLazyRoute,
   DashboardLogCommissionLazyRoute: DashboardLogCommissionLazyRoute,

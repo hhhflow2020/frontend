@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useNode } from "@/stores/node";
 import { useServer } from "@/stores/server";
+import ServerXrayTemplateBindForm from "../xray-templates/server-bind-form";
 import DynamicMultiplier from "./dynamic-multiplier";
 import OnlineUsersCell from "./online-users-cell";
 import ServerConfig from "./server-config";
@@ -125,6 +126,15 @@ export default function Servers() {
               trigger={t("edit", "Edit")}
             />,
             <ServerInstall key="install" server={row} />,
+            <ServerXrayTemplateBindForm
+              key="xray"
+              server={row}
+              trigger={
+                <Button variant="outline">
+                  {t("xrayTemplates", "Xray Templates")}
+                </Button>
+              }
+            />,
             <ConfirmButton
               cancelText={t("cancel", "Cancel")}
               confirmText={t("confirm", "Confirm")}
