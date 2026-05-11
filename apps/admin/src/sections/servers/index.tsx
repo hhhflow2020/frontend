@@ -96,6 +96,87 @@ function RegionIpCell({
   );
 }
 
+function shortHash(value?: string) {
+  if (!value) return "";
+  return value.length > 10 ? value.slice(0, 10) : value;
+}
+
+function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
+  const applyStatus = status.config_apply_status || "unknown";
+  const syncStatus = status.config_sync_status || "unknown";
+  const ok = applyStatus === "ok" && syncStatus === "ok";
+  const pending = applyStatus === "pending";
+  const error =
+    status.last_apply_error ||
+    status.last_config_error ||
+    status.xray_stats_error ||
+    "";
+  return (
+    <div className="flex min-w-44 flex-col gap-1 text-xs">
+      <div className="flex items-center gap-2">
+        <Badge variant={ok ? "secondary" : pending ? "outline" : "destructive"}>
+          {ok ? "Config OK" : pending ? "Config Pending" : "Config Failed"}
+        </Badge>
+        {status.xray_running ? (
+          <Badge variant="secondary">Xray Running</Badge>
+        ) : (
+          <Badge variant="outline">Xray Stopped</Badge>
+        )}
+      </div>
+      <div className="text-muted-foreground">
+        run:{" "}
+        <span className="font-mono">
+          {shortHash(status.running_config_hash || status.config_version) ||
+            "-"}
+        </span>
+        {status.pending_config_hash ? (
+          <>
+            {" "}
+            pending:{" "}
+            <span className="font-mono">
+              {shortHash(status.pending_config_hash)}
+            </span>
+          </>
+        ) : null}
+      </div>
+      {error ? (
+        <div className="max-w-56 truncate text-destructive" title={error}>
+          {error}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
+  return (
+    <div className="flex min-w-40 flex-col gap-1 text-xs">
+      <div className="grid grid-cols-[48px_1fr] gap-1">
+        <span className="text-muted-foreground">System</span>
+        <span>
+          ↑ {formatBitrate(status.net_tx_bps)} ↓{" "}
+          {formatBitrate(status.net_rx_bps)}
+        </span>
+      </div>
+      <div className="grid grid-cols-[48px_1fr] gap-1">
+        <span className="text-muted-foreground">Xray</span>
+        <span>
+          ↑ {formatBitrate(status.xray_tx_bps)} ↓{" "}
+          {formatBitrate(status.xray_rx_bps)}
+        </span>
+      </div>
+      {status.xray_stats_error ? (
+        <div
+          className="max-w-48 truncate text-muted-foreground"
+          title={status.xray_stats_error}
+        >
+          stats: {status.xray_stats_error}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function Servers() {
   const { t } = useTranslation("servers");
   const { isServerReferencedByNodes } = useNode();
@@ -302,16 +383,21 @@ export default function Servers() {
               const status = getStatus(row.original);
               const offline = status.status === "offline";
               return (
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "inline-block h-2.5 w-2.5 rounded-full",
-                      offline ? "bg-zinc-400" : "bg-emerald-500"
-                    )}
-                  />
-                  <span className="text-sm">
-                    {offline ? t("offline", "Offline") : t("online", "Online")}
-                  </span>
+                <div className="flex min-w-56 flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "inline-block h-2.5 w-2.5 rounded-full",
+                        offline ? "bg-zinc-400" : "bg-emerald-500"
+                      )}
+                    />
+                    <span className="text-sm">
+                      {offline
+                        ? t("offline", "Offline")
+                        : t("online", "Online")}
+                    </span>
+                  </div>
+                  <ConfigStatusCell status={status} />
                 </div>
               );
             },
@@ -342,12 +428,7 @@ export default function Servers() {
             header: t("networkSpeed", "Network Speed"),
             cell: ({ row }) => {
               const status = getStatus(row.original);
-              return (
-                <div className="flex min-w-28 flex-col gap-1 text-xs">
-                  <span>↑ {formatBitrate(status.net_tx_bps)}</span>
-                  <span>↓ {formatBitrate(status.net_rx_bps)}</span>
-                </div>
-              );
+              return <NetworkSpeedCell status={status} />;
             },
           },
           {

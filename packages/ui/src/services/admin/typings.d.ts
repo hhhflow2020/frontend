@@ -1991,6 +1991,11 @@ declare namespace API {
     net_tx_bps?: number;
     net_rx_bytes?: number;
     net_tx_bytes?: number;
+    xray_rx_bps?: number;
+    xray_tx_bps?: number;
+    xray_rx_bytes?: number;
+    xray_tx_bytes?: number;
+    xray_stats_error?: string;
     connections?: number;
     online_users?: number;
     xray_running?: boolean;
@@ -2003,6 +2008,15 @@ declare namespace API {
     uptime?: number;
     agent_version?: string;
     config_version?: string;
+    config_sync_status?: string;
+    config_apply_status?: string;
+    last_config_hash?: string;
+    running_config_hash?: string;
+    pending_config_hash?: string;
+    last_sync_at?: number;
+    last_apply_at?: number;
+    last_config_error?: string;
+    last_apply_error?: string;
   };
 
   type ServerTotalDataResponse = {
