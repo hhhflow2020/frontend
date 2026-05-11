@@ -1680,7 +1680,9 @@ export default function XrayTemplateForm({
                         />
                       ) : null}
 
-                      {supportsStreamSettings && security !== "none" ? (
+                      {supportsStreamSettings &&
+                      (security === "tls" ||
+                        (security === "reality" && type === "outbound")) ? (
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                           <FormField
                             control={form.control}
@@ -1699,30 +1701,35 @@ export default function XrayTemplateForm({
                               </FormItem>
                             )}
                           />
-                          <FormField
-                            control={form.control}
-                            name="fingerprint"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>
-                                  {t("form.fingerprint", "Fingerprint")}
-                                </FormLabel>
-                                <FormControl>
-                                  <EnhancedInput
-                                    onValueChange={field.onChange}
-                                    placeholder="chrome"
-                                    value={field.value || ""}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <SwitchField
-                            control={form.control}
-                            label={t("form.allowInsecure", "Allow Insecure")}
-                            name="allow_insecure"
-                          />
+                          {security === "tls" ||
+                          (security === "reality" && type === "outbound") ? (
+                            <FormField
+                              control={form.control}
+                              name="fingerprint"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    {t("form.fingerprint", "Fingerprint")}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <EnhancedInput
+                                      onValueChange={field.onChange}
+                                      placeholder="chrome"
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          ) : null}
+                          {security === "tls" ? (
+                            <SwitchField
+                              control={form.control}
+                              label={t("form.allowInsecure", "Allow Insecure")}
+                              name="allow_insecure"
+                            />
+                          ) : null}
                         </div>
                       ) : null}
 
