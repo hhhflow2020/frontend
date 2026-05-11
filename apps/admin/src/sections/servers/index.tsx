@@ -64,8 +64,8 @@ function PctBar({ label, value }: { label?: string; value: number }) {
                       ? "w-[10%]"
                       : "w-0";
   return (
-    <div className="min-w-28">
-      <div className="mb-1 grid grid-cols-[36px_1fr] items-center gap-2 text-xs leading-none">
+    <div className="min-w-24">
+      <div className="mb-1 grid grid-cols-[32px_1fr] items-center gap-1.5 text-xs leading-none">
         {label ? <span className="text-muted-foreground">{label}</span> : null}
         <span className="font-medium tabular-nums">{v}%</span>
       </div>
@@ -78,7 +78,7 @@ function PctBar({ label, value }: { label?: string; value: number }) {
 
 function ResourcesCell({ status }: { status: Partial<API.ServerStatus> }) {
   return (
-    <div className="flex min-w-32 flex-col gap-2">
+    <div className="flex min-w-28 flex-col gap-1.5">
       <PctBar label="CPU" value={(status.cpu as number) ?? 0} />
       <PctBar label="MEM" value={(status.mem as number) ?? 0} />
       <PctBar label="DISK" value={(status.disk as number) ?? 0} />
@@ -115,9 +115,13 @@ function RegionIpCell({
   const region =
     [country, city].filter(Boolean).join(" / ") || notAvailableText;
   return (
-    <div className="flex min-w-40 flex-col gap-1">
-      <span className="font-medium">{ip || notAvailableText}</span>
-      <span className="text-muted-foreground text-xs">{region}</span>
+    <div className="flex min-w-32 max-w-40 flex-col gap-0.5">
+      <span className="truncate font-medium" title={ip || notAvailableText}>
+        {ip || notAvailableText}
+      </span>
+      <span className="truncate text-muted-foreground text-xs" title={region}>
+        {region}
+      </span>
     </div>
   );
 }
@@ -138,8 +142,8 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
     status.xray_stats_error ||
     "";
   return (
-    <div className="flex min-w-44 flex-col gap-1 text-xs">
-      <div className="flex items-center gap-2">
+    <div className="flex min-w-36 max-w-44 flex-col gap-1 text-xs">
+      <div className="flex flex-wrap items-center gap-1">
         <Badge variant={ok ? "secondary" : pending ? "outline" : "destructive"}>
           {ok ? "Config OK" : pending ? "Config Pending" : "Config Failed"}
         </Badge>
@@ -149,7 +153,7 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
           <Badge variant="outline">Xray Stopped</Badge>
         )}
       </div>
-      <div className="text-muted-foreground">
+      <div className="truncate text-muted-foreground">
         run:{" "}
         <span className="font-mono">
           {shortHash(status.running_config_hash || status.config_version) ||
@@ -166,7 +170,7 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
         ) : null}
       </div>
       {error ? (
-        <div className="max-w-56 truncate text-destructive" title={error}>
+        <div className="max-w-44 truncate text-destructive" title={error}>
           {error}
         </div>
       ) : null}
@@ -176,15 +180,15 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
 
 function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
   return (
-    <div className="flex min-w-40 flex-col gap-1 text-xs">
-      <div className="grid grid-cols-[48px_1fr] gap-1">
+    <div className="flex min-w-36 flex-col gap-1 text-xs">
+      <div className="grid grid-cols-[42px_1fr] gap-1">
         <span className="text-muted-foreground">System</span>
         <span>
           ↑ {formatBitrate(status.net_tx_bps)} ↓{" "}
           {formatBitrate(status.net_rx_bps)}
         </span>
       </div>
-      <div className="grid grid-cols-[48px_1fr] gap-1">
+      <div className="grid grid-cols-[42px_1fr] gap-1">
         <span className="text-muted-foreground">Xray</span>
         <span>
           ↑ {formatBitrate(status.xray_tx_bps)} ↓{" "}
@@ -193,7 +197,7 @@ function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
       </div>
       {status.xray_stats_error ? (
         <div
-          className="max-w-48 truncate text-muted-foreground"
+          className="max-w-40 truncate text-muted-foreground"
           title={status.xray_stats_error}
         >
           stats: {status.xray_stats_error}
@@ -209,18 +213,18 @@ function ConnectionsCell({ status }: { status: Partial<API.ServerStatus> }) {
   const xrayInbound = status.xray_inbound_connections ?? 0;
   const xrayOutbound = status.xray_outbound_connections ?? 0;
   return (
-    <div className="min-w-32 space-y-1 text-xs">
-      <div className="grid grid-cols-[40px_1fr_1fr] gap-1 text-muted-foreground">
+    <div className="min-w-28 space-y-1 text-xs">
+      <div className="grid grid-cols-[34px_1fr_1fr] gap-1 text-muted-foreground">
         <span />
         <span>In</span>
         <span>Out</span>
       </div>
-      <div className="grid grid-cols-[40px_1fr_1fr] gap-1">
+      <div className="grid grid-cols-[34px_1fr_1fr] gap-1">
         <span className="text-muted-foreground">Sys</span>
         <span className="font-medium">{systemInbound}</span>
         <span className="font-medium">{systemOutbound}</span>
       </div>
-      <div className="grid grid-cols-[40px_1fr_1fr] gap-1">
+      <div className="grid grid-cols-[34px_1fr_1fr] gap-1">
         <span className="text-muted-foreground">Xray</span>
         <span className="font-medium">{xrayInbound}</span>
         <span className="font-medium">{xrayOutbound}</span>
@@ -435,8 +439,8 @@ export default function Servers() {
               const status = getStatus(row.original);
               const offline = status.status === "offline";
               return (
-                <div className="flex min-w-56 flex-col gap-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex min-w-40 max-w-48 flex-col gap-1.5">
+                  <div className="flex items-center gap-1.5">
                     <span
                       className={cn(
                         "inline-block h-2.5 w-2.5 rounded-full",
