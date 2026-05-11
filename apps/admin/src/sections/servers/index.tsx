@@ -178,22 +178,26 @@ function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
 }
 
 function ConnectionsCell({ status }: { status: Partial<API.ServerStatus> }) {
-  const system = status.system_connections ?? status.connections ?? 0;
-  const inbound = status.xray_inbound_connections ?? 0;
-  const outbound = status.xray_outbound_connections ?? 0;
+  const systemInbound = status.system_inbound_connections ?? 0;
+  const systemOutbound = status.system_outbound_connections ?? 0;
+  const xrayInbound = status.xray_inbound_connections ?? 0;
+  const xrayOutbound = status.xray_outbound_connections ?? 0;
   return (
-    <div className="grid min-w-28 grid-cols-3 gap-2 text-xs">
-      <div>
-        <div className="text-muted-foreground">Sys</div>
-        <div className="font-medium">{system}</div>
+    <div className="min-w-32 space-y-1 text-xs">
+      <div className="grid grid-cols-[40px_1fr_1fr] gap-1 text-muted-foreground">
+        <span />
+        <span>In</span>
+        <span>Out</span>
       </div>
-      <div>
-        <div className="text-muted-foreground">In</div>
-        <div className="font-medium">{inbound}</div>
+      <div className="grid grid-cols-[40px_1fr_1fr] gap-1">
+        <span className="text-muted-foreground">Sys</span>
+        <span className="font-medium">{systemInbound}</span>
+        <span className="font-medium">{systemOutbound}</span>
       </div>
-      <div>
-        <div className="text-muted-foreground">Out</div>
-        <div className="font-medium">{outbound}</div>
+      <div className="grid grid-cols-[40px_1fr_1fr] gap-1">
+        <span className="text-muted-foreground">Xray</span>
+        <span className="font-medium">{xrayInbound}</span>
+        <span className="font-medium">{xrayOutbound}</span>
       </div>
     </div>
   );

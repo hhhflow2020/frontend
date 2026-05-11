@@ -1998,6 +1998,8 @@ declare namespace API {
     xray_stats_error?: string;
     connections?: number;
     system_connections?: number;
+    system_inbound_connections?: number;
+    system_outbound_connections?: number;
     xray_connections?: number;
     xray_inbound_connections?: number;
     xray_outbound_connections?: number;
