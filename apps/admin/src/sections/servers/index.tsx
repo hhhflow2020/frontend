@@ -142,7 +142,7 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
     status.xray_stats_error ||
     "";
   return (
-    <div className="flex min-w-36 max-w-44 flex-col gap-1 text-xs">
+    <div className="flex min-w-32 max-w-36 flex-col gap-1 text-xs">
       <div className="flex flex-wrap items-center gap-1">
         <Badge variant={ok ? "secondary" : pending ? "outline" : "destructive"}>
           {ok ? "Config OK" : pending ? "Config Pending" : "Config Failed"}
@@ -170,7 +170,7 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
         ) : null}
       </div>
       {error ? (
-        <div className="max-w-44 truncate text-destructive" title={error}>
+        <div className="max-w-36 truncate text-destructive" title={error}>
           {error}
         </div>
       ) : null}
@@ -180,7 +180,7 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
 
 function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
   return (
-    <div className="flex min-w-36 flex-col gap-1 text-xs">
+    <div className="flex min-w-40 flex-col gap-1 pr-3 text-xs">
       <div className="grid grid-cols-[42px_1fr] gap-1">
         <span className="text-muted-foreground">System</span>
         <span>
@@ -197,7 +197,7 @@ function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
       </div>
       {status.xray_stats_error ? (
         <div
-          className="max-w-40 truncate text-muted-foreground"
+          className="max-w-36 truncate text-muted-foreground"
           title={status.xray_stats_error}
         >
           stats: {status.xray_stats_error}
@@ -439,7 +439,7 @@ export default function Servers() {
               const status = getStatus(row.original);
               const offline = status.status === "offline";
               return (
-                <div className="flex min-w-40 max-w-48 flex-col gap-1.5">
+                <div className="flex min-w-36 max-w-40 flex-col gap-1.5">
                   <div className="flex items-center gap-1.5">
                     <span
                       className={cn(
