@@ -28,7 +28,20 @@ import ServerConfig from "./server-config";
 import ServerForm from "./server-form";
 import ServerInstall from "./server-install";
 
-function PctBar({ value }: { value: number }) {
+function usageColor(value: number) {
+  if (value >= 90) {
+    return "bg-red-500";
+  }
+  if (value >= 75) {
+    return "bg-orange-500";
+  }
+  if (value >= 60) {
+    return "bg-amber-500";
+  }
+  return "bg-emerald-500";
+}
+
+function PctBar({ label, value }: { label?: string; value: number }) {
   const v = value.toFixed(2);
   const widthClass =
     value >= 90
@@ -51,11 +64,24 @@ function PctBar({ value }: { value: number }) {
                       ? "w-[10%]"
                       : "w-0";
   return (
-    <div className="min-w-24">
-      <div className="text-xs leading-none">{v}%</div>
-      <div className="h-1.5 w-full rounded bg-muted">
-        <div className={cn("h-1.5 rounded bg-primary", widthClass)} />
+    <div className="min-w-28">
+      <div className="mb-1 grid grid-cols-[36px_1fr] items-center gap-2 text-xs leading-none">
+        {label ? <span className="text-muted-foreground">{label}</span> : null}
+        <span className="font-medium tabular-nums">{v}%</span>
       </div>
+      <div className="h-1.5 w-full rounded bg-muted">
+        <div className={cn("h-1.5 rounded", usageColor(value), widthClass)} />
+      </div>
+    </div>
+  );
+}
+
+function ResourcesCell({ status }: { status: Partial<API.ServerStatus> }) {
+  return (
+    <div className="flex min-w-32 flex-col gap-2">
+      <PctBar label="CPU" value={(status.cpu as number) ?? 0} />
+      <PctBar label="MEM" value={(status.mem as number) ?? 0} />
+      <PctBar label="DISK" value={(status.disk as number) ?? 0} />
     </div>
   );
 }
@@ -89,9 +115,9 @@ function RegionIpCell({
   const region =
     [country, city].filter(Boolean).join(" / ") || notAvailableText;
   return (
-    <div className="flex items-center gap-1">
-      <Badge variant="outline">{region}</Badge>
-      <Badge variant="secondary">{ip || notAvailableText}</Badge>
+    <div className="flex min-w-40 flex-col gap-1">
+      <span className="font-medium">{ip || notAvailableText}</span>
+      <span className="text-muted-foreground text-xs">{region}</span>
     </div>
   );
 }
@@ -429,24 +455,10 @@ export default function Servers() {
             },
           },
           {
-            id: "cpu",
-            header: t("cpu", "CPU"),
+            id: "resources",
+            header: t("resources", "Resources"),
             cell: ({ row }) => (
-              <PctBar value={(getStatus(row.original).cpu as number) ?? 0} />
-            ),
-          },
-          {
-            id: "mem",
-            header: t("memory", "Memory"),
-            cell: ({ row }) => (
-              <PctBar value={(getStatus(row.original).mem as number) ?? 0} />
-            ),
-          },
-          {
-            id: "disk",
-            header: t("disk", "Disk"),
-            cell: ({ row }) => (
-              <PctBar value={(getStatus(row.original).disk as number) ?? 0} />
+              <ResourcesCell status={getStatus(row.original)} />
             ),
           },
           {
