@@ -1101,8 +1101,44 @@ export default function XrayTemplateForm({
     return buildInboundConfig(source);
   }
 
+  function validateXrayConfig(values: FormValues, config: Record<string, any>) {
+    const stream = config.streamSettings || {};
+    const reality = stream.realitySettings || {};
+    if (values.type !== "inbound" || stream.security !== "reality") {
+      return true;
+    }
+    if (!(reality.target || reality.dest)) {
+      form.setError("reality_target", {
+        message:
+          "REALITY 入站必须填写 Target，例如 ebay.com:443。缺少 target 时 xray-core 会把它当成客户端配置解析。",
+      });
+      return false;
+    }
+    if (!reality.serverNames?.length) {
+      form.setError("reality_server_names", {
+        message:
+          "REALITY 入站必须填写 Server Names，例如 ebay.com, www.ebay.com。",
+      });
+      return false;
+    }
+    if (!reality.privateKey) {
+      form.setError("reality_private_key", {
+        message: "REALITY 入站必须填写 Private Key。",
+      });
+      return false;
+    }
+    if (!reality.shortIds?.length) {
+      form.setError("reality_short_ids", {
+        message: "REALITY 入站必须填写 Short IDs。",
+      });
+      return false;
+    }
+    return true;
+  }
+
   async function handleSubmit(values: FormValues) {
     const config = buildConfig(values);
+    if (!validateXrayConfig(values, config)) return;
     const ok = await onSubmit({
       name: values.name,
       type: values.type,
@@ -1743,14 +1779,14 @@ export default function XrayTemplateForm({
                               />
                               <InputField
                                 control={form.control}
-                                description="Reality server target, current Xray field is target; older configs may call this dest."
+                                description="必填。REALITY 服务端目标站点，当前 Xray 字段是 target；例如 ebay.com:443。缺少时会被 xray-core 当成客户端 REALITY 配置解析。"
                                 label="Target"
                                 name="reality_target"
                                 placeholder="example.com:443"
                               />
                               <InputField
                                 control={form.control}
-                                description="Comma separated serverNames used by REALITY server."
+                                description="必填。REALITY 服务端允许的 SNI 列表，多个值用英文逗号分隔。"
                                 label="Server Names"
                                 name="reality_server_names"
                                 placeholder="example.com, www.example.com"

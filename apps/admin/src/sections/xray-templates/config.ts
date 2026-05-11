@@ -834,7 +834,7 @@ export function configToFormValues(
     reality_show: !!reality.show,
     reality_target: reality.target || reality.dest || "",
     reality_xver: reality.xver || undefined,
-    reality_server_names: joinCsv(reality.serverNames),
+    reality_server_names: joinCsv(reality.serverNames || reality.serverName),
     reality_private_key: reality.privateKey || "",
     reality_public_key: reality.password || reality.publicKey || "",
     reality_short_id: reality.shortId || "",
