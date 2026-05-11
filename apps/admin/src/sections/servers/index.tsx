@@ -177,6 +177,28 @@ function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
   );
 }
 
+function ConnectionsCell({ status }: { status: Partial<API.ServerStatus> }) {
+  const system = status.system_connections ?? status.connections ?? 0;
+  const inbound = status.xray_inbound_connections ?? 0;
+  const outbound = status.xray_outbound_connections ?? 0;
+  return (
+    <div className="grid min-w-28 grid-cols-3 gap-2 text-xs">
+      <div>
+        <div className="text-muted-foreground">Sys</div>
+        <div className="font-medium">{system}</div>
+      </div>
+      <div>
+        <div className="text-muted-foreground">In</div>
+        <div className="font-medium">{inbound}</div>
+      </div>
+      <div>
+        <div className="text-muted-foreground">Out</div>
+        <div className="font-medium">{outbound}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function Servers() {
   const { t } = useTranslation("servers");
   const { isServerReferencedByNodes } = useNode();
@@ -435,9 +457,7 @@ export default function Servers() {
             id: "connections",
             header: t("connections", "Connections"),
             cell: ({ row }) => (
-              <Badge variant="outline">
-                {getStatus(row.original).connections ?? 0}
-              </Badge>
+              <ConnectionsCell status={getStatus(row.original)} />
             ),
           },
 

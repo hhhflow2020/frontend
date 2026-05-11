@@ -1997,6 +1997,10 @@ declare namespace API {
     xray_tx_bytes?: number;
     xray_stats_error?: string;
     connections?: number;
+    system_connections?: number;
+    xray_connections?: number;
+    xray_inbound_connections?: number;
+    xray_outbound_connections?: number;
     online_users?: number;
     xray_running?: boolean;
     xray_version?: string;
