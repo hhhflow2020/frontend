@@ -1,6 +1,7 @@
 {
   "errors": {
     "nameRequired": "请输入名称",
+    "inboundRequired": "请选择 inbound",
     "portRange": "端口必须在 1 到 65535 之间",
     "protocolRequired": "请选择协议",
     "serverAddrRequired": "请输入入口地址",

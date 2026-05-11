@@ -75,6 +75,26 @@ export const subscribeSchema = {
           type: "string",
           description: "For Shadowsocks 2022",
         },
+        Username: {
+          type: "string",
+          description: "Protocol account username when available",
+        },
+        HeaderType: {
+          type: "string",
+          description: "Transport header type, usually from raw/kcp settings",
+        },
+        TLS: {
+          type: "boolean",
+          description: "Whether TLS-like security is enabled",
+        },
+        EchEnable: {
+          type: "boolean",
+          description: "Whether ECH is enabled in TLS settings",
+        },
+        EchServerName: {
+          type: "string",
+          description: "ECH query server name",
+        },
         // Vmess/Vless/Trojan Options
         Flow: {
           type: "string",
@@ -128,6 +148,10 @@ export const subscribeSchema = {
           type: "string",
           description: 'Encryption mode (e.g., "native", "xorpub", "random")',
         },
+        Encryption_Mode: {
+          type: "string",
+          description: "Compatibility alias of EncryptionMode",
+        },
         EncryptionRtt: {
           type: "string",
           description: 'Encryption RTT (e.g., "0rtt", "1rtt")',
@@ -166,6 +190,10 @@ export const subscribeSchema = {
         ObfsHost: {
           type: "string",
           description: "Obfuscation host",
+        },
+        Obfs: {
+          type: "string",
+          description: "Obfuscation type",
         },
         ObfsPath: {
           type: "string",

@@ -26,7 +26,7 @@ const frontendLoading = ref(true)
 onMounted(async () => {
   // Fetch contributors from backend related repositories
   try {
-    const repos = ['server', 'ppanel', 'ppanel-node']
+    const repos = ['server', 'ppanel', 'xray-agent']
     const contributorsMap = new Map()
 
     for (const repo of repos) {

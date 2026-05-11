@@ -1,214 +1,92 @@
 # Server Management
 
-Manage proxy servers' basic information, protocol configuration, and runtime status, as well as configure global node parameters.
+Manage physical servers, Xray template bindings, runtime status, and global node-agent communication settings.
 
 ## Page Components
 
-The Server Management page consists of the following modules:
+### Dynamic Multiplier
 
-### 1. Dynamic Multiplier
+Define traffic billing multipliers for time periods. The multiplier is applied when traffic reports are processed.
 
-A card at the top of the page for defining traffic billing multipliers for different time periods.
+### Node Configuration
 
-**Features:**
-- **Time Slot Management**: Define multiple time periods, each containing:
-  - Start time: Format HH:MM:SS
-  - End time: Format HH:MM:SS
-  - Multiplier: Traffic billing multiplier for this period
-- **Dynamic Billing**: Apply different multipliers at different times, e.g., higher rates during peak hours
-- **Flexible Configuration**: Support adding, editing, and deleting time periods
-- **Immediate Effect**: Applied to traffic statistics immediately after saving
+This card only controls agent communication basics:
 
-**Use Cases:**
-- Peak/off-peak time-based billing
-- Holiday special billing
-- Limit traffic usage during peak hours
+- **Node Secret**: authentication key used by `xray-agent`.
+- **Node Pull Interval**: how often nodes pull config/users.
+- **Node Push Interval**: compatibility setting for push-style status intervals.
+- **Traffic Report Threshold**: byte threshold for traffic reporting.
+- **IP Strategy**: prefer IPv4 or IPv6 where applicable.
 
-### 2. Node Configuration
+DNS, outbound, routing, blocking, and protocol-specific settings are configured through **Xray Templates**, not here.
 
-A card at the top of the page for configuring node communication and global policies.
+### Server List
 
-**Basic Configuration:**
-- **Node Secret**: Authentication key for node-server communication
-- **Node Pull Interval**: Time interval (seconds) for nodes to pull configuration from server
-- **Node Push Interval**: Time interval (seconds) for nodes to push status to server
-- **Traffic Report Threshold**: Byte threshold for triggering traffic reports
-- **IP Strategy**: Choose prefer_ipv4 or prefer_ipv6
+The table displays:
 
-**DNS Configuration:**
-- **Protocol**: tcp, udp, tls, https, quic
-- **Address**: DNS server address
-- **Domains**: List of domains to be resolved using this DNS
-- Support configuring multiple DNS servers
-
-**Outbound Rules:**
-Configure outbound proxies for specific traffic:
-- **Name**: Rule identifier
-- **Protocol**: Proxy protocol type
-- **Address**: Proxy server address
-- **Port**: Proxy server port
-- **Cipher**: Encryption method for protocols like Shadowsocks
-- **Password**: Proxy authentication password
-- **Rules**: Matching rules, such as domain names or IP ranges
-
-**Block Rules:**
-Configure list of domains or IPs to block, supporting wildcards and regex.
-
-### 3. Server List
-
-The main body of the page displays all servers in a table format.
-
-**Column Information:**
-- **ID**: Server unique identifier, displayed as a badge
-- **Name**: Server custom name
-- **Address**: Displays country/city/IP address using badge components
-- **Protocols**: Displays list of enabled protocols, each showing:
-  - Multiplier (e.g., 1.00x)
-  - Protocol type (e.g., vless, vmess, trojan, shadowsocks)
-  - Port number
-- **Status**: Online/offline status with dot indicator
-  - Green dot: Online
-  - Gray dot: Offline
-- **CPU**: CPU usage percentage, displayed as a progress bar
-- **Memory**: Memory usage percentage, displayed as a progress bar
-- **Disk**: Disk usage percentage, displayed as a progress bar
-- **Online Users**: Number of currently connected users
-
-**Operation Features:**
-- **Search**: Quickly filter servers by keyword
-- **Sorting**: Adjust server display order by dragging rows, sorting is saved to database
-- **Pagination**: Support paging for large number of servers
-- **Batch Delete**: Delete multiple selected servers (servers referenced by nodes cannot be deleted)
-
-**Individual Server Operations:**
-- **Edit**: Modify server configuration
-- **Connect**: Display one-click installation script
-- **Delete**: Delete server (disabled when referenced by nodes)
-- **Copy**: Copy server configuration to create a new server
+- server name and region/address;
+- realtime status from `xray-agent` over WebSocket;
+- CPU, memory, disk, and network rate;
+- operations such as edit, connect, delete, copy, and Xray template binding.
 
 ## Server Form
 
-A sidebar form that opens when clicking "Create" or "Edit".
+The server form contains only physical server metadata:
 
-**Basic Information:**
-- **Name**: Required, server identifier name
-- **Country**: Server country code (e.g., CN, US, JP)
-- **City**: Server city
-- **Address**: Server IP address or domain
+- **Name**
+- **Country**
+- **City**
+- **Address**
+- **Sort**
 
-**Protocol Configuration:**
+Protocols are no longer configured on the server form. Configure Xray in **Xray Templates**, then bind templates to a server.
 
-Support configuration of multiple proxy protocols, each expanded in accordion format. Protocol types used in nodes cannot be disabled.
+## Xray Template Binding
 
-**Common Protocol Fields:**
-- **Enable**: Toggle switch to control whether to enable the protocol
-- **Port**: Listening port number
-- **Ratio**: Traffic billing multiplier, e.g., 1.5 means 1.5 times actual traffic
-- **Encryption/Security**: Varies depending on protocol type
+Use **Bind Xray Templates** on a server to attach one or more templates:
 
-**Supported Protocol Types:**
+- **Inbound** templates render into top-level `inbounds`.
+- **Outbound** templates render into top-level `outbounds`.
+- **DNS** templates are merged into top-level `dns`.
+- **Routing** templates are merged into top-level `routing`.
 
-1. **Shadowsocks**
-   - Cipher: Encryption method (e.g., aes-256-gcm, chacha20-poly1305)
-   - Password: Authentication password, supports generating random password
+Each binding has:
 
-2. **Trojan**
-   - Password: Authentication password, supports generating random password
+- **Alias**: stable name used by nodes and template references.
+- **Variables**: per-server overrides, for example `{ "port": 20002 }`.
+- **Sort**: merge/render order.
+- **Enabled**: whether this binding is active.
 
-3. **Vmess**
-   - UUID: User identifier, supports auto-generation
-   - Alter ID: Number of additional IDs
-
-4. **Vless**
-   - UUID: User identifier, supports auto-generation
-   - Flow: Flow control mode (e.g., xtls-rprx-vision)
-
-5. **Hysteria**
-   - Up/Down Speed: Upload/download speed limits
-   - Obfs Password: Obfuscation password
-
-6. **Hysteria2**
-   - Password: Authentication password
-   - Obfs Password: Obfuscation password
-
-7. **TUIC**
-   - UUID: User identifier
-   - Password: Authentication password
-   - Congestion Control: Congestion control algorithm (e.g., bbr, cubic)
-   - UDP Relay Mode: UDP relay mode
-
-**Transport Configuration:**
-
-Each protocol can be configured with different transport layers:
-- **TCP**: Basic TCP transport
-- **WS (WebSocket)**: WebSocket transport
-  - Path: WebSocket path
-  - Host: WebSocket Host header
-- **gRPC**: gRPC transport
-  - Service Name: gRPC service name
-- **HTTP/2**: HTTP/2 transport
-  - Path: Request path
-  - Host: Host header
-- **QUIC**: QUIC protocol transport
-- **HTTPUpgrade**: HTTP upgrade transport
-- **SplitHTTP**: Split HTTP transport
-- **XHTTP**: Extended HTTP transport
-
-**TLS Configuration:**
-- **TLS**: Whether to enable TLS
-- **Server Name**: SNI server name
-- **ALPN**: Application-Layer Protocol Negotiation (e.g., h2, http/1.1)
-- **Fingerprint**: TLS fingerprint (e.g., chrome, firefox, safari)
-- **Reality**: Reality protocol configuration
-  - Public Key: Public key
-  - Short ID: Short ID
-  - Spider X: Spider X parameter
-
-**Advanced Configuration:**
-- **Multiplex**: Multiplexing settings
-- **Encryption**: Additional encryption layer
-- **Flow Control**: Flow control parameters
-
-**Field Generation:**
-
-Some fields support auto-generation with a key icon:
-- **UUID**: Generate random UUID
-- **Password**: Generate random strong password
-- **Reality Key Pair**: Generate Public Key and Private Key
-- **Short ID**: Generate random short ID
+The final preview shows the pure Xray config that `xray-agent` will pull.
 
 ## One-Click Installation
 
-Click the "Connect" button to display the server node installation script.
+Click **Connect** to generate a Docker command for `xray-agent`:
 
-**Configuration:**
-- **API Host**: API address of the management panel (automatically obtained from current domain, can be manually modified)
-- **Server ID**: Unique ID of the current server (auto-filled)
-- **Secret Key**: Automatically obtained from node configuration
-
-**Install Command:**
-The generated bash script contains:
 ```bash
-wget -N https://raw.githubusercontent.com/perfect-panel/ppanel-node/master/scripts/install.sh && bash install.sh --api-host [domain] --server-id [ID] --secret-key [key]
+docker run -d --name ppanel-xray-agent --restart unless-stopped --network host \
+  -v /var/lib/ppanel/xray-agent:/var/lib/ppanel/xray-agent \
+  -e PPANEL_SERVER_URL=https://panel.example.com \
+  -e PPANEL_SERVER_ID=1 \
+  -e PPANEL_NODE_SECRET=<SECRET> \
+  ppanel/xray-agent:latest
 ```
 
-**Operations:**
-- Click "Copy and Close" to copy the script with one click and close the popup
-- Execute the script on the server to automatically install and connect the node
+Run this command on the target server. The agent pulls server-level Xray config, starts `xray-core`, reports realtime status, and sends traffic usage.
 
-## Online Users Viewing
+## Relationship With Nodes
 
-Click the "Online Users" number to view details of currently online users on the server.
+Servers own Xray template bindings. Nodes are user-facing entries that select one server inbound alias and define subscription-facing address/port.
 
-**Display Information:**
-- **User Account**: Link to user detail page
-- **Subscribe ID**: Subscription record ID
-- **Subscribe Name**: Plan name being used
-- **Traffic Usage**: Used traffic / Total traffic (displays "Unlimited" if unlimited)
-- **Expire Time**: Subscription expiration time, expired shows red "Expired" badge
-- **IP Address**: User connection IP, clickable to view IP information
-- **Connection Time**: Time when user established connection
+```text
+Server
+  └─ inbound alias: grpc-reality
+       ├─ Node: HK Direct, address 203.0.113.10, port 20002
+       └─ Node: HK CDN, address hk.example.com, port 443
+```
 
-## Data Refresh
+The node port is what clients see. The actual Xray listen port comes from the rendered inbound template and binding variables.
 
-Server status (CPU, Memory, Disk, Online Users) is updated in real-time according to the "Node Push Interval" set in "Node Configuration".
+## Realtime Status
+
+`xray-agent` reports CPU, memory, disk, network speed, and traffic through server APIs and WebSocket. The admin server list subscribes to realtime updates from PPanel.

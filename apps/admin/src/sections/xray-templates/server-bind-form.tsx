@@ -22,6 +22,7 @@ import { Icon } from "@workspace/ui/composed/icon";
 import {
   bindServerXrayTemplates,
   filterXrayTemplateList,
+  previewServerXrayConfig,
   queryServerXrayTemplateList,
 } from "@workspace/ui/services/admin/server";
 import { useEffect, useMemo, useState } from "react";
@@ -47,6 +48,18 @@ type VariableHint = {
   description?: string;
   defaultValue?: unknown;
   required?: boolean;
+};
+
+type RenderedTemplate = {
+  id: number;
+  name: string;
+  type: XrayTemplateType;
+  alias: string;
+  sort: number;
+  variables: Record<string, any>;
+  config?: Record<string, any>;
+  raw?: string;
+  error?: string;
 };
 
 function stringifyHintValue(value: unknown) {
@@ -142,34 +155,171 @@ function renderSubscriptionHints(template: API.XrayTemplate) {
   );
 }
 
+function getPathValue(source: Record<string, any>, path: string[]) {
+  return path.reduce<any>((current, key) => current?.[key], source);
+}
+
+function templateValueToString(value: unknown) {
+  if (value === undefined || value === null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return JSON.stringify(value);
+}
+
+function renderTemplateString(
+  source: string,
+  context: Record<string, any>
+): string {
+  return source.replace(
+    /\{\{\s*(toJson\s+)?\.([A-Za-z]+)((?:\.[A-Za-z0-9_-]+)+)\s*\}\}/g,
+    (_match, toJson: string | undefined, root: string, pathText: string) => {
+      const rootKey = root.toLowerCase();
+      const value = getPathValue(
+        context[rootKey] || {},
+        pathText.split(".").filter(Boolean)
+      );
+      return toJson
+        ? JSON.stringify(value ?? null)
+        : templateValueToString(value);
+    }
+  );
+}
+
+function mergeDnsObjects(items: Record<string, any>[]) {
+  if (!items.length) return;
+  if (items.length === 1) return items[0];
+  const merged: Record<string, any> = {};
+  for (const item of items) {
+    Object.assign(merged, item);
+    merged.servers = [...(merged.servers || []), ...(item.servers || [])];
+    merged.hosts = { ...(merged.hosts || {}), ...(item.hosts || {}) };
+  }
+  return merged;
+}
+
+function mergeRoutingObjects(items: Record<string, any>[]) {
+  if (!items.length) return;
+  if (items.length === 1) return items[0];
+  const merged: Record<string, any> = {};
+  for (const item of items) {
+    Object.assign(merged, item);
+    merged.rules = [...(merged.rules || []), ...(item.rules || [])];
+    merged.balancers = [...(merged.balancers || []), ...(item.balancers || [])];
+  }
+  return merged;
+}
+
+function cleanXrayConfig(source?: {
+  inbounds?: any[];
+  outbounds?: any[];
+  dns?: any;
+  routing?: any;
+}) {
+  const config: Record<string, any> = {
+    inbounds: source?.inbounds || [],
+    outbounds: source?.outbounds || [],
+  };
+  if (source?.dns) {
+    config.dns = source.dns;
+  }
+  if (source?.routing) {
+    config.routing = source.routing;
+  }
+  return config;
+}
+
+function variablePreview(source?: API.PreviewServerXrayConfigResponse) {
+  return source?.variables || {};
+}
+
 function groupPreview(bindings: BindingRow[], templates: API.XrayTemplate[]) {
   const selected = bindings
     .filter((item) => item.enabled)
     .sort((a, b) => a.sort - b.sort)
-    .map((item) =>
-      templates.find((template) => template.id === item.template_id)
-    )
-    .filter(Boolean) as API.XrayTemplate[];
+    .map((binding) => ({
+      binding,
+      template: templates.find(
+        (template) => template.id === binding.template_id
+      ),
+    }))
+    .filter((item) => item.template) as {
+    binding: BindingRow;
+    template: API.XrayTemplate;
+  }[];
 
-  const inbounds = selected
-    .filter((item) => item.type === "inbound")
+  const ref: Record<string, Record<string, Record<string, any>>> = {
+    inbound: {},
+    outbound: {},
+    dns: {},
+    routing: {},
+  };
+  const rendered: RenderedTemplate[] = [];
+
+  for (const { binding, template } of selected) {
+    const variables = {
+      ...(template.default_variables || {}),
+      ...safeJsonParse(binding.variables_json || "", {}),
+    };
+    const source = template.config_template?.trim()
+      ? template.config_template
+      : JSON.stringify(template.config || {}, null, 2);
+    const raw = renderTemplateString(source, {
+      vars: variables,
+      variables,
+      ref,
+      server: {},
+      template,
+      binding,
+    });
+    const item: RenderedTemplate = {
+      id: template.id,
+      name: template.name,
+      type: template.type,
+      alias: binding.alias,
+      sort: binding.sort,
+      variables,
+      raw,
+    };
+    try {
+      const config = JSON.parse(raw) as Record<string, any>;
+      item.config = config;
+      if (binding.alias) {
+        ref[template.type] ||= {};
+        const typeRef = ref[template.type];
+        if (typeRef) {
+          typeRef[binding.alias] = config;
+        }
+      }
+    } catch (error) {
+      item.error = error instanceof Error ? error.message : "JSON parse error";
+    }
+    rendered.push(item);
+  }
+
+  const inbounds = rendered
+    .filter((item) => item.type === "inbound" && item.config)
     .map((item) => item.config);
-  const outbounds = selected
-    .filter((item) => item.type === "outbound")
+  const outbounds = rendered
+    .filter((item) => item.type === "outbound" && item.config)
     .map((item) => item.config);
-  const dns = selected
-    .filter((item) => item.type === "dns")
-    .map((item) => item.config);
-  const routing = selected
-    .filter((item) => item.type === "routing")
-    .map((item) => item.config);
+  const dnsItems = rendered
+    .filter((item) => item.type === "dns" && item.config)
+    .map((item) => item.config as Record<string, any>);
+  const routingItems = rendered
+    .filter((item) => item.type === "routing" && item.config)
+    .map((item) => item.config as Record<string, any>);
+  const errors = rendered.filter((item) => item.error);
 
   return {
+    note: "前端草稿预览：会合并默认变量和绑定变量，并解析常见的 {{ .Vars.xxx }}、{{ toJson .Vars.xxx }}、{{ .Ref.type.alias.field }}。最终配置仍以后端节点拉取渲染结果为准。",
     inbounds,
     outbounds,
-    dns: dns.length === 1 ? dns[0] : dns,
-    routing: routing.length === 1 ? routing[0] : routing,
-    templates: selected,
+    dns: mergeDnsObjects(dnsItems),
+    routing: mergeRoutingObjects(routingItems),
+    rendered,
+    errors,
   };
 }
 
@@ -236,6 +386,40 @@ export default function ServerXrayTemplateBindForm({
     [bindings, templates]
   );
 
+  const previewPayload = useMemo<API.PreviewServerXrayConfigRequest>(
+    () => ({
+      server_id: server.id,
+      bindings: bindings
+        .filter((item) => item.enabled)
+        .slice()
+        .sort((a, b) => a.sort - b.sort)
+        .map((item) => ({
+          template_id: item.template_id,
+          sort: item.sort,
+          enabled: item.enabled,
+          alias: item.alias,
+          variables: safeJsonParse(item.variables_json || "", {}),
+          subscription_enabled: item.subscription_enabled,
+          subscription_name: item.subscription_name,
+          subscription_variables: safeJsonParse(
+            item.subscription_variables_json || "",
+            {}
+          ),
+        })),
+    }),
+    [bindings, server.id]
+  );
+
+  const { data: backendPreview } = useQuery({
+    enabled: open,
+    queryKey: ["server-xray-template-preview", previewPayload],
+    queryFn: async () => {
+      const { data } = await previewServerXrayConfig(previewPayload);
+      return data.data;
+    },
+    retry: false,
+  });
+
   function getBinding(templateId: number) {
     return bindings.find((item) => item.template_id === templateId);
   }
@@ -280,6 +464,7 @@ export default function ServerXrayTemplateBindForm({
       await bindServerXrayTemplates({
         server_id: server.id,
         bindings: bindings
+          .slice()
           .sort((a, b) => a.sort - b.sort)
           .map((item) => ({
             template_id: item.template_id,
@@ -414,7 +599,7 @@ export default function ServerXrayTemplateBindForm({
                       <p className="text-muted-foreground text-xs">
                         {t(
                           "bind.variablesDesc",
-                          "变量 JSON 必须是对象。它会覆盖模板默认变量，并在渲染时作为 Vars/vars 使用。"
+                          "变量 JSON 必须是对象。它会覆盖模板默认变量，并可差异化覆盖常用配置字段，如 port、tag、listen、transport、security、sni、host、path、service_name。"
                         )}
                       </p>
                     </div>
@@ -472,7 +657,7 @@ export default function ServerXrayTemplateBindForm({
 
         <div className="space-y-4 overflow-y-auto px-6 pt-4">
           <Tabs defaultValue="inbound">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="inbound">
                 {t("type.inbound", "Inbound")}
               </TabsTrigger>
@@ -485,6 +670,9 @@ export default function ServerXrayTemplateBindForm({
               </TabsTrigger>
               <TabsTrigger value="preview">
                 {t("bind.preview", "Preview")}
+              </TabsTrigger>
+              <TabsTrigger value="variables">
+                {t("bind.variablesPreview", "Variables")}
               </TabsTrigger>
             </TabsList>
             <TabsContent className="pt-4" value="inbound">
@@ -503,7 +691,18 @@ export default function ServerXrayTemplateBindForm({
               <Textarea
                 className="min-h-[420px] font-mono text-xs"
                 readOnly
-                value={JSON.stringify(preview, null, 2)}
+                value={JSON.stringify(
+                  cleanXrayConfig(backendPreview || preview),
+                  null,
+                  2
+                )}
+              />
+            </TabsContent>
+            <TabsContent className="pt-4" value="variables">
+              <Textarea
+                className="min-h-[420px] font-mono text-xs"
+                readOnly
+                value={JSON.stringify(variablePreview(backendPreview), null, 2)}
               />
             </TabsContent>
           </Tabs>

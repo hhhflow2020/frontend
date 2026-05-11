@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
 import {
   Form,
@@ -15,6 +16,7 @@ import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -23,6 +25,7 @@ import {
 import { Combobox } from "@workspace/ui/composed/combobox";
 import { EnhancedInput } from "@workspace/ui/composed/enhanced-input";
 import TagInput from "@workspace/ui/composed/tag-input";
+import { queryServerXrayTemplateList } from "@workspace/ui/services/admin/server";
 import type { TFunction } from "i18next";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -32,18 +35,33 @@ import { z } from "zod";
 import { useNode } from "@/stores/node";
 import { useServer } from "@/stores/server";
 
-export type ProtocolName =
-  | "shadowsocks"
-  | "vmess"
-  | "vless"
-  | "trojan"
-  | "hysteria"
-  | "tuic"
-  | "anytls"
-  | "naive"
-  | "http"
-  | "socks"
-  | "mieru";
+type InboundOption = {
+  alias: string;
+  label: string;
+  port: number;
+};
+
+function readInboundPort(binding?: API.ServerXrayTemplate) {
+  if (!binding) return 0;
+  const variables = {
+    ...(binding.template?.default_variables || {}),
+    ...(binding.variables || {}),
+  } as Record<string, any>;
+  const port =
+    variables.port ??
+    binding.template?.config?.port ??
+    binding.template?.config?.settings?.port;
+  const value = Number(port);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function normalizeInitialValues(values?: Partial<NodeFormValues>) {
+  const legacy = values as any;
+  return {
+    ...values,
+    inbound_alias: legacy?.inbound_alias || legacy?.protocol || "",
+  };
+}
 
 const buildSchema = (t: TFunction) =>
   z.object({
@@ -56,9 +74,9 @@ const buildSchema = (t: TFunction) =>
       .int()
       .gt(0, t("errors.serverRequired", "Please select a server"))
       .optional(),
-    protocol: z
+    inbound_alias: z
       .string()
-      .min(1, t("errors.protocolRequired", "Please select a protocol")),
+      .min(1, t("errors.inboundRequired", "请选择 inbound")),
     address: z
       .string()
       .trim()
@@ -108,33 +126,62 @@ export default function NodeForm(props: {
     defaultValues: {
       name: "",
       server_id: undefined,
-      protocol: "",
       address: "",
       port: 0,
       tags: [],
-      ...initialValues,
+      ...normalizeInitialValues(initialValues),
     },
   });
 
   const serverId = form.watch("server_id");
 
-  const { servers, getAvailableProtocols } = useServer();
+  const { servers } = useServer();
   const { tags } = useNode();
 
   const existingTags: string[] = tags || [];
 
-  const availableProtocols = getAvailableProtocols(serverId);
+  const { data: xrayBindingData } = useQuery({
+    enabled: open && !!serverId,
+    queryKey: ["node-form-server-xray-inbounds", serverId],
+    queryFn: async () => {
+      const { data } = await queryServerXrayTemplateList({
+        server_id: Number(serverId),
+      });
+      return data.data?.list || [];
+    },
+  });
+
+  const inboundOptions = useMemo<InboundOption[]>(
+    () =>
+      (xrayBindingData || [])
+        .filter(
+          (binding) => binding.enabled && binding.template?.type === "inbound"
+        )
+        .sort((a, b) => a.sort - b.sort)
+        .map((binding) => {
+          const alias = binding.alias || binding.template?.name || "";
+          const port = readInboundPort(binding);
+          return {
+            alias,
+            port,
+            label: `${alias || binding.template?.name || "inbound"}${
+              port ? ` (${port})` : ""
+            }`,
+          };
+        })
+        .filter((item) => item.alias),
+    [xrayBindingData]
+  );
 
   useEffect(() => {
     if (initialValues) {
       form.reset({
         name: "",
         server_id: undefined,
-        protocol: "",
         address: "",
         port: 0,
         tags: [],
-        ...initialValues,
+        ...normalizeInitialValues(initialValues),
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,29 +216,38 @@ export default function NodeForm(props: {
       fieldsToFill.push("address");
     }
 
-    const protocols = getAvailableProtocols(id);
-    const firstProtocol = protocols[0];
-
-    if (
-      firstProtocol &&
-      (!currentValues.protocol || autoFilledFields.has("protocol"))
-    ) {
-      form.setValue("protocol", firstProtocol.protocol, { shouldDirty: false });
-      fieldsToFill.push("protocol");
-
-      if (
-        !currentValues.port ||
-        currentValues.port === 0 ||
-        autoFilledFields.has("port")
-      ) {
-        const port = firstProtocol.port || 0;
-        form.setValue("port", port, { shouldDirty: false });
-        fieldsToFill.push("port");
-      }
-    }
-
     setAutoFilledFields(new Set(fieldsToFill));
   }
+
+  useEffect(() => {
+    if (!(serverId && inboundOptions.length)) return;
+    const currentValues = form.getValues();
+    const currentExists = inboundOptions.some(
+      (item) => item.alias === currentValues.inbound_alias
+    );
+    if (currentExists && !autoFilledFields.has("inbound_alias")) return;
+
+    const firstInbound = inboundOptions[0];
+    if (!firstInbound) return;
+
+    const fieldsToFill = new Set(autoFilledFields);
+    if (!currentValues.inbound_alias || autoFilledFields.has("inbound_alias")) {
+      form.setValue("inbound_alias", firstInbound.alias, {
+        shouldDirty: false,
+      });
+      fieldsToFill.add("inbound_alias");
+    }
+    if (
+      !currentValues.port ||
+      currentValues.port === 0 ||
+      autoFilledFields.has("port")
+    ) {
+      form.setValue("port", firstInbound.port || 0, { shouldDirty: false });
+      fieldsToFill.add("port");
+    }
+    setAutoFilledFields(fieldsToFill);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverId, inboundOptions]);
 
   const handleManualFieldChange = (
     fieldName: keyof NodeFormValues,
@@ -201,24 +257,22 @@ export default function NodeForm(props: {
     removeAutoFilledField(fieldName);
   };
 
-  function handleProtocolChange(nextProto?: ProtocolName | null) {
-    const protocol = (nextProto || "") as ProtocolName | "";
-    form.setValue("protocol", protocol);
+  function handleInboundChange(nextInbound?: string | null) {
+    const inbound = nextInbound || "";
+    form.setValue("inbound_alias", inbound);
 
-    if (!(protocol && serverId)) {
-      removeAutoFilledField("protocol");
+    if (!(inbound && serverId)) {
+      removeAutoFilledField("inbound_alias");
       return;
     }
 
     const currentValues = form.getValues();
     const isPortAutoFilled = autoFilledFields.has("port");
 
-    removeAutoFilledField("protocol");
+    removeAutoFilledField("inbound_alias");
 
     if (!currentValues.port || currentValues.port === 0 || isPortAutoFilled) {
-      const protocolData = availableProtocols.find(
-        (p) => p.protocol === protocol
-      );
+      const protocolData = inboundOptions.find((p) => p.alias === inbound);
 
       if (protocolData) {
         const port = protocolData.port || 0;
@@ -252,6 +306,12 @@ export default function NodeForm(props: {
       <SheetContent className="w-[560px] max-w-full">
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
+          <SheetDescription>
+            {t(
+              "node_form_description",
+              "配置节点展示信息，并关联该服务器已绑定的 Xray inbound。"
+            )}
+          </SheetDescription>
         </SheetHeader>
         <ScrollArea className="h-[calc(100dvh-48px-36px-36px-env(safe-area-inset-top))] px-6 pt-4">
           <Form {...form}>
@@ -279,23 +339,27 @@ export default function NodeForm(props: {
               />
               <FormField
                 control={form.control}
-                name="protocol"
+                name="inbound_alias"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("protocol", "Protocol")}</FormLabel>
+                    <FormLabel>{t("inbound", "Inbound")}</FormLabel>
                     <FormControl>
                       <Combobox<string, false>
-                        onChange={(v) =>
-                          handleProtocolChange((v as ProtocolName) || null)
-                        }
-                        options={availableProtocols.map((p) => ({
-                          value: p.protocol,
-                          label: `${p.protocol}${p.port ? ` (${p.port})` : ""}`,
+                        onChange={(v) => handleInboundChange(v || null)}
+                        options={inboundOptions.map((p) => ({
+                          value: p.alias,
+                          label: p.label,
                         }))}
-                        placeholder={t("select_protocol", "Select protocol…")}
+                        placeholder={t("select_inbound", "Select inbound…")}
                         value={field.value}
                       />
                     </FormControl>
+                    <FormDescription>
+                      {t(
+                        "inbound_description",
+                        "选择该服务器已绑定的 Xray inbound。这里保存的是 inbound 的 Alias，用于订阅和节点展示。"
+                      )}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

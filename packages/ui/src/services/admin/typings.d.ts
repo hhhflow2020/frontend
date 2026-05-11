@@ -263,7 +263,8 @@ declare namespace API {
     port: number;
     address: string;
     server_id: number;
-    protocol: string;
+    inbound_alias: string;
+    protocol?: string;
     enabled: boolean;
   };
 
@@ -314,7 +315,6 @@ declare namespace API {
     city?: string;
     address: string;
     sort?: number;
-    protocols: Protocol[];
   };
 
   type CreateSubscribeApplicationRequest = {
@@ -397,10 +397,14 @@ declare namespace API {
 
   type CreateXrayTemplateRequest = {
     name: string;
-    type: "inbound" | "outbound" | "dns";
+    type: "inbound" | "outbound" | "dns" | "routing";
     config: Record<string, any>;
     description?: string;
     enabled?: boolean;
+    config_template?: string;
+    variables_schema?: Record<string, any>;
+    default_variables?: Record<string, any>;
+    subscription_meta?: Record<string, any>;
   };
 
   type CurrencyConfig = {
@@ -535,7 +539,7 @@ declare namespace API {
   type FilterXrayTemplateListParams = {
     page: number;
     size: number;
-    type?: "inbound" | "outbound" | "dns";
+    type?: "inbound" | "outbound" | "dns" | "routing";
     search?: string;
     enabled?: boolean;
   };
@@ -1048,18 +1052,6 @@ declare namespace API {
     count: number;
   };
 
-  type GetServerProtocolsParams = {
-    id: number;
-  };
-
-  type GetServerProtocolsRequest = {
-    id: number;
-  };
-
-  type GetServerProtocolsResponse = {
-    protocols: Protocol[];
-  };
-
   type GetSubscribeApplicationListParams = {
     page: number;
     size: number;
@@ -1383,7 +1375,8 @@ declare namespace API {
     port: number;
     address: string;
     server_id: number;
-    protocol: string;
+    inbound_alias: string;
+    protocol?: string;
     enabled: boolean;
     sort?: number;
     created_at: number;
@@ -1396,24 +1389,6 @@ declare namespace API {
     node_push_interval: number;
     traffic_report_threshold: number;
     ip_strategy: string;
-    dns: NodeDNS[];
-    block: string[];
-    outbound: NodeOutbound[];
-  };
-
-  type NodeDNS = {
-    proto: string;
-    address: string;
-    domains: string[];
-  };
-
-  type NodeOutbound = {
-    name: string;
-    protocol: string;
-    address: string;
-    port: number;
-    password: string;
-    rules: string[];
   };
 
   type NodeRelay = {
@@ -1906,7 +1881,6 @@ declare namespace API {
     city: string;
     address: string;
     sort: number;
-    protocols: Protocol[];
     last_reported_at: number;
     status: ServerStatus;
     created_at: number;
@@ -1917,11 +1891,50 @@ declare namespace API {
     template_id: number;
     sort?: number;
     enabled?: boolean;
+    alias?: string;
+    variables?: Record<string, any>;
+    subscription_enabled?: boolean;
+    subscription_name?: string;
+    subscription_variables?: Record<string, any>;
   };
 
   type BindServerXrayTemplatesRequest = {
     server_id: number;
     bindings: ServerXrayTemplateBinding[];
+  };
+
+  type PreviewServerXrayConfigRequest = {
+    server_id: number;
+    bindings: ServerXrayTemplateBinding[];
+  };
+
+  type QueryServerXrayConfigResponse = {
+    inbounds: any[];
+    outbounds: any[];
+    dns?: any;
+    routing?: any;
+    templates: XrayTemplate[];
+  };
+
+  type PreviewServerXrayConfigResponse = QueryServerXrayConfigResponse & {
+    subscription_proxies?: any[];
+    variables?: Record<
+      string,
+      {
+        type: string;
+        alias: string;
+        template_id: number;
+        template_name: string;
+        sort: number;
+        config_variables: Record<string, any>;
+        default_variables: Record<string, any>;
+        binding_variables: Record<string, any>;
+        merged_variables: Record<string, any>;
+        subscription_variables: Record<string, any>;
+        subscription_merged_variables: Record<string, any>;
+        ref: Record<string, any>;
+      }
+    >;
   };
 
   type QueryServerXrayTemplateListParams = {
@@ -1934,6 +1947,11 @@ declare namespace API {
     template_id: number;
     sort: number;
     enabled: boolean;
+    alias: string;
+    variables: Record<string, any>;
+    subscription_enabled: boolean;
+    subscription_name: string;
+    subscription_variables: Record<string, any>;
     template: XrayTemplate;
     created_at: number;
     updated_at: number;
@@ -1949,20 +1967,6 @@ declare namespace API {
     description: string;
     created_at: number;
     updated_at: number;
-  };
-
-  type ServerOnlineIP = {
-    ip: string;
-    protocol: string;
-  };
-
-  type ServerOnlineUser = {
-    ip: ServerOnlineIP[];
-    user_id: number;
-    subscribe: string;
-    subscribe_id: number;
-    traffic: number;
-    expired_at: number;
   };
 
   type ServerRuleGroup = {
@@ -1982,9 +1986,23 @@ declare namespace API {
     cpu: number;
     mem: number;
     disk: number;
-    protocol: string;
-    online: ServerOnlineUser[];
     status: string;
+    net_rx_bps?: number;
+    net_tx_bps?: number;
+    net_rx_bytes?: number;
+    net_tx_bytes?: number;
+    connections?: number;
+    online_users?: number;
+    xray_running?: boolean;
+    xray_version?: string;
+    updated_at?: number;
+    last_seen?: number;
+    load1?: number;
+    load5?: number;
+    load15?: number;
+    uptime?: number;
+    agent_version?: string;
+    config_version?: string;
   };
 
   type ServerTotalDataResponse = {
@@ -2332,7 +2350,8 @@ declare namespace API {
     port: number;
     address: string;
     server_id: number;
-    protocol: string;
+    inbound_alias: string;
+    protocol?: string;
     enabled: boolean;
   };
 
@@ -2364,7 +2383,6 @@ declare namespace API {
     city?: string;
     address: string;
     sort?: number;
-    protocols: Protocol[];
   };
 
   type UpdateSubscribeApplicationRequest = {
@@ -2459,10 +2477,14 @@ declare namespace API {
   type UpdateXrayTemplateRequest = {
     id: number;
     name: string;
-    type: "inbound" | "outbound" | "dns";
+    type: "inbound" | "outbound" | "dns" | "routing";
     config: Record<string, any>;
     description?: string;
     enabled?: boolean;
+    config_template?: string;
+    variables_schema?: Record<string, any>;
+    default_variables?: Record<string, any>;
+    subscription_meta?: Record<string, any>;
   };
 
   type User = {
@@ -2651,8 +2673,12 @@ declare namespace API {
   type XrayTemplate = {
     id: number;
     name: string;
-    type: "inbound" | "outbound" | "dns";
+    type: "inbound" | "outbound" | "dns" | "routing";
     config: Record<string, any>;
+    config_template: string;
+    variables_schema: Record<string, any>;
+    default_variables: Record<string, any>;
+    subscription_meta: Record<string, any>;
     description: string;
     enabled: boolean;
     created_at: number;

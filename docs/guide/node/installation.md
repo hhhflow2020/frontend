@@ -1,168 +1,115 @@
-# Node Agent Installation
+# Xray Agent Installation
 
-`ppanel-node` is the lightweight agent each edge server runs to sync routes, heartbeats, and transport keys with the PPanel control plane. This guide covers the fastest install path plus alternative deployments.
+`xray-agent` is the node-side process for PPanel. It pulls the server-level Xray configuration from PPanel, writes the effective `current.json`, supervises `xray-core`, hot-reloads supported user lists, and reports traffic plus realtime status back to the panel.
 
-## Quick start
+## Runtime Model
 
-```bash
-wget -N https://raw.githubusercontent.com/perfect-panel/ppanel-node/master/scripts/install.sh
-sudo bash install.sh --api-host https://panel.example.com --server-id 1 --secret-key <SECRET>
+```text
+PPanel server <----HTTP/WS----> xray-agent ----process/API----> xray-core
 ```
 
-The script auto-detects your distro/architecture, downloads the latest release, installs geo databases, and sets up the `ppnode` CLI + system service.
+- PPanel owns servers, Xray templates, template bindings, nodes, subscriptions, and users.
+- `xray-agent` pulls `/v2/server/{server_id}/xray-config` and `/v2/server/{server_id}/xray-users`.
+- `xray-core` only runs the final rendered config produced by `xray-agent`.
+
+## Quick Start
+
+The admin console’s **Servers → Connect** button generates the recommended Docker command:
+
+```bash
+docker run -d --name ppanel-xray-agent --restart unless-stopped --network host \
+  -v /var/lib/ppanel/xray-agent:/var/lib/ppanel/xray-agent \
+  -e PPANEL_SERVER_URL=https://panel.example.com \
+  -e PPANEL_SERVER_ID=1 \
+  -e PPANEL_NODE_SECRET=<SECRET> \
+  ppanel/xray-agent:latest
+```
 
 ### Requirements
 
-- 64-bit Linux (Debian/Ubuntu ≥16, CentOS ≥7, Alpine, Arch, etc.)
-- Root access and outbound HTTPS connectivity to `github.com`
-- Firewall ports open for the protocols you expose as well as panel callbacks
-- Matching **Server ID** + **Secret Key** generated in the PPanel admin console
+- 64-bit Linux with Docker, or a host capable of running `xray-agent` and `xray-core`.
+- The panel URL must be reachable from the node.
+- Firewall rules must allow every inbound port rendered by the server’s Xray templates.
+- The server record must already exist in PPanel and have the same **Server ID** and **Node Secret**.
 
-### Optional flags
+## Configuration
 
-- Positional `vX.Y.Z` argument installs a specific tag instead of the latest release.
-- `--api-host https://panel.example.com`
-- `--server-id <ID>` (matches the record you created under Maintenance → Servers)
-- `--secret-key <KEY>`
+The Docker image can be configured entirely through environment variables:
 
-If the flags are omitted the installer will prompt for the values interactively.
+| Variable | Purpose |
+| --- | --- |
+| `PPANEL_SERVER_URL` | Panel base URL, for example `https://panel.example.com` |
+| `PPANEL_SERVER_ID` | Server ID from PPanel admin |
+| `PPANEL_NODE_SECRET` | Node secret from system node configuration |
+| `XRAY_AGENT_PULL_INTERVAL` | Config/user polling interval, default `30s` |
+| `XRAY_AGENT_STATUS_INTERVAL` | Realtime status interval, default `5s` |
+| `XRAY_AGENT_TRAFFIC_INTERVAL` | Traffic report interval, default `30s` |
+| `XRAY_AGENT_INTERFACE` | Optional network interface name for rate stats |
 
-### Service operations
+For non-Docker deployments, use a JSON config file:
 
-Once installed you can manage the agent with the bundled CLI:
+```json
+{
+  "panel": {
+    "base_url": "https://panel.example.com",
+    "server_id": 1,
+    "secret_key": "<SECRET>"
+  },
+  "xray": {
+    "bin_path": "/usr/local/bin/xray",
+    "work_dir": "/var/lib/ppanel/xray-agent",
+    "api_port": 10085,
+    "inject_api": true,
+    "validate_config": true
+  },
+  "agent": {
+    "pull_interval": "30s"
+  },
+  "report": {
+    "status_interval": "5s",
+    "traffic_interval": "30s"
+  }
+}
+```
+
+Run it with:
 
 ```bash
-ppnode status      # current state
-ppnode start       # start daemon
-ppnode restart     # restart + reload config
-ppnode log         # follow logs
-ppnode update      # upgrade to latest release
-ppnode update v1.2.3
-ppnode uninstall
-ppnode generate    # regenerate /etc/PPanel-node/config.yml
+xray-agent -config /etc/ppanel/xray-agent.json
 ```
 
-## Installation methods
+## Mapping to PPanel
 
-### Method 1 — One-click installer (recommended)
+1. Create or edit a server under **Maintenance → Servers**.
+2. Bind the server to one or more Xray templates. Inbound templates should have stable aliases such as `main`, `grpc-reality`, or `ws-cdn`.
+3. Use binding variables to override per-server values, for example:
 
-Use the Quick Start command above or run `sudo bash install.sh` and answer the prompts. Behind the scenes the script:
-
-1. Installs prerequisites (`wget`, `curl`, `tar`, `socat`, cron, etc.).
-2. Downloads `ppanel-node-linux-<arch>.zip` for amd64, arm64, or s390x.
-3. Extracts to `/usr/local/PPanel-node`, installs `geoip.dat`/`geosite.dat`, and wires the service with systemd/OpenRC.
-4. Drops the helper CLI to `/usr/bin/ppnode` and enables auto-start.
-
-### Method 2 — Build from source
-
-1. Install Go 1.21 or newer and enable the JSON v2 experiment:
-
-    ```bash
-    export GOEXPERIMENT=jsonv2
+    ```json
+    {
+      "port": 20002
+    }
     ```
 
-2. Clone the repository and build:
+4. Create user-facing nodes under **Nodes** and select the inbound alias that the node should expose.
+5. Make sure the node entry port matches the public port users should connect to. It can be different from the rendered Xray listen port when a load balancer, CDN, or port-forwarding layer is used.
 
-    ```bash
-    git clone https://github.com/perfect-panel/ppanel-node.git
-    cd ppanel-node
-    GOEXPERIMENT=jsonv2 go build -v -o ./ppnode -trimpath -ldflags "-s -w -buildid="
-    ```
-
-3. Copy the binary plus geo assets to their runtime locations:
-
-    ```bash
-    sudo install -Dm755 ./ppnode /usr/local/PPanel-node/ppnode
-    sudo install -Dm644 ./geoip.dat /etc/PPanel-node/geoip.dat
-    sudo install -Dm644 ./geosite.dat /etc/PPanel-node/geosite.dat
-    ```
-
-4. Create the systemd unit (adapt paths as needed):
-
-    ```bash
-    sudo tee /etc/systemd/system/PPanel-node.service <<'EOF'
-    [Unit]
-    Description=PPanel Node
-    After=network.target
-
-    [Service]
-    Type=simple
-    ExecStart=/usr/local/PPanel-node/ppnode server
-    Restart=always
-    RestartSec=10
-
-    [Install]
-    WantedBy=multi-user.target
-    EOF
-    sudo systemctl daemon-reload
-    sudo systemctl enable --now PPanel-node
-    ```
-
-5. Copy `config.yml` from the repo or create it manually (see the configuration section) and restart the service.
-
-### Method 3 — Docker / container images
-
-The repository ships a `Dockerfile`. You can build and run it on hosts where installing directly is undesirable:
+## Operations
 
 ```bash
-git clone https://github.com/perfect-panel/ppanel-node.git
-cd ppanel-node
-docker build -t ppanel-node:latest .
-docker run -d --name ppanel-node \
-  --net host \
-  -v /etc/PPanel-node:/etc/PPanel-node \
-  ppanel-node:latest server
+docker logs -f ppanel-xray-agent
+docker restart ppanel-xray-agent
+docker pull ppanel/xray-agent:latest
 ```
 
-Recommended bind mounts:
+Useful files when using the default Docker volume:
 
-- `/etc/PPanel-node/config.yml` – credentials and API settings.
-- `/etc/PPanel-node/geoip.dat` & `/etc/PPanel-node/geosite.dat` – keep them on the host so updates persist.
-- `/var/log/ppanel-node` (optional) – collect structured logs outside the container.
-
-## Configure the node
-
-The runtime configuration lives in `/etc/PPanel-node/config.yml`. The installer generates the file with the following structure:
-
-```yaml
-Log:
-  Level: warn          # debug | info | warn | error
-  Output: ""           # empty = stdout, or set a file path
-  Access: none         # path for access logs, or "none"
-
-Api:
-  ApiHost: https://panel.example.com
-  ServerID: 3
-  SecretKey: b23d8ee1cfe44d7f
-  Timeout: 30
-```
-
-After editing the file, restart the service:
-
-```bash
-sudo systemctl restart PPanel-node
-# or
-ppnode restart
-```
-
-### Mapping to the panel
-
-1. Create a server entry in the **Maintenance → Servers** page inside the PPanel admin UI.
-2. Copy the generated **Server ID** and **Secret Key** into `config.yml`.
-3. Ensure the node host can reach the panel’s HTTPS endpoint defined as `ApiHost`.
-4. Approve the node once it appears under the panel’s node list (heartbeat should update within ~30 seconds).
-
-## Maintenance
-
-- `ppnode update` keeps configuration/geo files intact while replacing the binary.
-- `ppnode update vX.Y.Z` pins a specific release for rollbacks.
-- For manual builds, rebuild the target tag, replace `/usr/local/PPanel-node/ppnode`, then `systemctl restart PPanel-node`.
+- `/var/lib/ppanel/xray-agent/current.json` - active rendered Xray config.
+- `/var/lib/ppanel/xray-agent/last_good.json` - last config that validated successfully.
+- `/var/lib/ppanel/xray-agent/stats_cursor.json` - traffic stats cursor.
 
 ## Troubleshooting
 
-- `ppnode log` or `journalctl -u PPanel-node -f` surfaces runtime logs.
-- Validate `/etc/PPanel-node/config.yml`—typos in `ApiHost` or `SecretKey` cause auth failures.
-- Ensure the host can reach GitHub (updates) and your panel domain on port 443.
-- If the panel lists the node as offline, verify firewall rules allow heartbeats and that NTP is synchronized (`chronyc tracking`).
-
-Need more detail? Review the source at [`github.com/perfect-panel/ppanel-node`](https://github.com/perfect-panel/ppanel-node).
+- If the panel shows the server offline, check `PPANEL_SERVER_URL`, `PPANEL_SERVER_ID`, and `PPANEL_NODE_SECRET`.
+- If Xray fails to start, inspect `current.json` and `last_good.json`; invalid template output usually shows up there first.
+- If users cannot connect, verify the node’s inbound alias, the rendered inbound port, and firewall/CDN forwarding rules.
+- If traffic does not report, verify Xray API injection is enabled and the API port is not occupied.

@@ -398,24 +398,6 @@ declare namespace API {
     node_push_interval: number;
     traffic_report_threshold: number;
     ip_strategy: string;
-    dns: NodeDNS[];
-    block: string[];
-    outbound: NodeOutbound[];
-  };
-
-  type NodeDNS = {
-    proto: string;
-    address: string;
-    domains: string[];
-  };
-
-  type NodeOutbound = {
-    name: string;
-    protocol: string;
-    address: string;
-    port: number;
-    password: string;
-    rules: string[];
   };
 
   type NodeRelay = {

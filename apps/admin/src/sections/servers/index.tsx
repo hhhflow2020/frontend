@@ -7,6 +7,7 @@ import {
   ProTable,
   type ProTableActions,
 } from "@workspace/ui/composed/pro-table/pro-table";
+import { getCookie } from "@workspace/ui/lib/cookies";
 import { cn } from "@workspace/ui/lib/utils";
 import {
   createServer,
@@ -15,14 +16,14 @@ import {
   resetSortWithServer,
   updateServer,
 } from "@workspace/ui/services/admin/server";
-import { useRef, useState } from "react";
+import { formatBytes } from "@workspace/ui/utils/formatting";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useNode } from "@/stores/node";
 import { useServer } from "@/stores/server";
 import ServerXrayTemplateBindForm from "../xray-templates/server-bind-form";
 import DynamicMultiplier from "./dynamic-multiplier";
-import OnlineUsersCell from "./online-users-cell";
 import ServerConfig from "./server-config";
 import ServerForm from "./server-form";
 import ServerInstall from "./server-install";
@@ -59,6 +60,21 @@ function PctBar({ value }: { value: number }) {
   );
 }
 
+function formatBitrate(value?: number) {
+  if (!value) return "0 bps";
+  return `${formatBytes(value / 8).replace("B", "b")}ps`;
+}
+
+function buildRealtimeWsUrl() {
+  const base = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+  const prefix = import.meta.env.VITE_API_PREFIX || "";
+  const url = new URL(`${prefix}/v1/admin/server/realtime/ws`, base);
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  const token = getCookie("Authorization");
+  if (token) url.searchParams.set("token", token);
+  return url.toString();
+}
+
 function RegionIpCell({
   country,
   city,
@@ -86,7 +102,47 @@ export default function Servers() {
   const { fetchServers } = useServer();
 
   const [loading, setLoading] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState<
+    Record<number, Partial<API.ServerStatus>>
+  >({});
   const ref = useRef<ProTableActions>(null);
+  const getStatus = (server: API.Server) => ({
+    ...(server.status || {}),
+    ...(realtimeStatus[server.id] || {}),
+  });
+
+  useEffect(() => {
+    if (!getCookie("Authorization")) return;
+    const ws = new WebSocket(buildRealtimeWsUrl());
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        const applyStatus = (
+          item: Partial<API.ServerStatus> & { server_id?: number }
+        ) => {
+          if (!item.server_id) return;
+          const { server_id: serverId, ...status } = item;
+          setRealtimeStatus((prev) => ({
+            ...prev,
+            [serverId]: {
+              ...(prev[serverId] || {}),
+              ...status,
+            },
+          }));
+        };
+        if (message.type === "snapshot" && Array.isArray(message.data)) {
+          for (const item of message.data) applyStatus(item);
+          return;
+        }
+        if (message.type === "node_status") applyStatus(message);
+      } catch {
+        // Ignore malformed realtime messages.
+      }
+    };
+    return () => {
+      ws.close();
+    };
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -176,7 +232,6 @@ export default function Servers() {
                   country: others.country as string,
                   city: others.city as string,
                   address: others.address as string,
-                  protocols: (others.protocols as API.Protocol[]) || [],
                 };
                 await createServer(body);
                 toast.success(t("copied", "Copied"));
@@ -239,36 +294,13 @@ export default function Servers() {
               />
             ),
           },
-          {
-            accessorKey: "protocols",
-            header: t("protocols", "Protocols"),
-            cell: ({ row }) => {
-              const list = row.original.protocols.filter(
-                (p) => p.enable
-              ) as API.Protocol[];
-              if (!list.length) return "—";
-              return (
-                <div className="flex flex-col gap-1">
-                  {list.map((p, idx) => {
-                    const ratio = Number(p.ratio ?? 1) || 1;
-                    return (
-                      <div className="flex items-center gap-2" key={idx}>
-                        <Badge variant="outline">{ratio.toFixed(2)}x</Badge>
-                        <Badge variant="secondary">{p.type}</Badge>
-                        <Badge variant="secondary">{p.port}</Badge>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            },
-          },
 
           {
             id: "status",
             header: t("status", "Status"),
             cell: ({ row }) => {
-              const offline = row.original.status.status === "offline";
+              const status = getStatus(row.original);
+              const offline = status.status === "offline";
               return (
                 <div className="flex items-center gap-2">
                   <span
@@ -288,27 +320,43 @@ export default function Servers() {
             id: "cpu",
             header: t("cpu", "CPU"),
             cell: ({ row }) => (
-              <PctBar
-                value={(row.original.status?.cpu as unknown as number) ?? 0}
-              />
+              <PctBar value={(getStatus(row.original).cpu as number) ?? 0} />
             ),
           },
           {
             id: "mem",
             header: t("memory", "Memory"),
             cell: ({ row }) => (
-              <PctBar
-                value={(row.original.status?.mem as unknown as number) ?? 0}
-              />
+              <PctBar value={(getStatus(row.original).mem as number) ?? 0} />
             ),
           },
           {
             id: "disk",
             header: t("disk", "Disk"),
             cell: ({ row }) => (
-              <PctBar
-                value={(row.original.status?.disk as unknown as number) ?? 0}
-              />
+              <PctBar value={(getStatus(row.original).disk as number) ?? 0} />
+            ),
+          },
+          {
+            id: "network_speed",
+            header: t("networkSpeed", "Network Speed"),
+            cell: ({ row }) => {
+              const status = getStatus(row.original);
+              return (
+                <div className="flex min-w-28 flex-col gap-1 text-xs">
+                  <span>↑ {formatBitrate(status.net_tx_bps)}</span>
+                  <span>↓ {formatBitrate(status.net_rx_bps)}</span>
+                </div>
+              );
+            },
+          },
+          {
+            id: "connections",
+            header: t("connections", "Connections"),
+            cell: ({ row }) => (
+              <Badge variant="outline">
+                {getStatus(row.original).connections ?? 0}
+              </Badge>
             ),
           },
 
@@ -316,9 +364,9 @@ export default function Servers() {
             id: "online_users",
             header: t("onlineUsers", "Online Users"),
             cell: ({ row }) => (
-              <OnlineUsersCell
-                status={row.original.status as API.ServerStatus}
-              />
+              <Badge variant="outline">
+                {getStatus(row.original).online_users ?? 0}
+              </Badge>
             ),
           },
         ]}

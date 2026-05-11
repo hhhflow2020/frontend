@@ -1,187 +1,102 @@
 # Node Management
 
-Manage user-facing proxy nodes, configure node-server associations, entry addresses, and tags. Nodes are the actual endpoints users connect to, and one server can correspond to multiple nodes.
+Nodes are the user-facing endpoints shown in subscriptions. A node belongs to one server and points to one server-bound Xray inbound alias. The server runs `xray-agent`; the node controls how users see and connect to that inbound.
 
-## Page Components
+## Node List
 
-### Node List
+The table shows all user-facing nodes.
 
-Display all node configuration information in table format.
+**Columns:**
 
-**Column Information:**
-- **Enabled**: Toggle switch to control whether the node is visible to users in real-time
-  - On: Node appears in subscriptions, users can connect
-  - Off: Node is hidden, users cannot connect
-  - Takes effect immediately without restart
-- **Name**: Node display name, shown in user's client
-- **Address:Port**: Entry address and port for user connections
-- **Server**: Shows associated server name and IP address
-  - Format: `Server Name:Server IP`
-- **Protocol:Port**: Proxy protocol type and server listening port
-  - Format: `Protocol Type:Server Port`
-  - Examples: `vless:443`, `vmess:80`, `trojan:8443`
-- **Tags**: Node grouping tags, displayed as badges
-  - Used for permission grouping and plan binding
-  - Used for traffic distribution policies
-  - Supports multiple tags
-
-**Operation Features:**
-- **Search**: Quickly filter nodes by keyword
-- **Sorting**: Adjust node display order by dragging rows, affects node order in user subscriptions
-- **Pagination**: Support paging for large number of nodes
-- **Batch Delete**: Delete multiple selected nodes
-
-**Individual Node Operations:**
-- **Edit**: Modify node configuration
-- **Delete**: Delete node
-- **Copy**: Copy node configuration to create new node (new node disabled by default)
+- **Enabled**: Whether the node is visible in subscriptions.
+- **Name**: Display name shown in client subscriptions.
+- **Address:Port**: Public entry address and port for users.
+- **Server**: Physical server or VPS associated with the node.
+- **Inbound:Port**: Xray inbound alias selected from the server’s bound inbound templates, plus the node entry port.
+- **Tags**: Permission and product grouping tags.
 
 ## Node Form
 
-A sidebar form that opens when clicking "Create" or "Edit".
+### Server
 
-### Form Fields
+Select the server that owns the Xray configuration. The form will load enabled inbound template bindings from that server.
 
-**1. Server** - Required
-- Select the physical server associated with the node
-- Dropdown shows: `Server Name (Server IP)`
-- Triggers smart autofill upon selection
+### Inbound
 
-**2. Protocol** - Required
-- Select the proxy protocol to use
-- Dropdown only shows protocols enabled on selected server
-- Format: `Protocol Type (Port Number)`
-- Supported protocols: shadowsocks, vmess, vless, trojan, hysteria, tuic, anytls, naive, http, socks, mieru
-- Automatically fills corresponding port upon selection
+Select one of the server’s enabled inbound aliases. This does not create a new Xray inbound; it links the node to an inbound template already bound to the server.
 
-**3. Name** - Required
-- Display name of the node
-- Shown in user's proxy client
-- Supports autofill (from server name)
+Examples:
 
-**4. Address** - Required
-- Entry address for user connections
-- Can be domain name or IP address
-- Supports autofill (from server address)
-- Can be manually changed to CDN domain or other entry
+- `main`
+- `grpc-reality`
+- `ws-cdn`
 
-**5. Port** - Required
-- Entry port number for user connections
-- Range: 1-65535
-- Supports autofill (from protocol port)
-- Can be manually changed to different port (e.g., when using port forwarding)
+### Name
 
-**6. Tags** - Optional
-- Node grouping tags, supports multiple tags
-- Can select from existing tags or enter new tags
-- Use Enter key or comma (,) to add multiple tags
-- Purpose:
-  - **Permission Grouping**: Bind with plans to control visible nodes for different plan users
-  - **Traffic Strategy**: Used for node traffic distribution and load balancing
+Display name shown in user subscriptions.
 
-### Smart Autofill Mechanism
+### Address
 
-The form has smart autofill functionality to improve configuration efficiency:
+The public entry address users connect to. It can be the server IP, a domain, a CDN hostname, or a load balancer address.
 
-**Trigger Conditions:**
-1. When selecting server
-2. When selecting protocol
+### Port
 
-**Fill Rules:**
-- **After selecting server**:
-  - Name autofills with server name
-  - Address autofills with server IP
-  - Protocol automatically selects first available protocol
-  - Port autofills with corresponding protocol port
+The public entry port users connect to. The form can autofill from the selected inbound’s rendered port, but the value is intentionally editable.
 
-- **After selecting protocol**:
-  - Port autofills with the protocol's port number
+This lets one Xray inbound be exposed differently per node:
 
-**Manual Modification:**
-- After manually modifying any field, that field will no longer autofill
-- Reselecting server or protocol refreshes autofill status
+- Direct node: public port equals Xray listen port.
+- CDN node: public port may be `443` while Xray listens behind the CDN.
+- Port forwarding: public port can differ from the local Xray port.
 
-## Use Cases
+### Tags
 
-### Scenario 1: Create Basic Node
-1. Click "Create" button
-2. Select server (other fields autofill)
-3. Confirm or adjust autofilled configuration
-4. Click "Confirm"
+Tags are used for product/plan binding and grouping. A product can include nodes directly or include all nodes with selected tags.
 
-### Scenario 2: Create CDN Node
-1. Click "Create" button
-2. Select server
-3. Change name to: `Hong Kong 01 [CDN]`
-4. Change address to CDN domain: `hk01.cdn.example.com`
-5. Change port to CDN port: `443` or `80`
-6. Click "Confirm"
+## Autofill
 
-### Scenario 3: Tag Group Management
-**For Plan Binding:**
-- Premium plan nodes: Add tags `premium`, `vip`
-- Standard plan nodes: Add tag `standard`
-- Trial plan nodes: Add tag `trial`
-- Bind tags in product management to show different nodes for different plans
+When selecting a server, the form can autofill:
 
-**For Region Classification:**
-- Hong Kong nodes: Add tags `hk`, `asia`
-- US nodes: Add tags `us`, `americas`
-- Japan nodes: Add tags `jp`, `asia`
+- node name from server name;
+- entry address from server address;
+- the first available inbound alias;
+- port from the inbound template or binding variables.
 
-### Scenario 4: Batch Management
-1. Use search to filter specific nodes
-2. Check multiple nodes
-3. Click batch delete or batch operations
-4. Confirm operation
+Manual edits are respected. Once a field is changed by hand, the form avoids overwriting it unless the server or inbound is reselected.
 
-## Relationship Between Nodes and Servers
+## Relationship Between Templates, Servers, and Nodes
 
-**Server:**
-- Physical server or VPS
-- Runs proxy service programs
-- Configures listening protocols and ports
-- One server can configure multiple protocols
-
-**Node:**
-- User-visible connection endpoint
-- Associated with a specific protocol on a server
-- Configures user connection entry address (can differ from server address)
-- One server can create multiple nodes
-
-**Example:**
+```text
+Xray Template
+  └─ bound to Server with alias and variables
+       └─ rendered by xray-agent into xray-core config
+            └─ selected by one or more user-facing Nodes
 ```
-Server: Hong Kong-HK01 (192.168.1.100)
-├── Protocol: vless:443
-├── Protocol: vmess:80
-└── Protocol: trojan:8443
 
-Node Configuration:
-1. Node Name: Hong Kong 01 [Direct]
-   - Server: Hong Kong-HK01
-   - Protocol: vless:443
-   - Address: 192.168.1.100
-   - Port: 443
+Example:
 
-2. Node Name: Hong Kong 01 [CDN]
-   - Server: Hong Kong-HK01
-   - Protocol: vmess:80
-   - Address: hk01.cdn.example.com
-   - Port: 443 (CDN port)
+```text
+Server: Hong Kong-HK01
+Inbound binding:
+  alias: grpc-reality
+  variables: { "port": 20002 }
 
-3. Node Name: Hong Kong 01 [VIP]
-   - Server: Hong Kong-HK01
-   - Protocol: trojan:8443
-   - Address: 192.168.1.100
-   - Port: 8443
-   - Tags: premium, vip
+Nodes:
+  Hong Kong 01 Direct
+    inbound: grpc-reality
+    address: 203.0.113.10
+    port: 20002
+
+  Hong Kong 01 CDN
+    inbound: grpc-reality
+    address: hk01.example.com
+    port: 443
 ```
 
 ## Important Notes
 
-1. **Protocol Must Be Enabled**: Can only select protocols already enabled on the server; disabled protocols won't appear in dropdown
-2. **Delete Impact**: Deleting a node will cause users using that node to be unable to connect, proceed with caution
-3. **Disable vs Delete**: For temporarily taking a node offline, use "disable" instead of delete for easy restoration
-4. **Tag Planning**: Recommend planning tag system in advance for easier batch management of plans and nodes
-5. **Address Configuration**: When using CDN, ensure CDN is correctly configured to origin to server address
-6. **Port Mapping**: If entry port differs from server listening port (e.g., using port forwarding), ensure network layer is configured correctly
+1. The inbound must already be bound and enabled on the selected server.
+2. The node port is the subscription/client-facing port; the Xray listen port comes from the rendered inbound template.
+3. If the two ports differ, make sure CDN, load balancer, NAT, or firewall rules forward traffic correctly.
+4. Deleting a node removes it from subscriptions; disabling is safer for temporary maintenance.
+5. Plan tags should be designed before large-scale node creation.

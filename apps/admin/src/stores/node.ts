@@ -21,6 +21,7 @@ interface NodeState {
 
   // Getters
   getNodeById: (nodeId: number) => API.Node | undefined;
+  isInboundUsedInNodes: (serverId: number, inboundAlias: string) => boolean;
   isProtocolUsedInNodes: (serverId: number, protocolType: string) => boolean;
   isServerReferencedByNodes: (serverId: number) => boolean;
   getNodesByTag: (tag: string) => API.Node[];
@@ -78,10 +79,15 @@ export const useNodeStore = create<NodeState>((set, get) => ({
   // Getters
   getNodeById: (nodeId: number) => get().nodes.find((n) => n.id === nodeId),
 
-  isProtocolUsedInNodes: (serverId: number, protocolType: string) =>
+  isInboundUsedInNodes: (serverId: number, inboundAlias: string) =>
     get().nodes.some(
-      (node) => node.server_id === serverId && node.protocol === protocolType
+      (node) =>
+        node.server_id === serverId &&
+        (node.inbound_alias || node.protocol) === inboundAlias
     ),
+
+  isProtocolUsedInNodes: (serverId: number, protocolType: string) =>
+    get().isInboundUsedInNodes(serverId, protocolType),
 
   isServerReferencedByNodes: (serverId: number) =>
     get().nodes.some((node) => node.server_id === serverId),
@@ -131,6 +137,7 @@ export const useNode = () => {
     fetchNodes: store.fetchNodes,
     fetchTags: store.fetchTags,
     getNodeById: store.getNodeById,
+    isInboundUsedInNodes: store.isInboundUsedInNodes,
     isProtocolUsedInNodes: store.isProtocolUsedInNodes,
     isServerReferencedByNodes: store.isServerReferencedByNodes,
     getNodesByTag: store.getNodesByTag,

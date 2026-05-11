@@ -29,7 +29,7 @@ export default function Nodes() {
   const [loading, setLoading] = useState(false);
 
   // Use our zustand store for server data
-  const { getServerName, getServerAddress, getProtocolPort } = useServer();
+  const { getServerName, getServerAddress } = useServer();
   const { fetchNodes, fetchTags } = useNode();
 
   return (
@@ -170,10 +170,10 @@ export default function Nodes() {
             `${getServerName(row.original.server_id)}:${getServerAddress(row.original.server_id)}`,
         },
         {
-          id: "protocol",
-          header: ` ${t("protocol", "Protocol")}:${t("port", "Port")}`,
+          id: "inbound_alias",
+          header: ` ${t("inbound", "Inbound")}:${t("port", "Port")}`,
           cell: ({ row }) =>
-            `${row.original.protocol}:${getProtocolPort(row.original.server_id, row.original.protocol)}`,
+            `${row.original.inbound_alias || row.original.protocol || "—"}:${row.original.port || "—"}`,
         },
         {
           accessorKey: "tags",
@@ -202,7 +202,8 @@ export default function Nodes() {
                 const body: API.CreateNodeRequest = {
                   name: values.name,
                   server_id: Number(values.server_id!),
-                  protocol: values.protocol,
+                  inbound_alias: values.inbound_alias,
+                  protocol: values.inbound_alias,
                   address: values.address,
                   port: Number(values.port!),
                   tags: values.tags || [],

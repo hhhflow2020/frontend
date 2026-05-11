@@ -26,7 +26,7 @@ const frontendLoading = ref(true)
 onMounted(async () => {
   // 获取后端相关仓库的贡献者
   try {
-    const repos = ['server', 'ppanel', 'ppanel-node', 'subscription-template']
+    const repos = ['server', 'ppanel', 'xray-agent', 'subscription-template']
     const contributorsMap = new Map()
 
     for (const repo of repos) {

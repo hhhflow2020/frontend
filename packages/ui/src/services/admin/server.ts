@@ -177,24 +177,6 @@ export async function updateNode(
   );
 }
 
-/** Get Server Protocols GET /v1/admin/server/protocols */
-export async function getServerProtocols(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.GetServerProtocolsParams,
-  options?: { [key: string]: any }
-) {
-  return request<API.Response & { data?: API.GetServerProtocolsResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/protocols`,
-    {
-      method: "GET",
-      params: {
-        ...params,
-      },
-      ...(options || {}),
-    }
-  );
-}
-
 /** Reset server sort POST /v1/admin/server/server/sort */
 export async function resetSortWithServer(
   body: API.ResetSortRequest,
@@ -326,6 +308,24 @@ export async function bindServerXrayTemplates(
 ) {
   return request<API.Response & { data?: any }>(
     `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/bind`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** Preview Server Xray Config POST /v1/admin/server/xray-template/preview */
+export async function previewServerXrayConfig(
+  body: API.PreviewServerXrayConfigRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.Response & { data?: API.PreviewServerXrayConfigResponse }>(
+    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/preview`,
     {
       method: "POST",
       headers: {

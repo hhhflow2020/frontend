@@ -50,7 +50,14 @@ export default function ServerInstall({ server }: Props) {
 
   const installCommand = useMemo(() => {
     const secret = cfgResp?.node_secret ?? "";
-    return `wget -N https://raw.githubusercontent.com/perfect-panel/ppanel-node/master/scripts/install.sh && bash install.sh --api-host ${domain} --server-id ${server.id} --secret-key ${secret}`;
+    return [
+      "docker run -d --name ppanel-xray-agent --restart unless-stopped --network host \\",
+      "  -v /var/lib/ppanel/xray-agent:/var/lib/ppanel/xray-agent \\",
+      `  -e PPANEL_SERVER_URL=${domain} \\`,
+      `  -e PPANEL_SERVER_ID=${server.id} \\`,
+      `  -e PPANEL_NODE_SECRET=${secret} \\`,
+      "  ppanel/xray-agent:latest",
+    ].join("\n");
   }, [domain, server.id, cfgResp?.node_secret]);
 
   async function handleCopy() {
@@ -85,7 +92,9 @@ export default function ServerInstall({ server }: Props) {
 
       <DialogContent className="w-[720px] max-w-full md:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{t("oneClickInstall", "One-click Install")}</DialogTitle>
+          <DialogTitle>
+            {t("oneClickInstall", "Install xray-agent")}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">

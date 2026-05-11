@@ -16,11 +16,6 @@ interface ServerState {
   getServerById: (serverId: number) => API.Server | undefined;
   getServerName: (serverId?: number) => string;
   getServerAddress: (serverId?: number) => string;
-  getServerEnabledProtocols: (serverId: number) => API.Protocol[];
-  getProtocolPort: (serverId?: number, protocol?: string) => string;
-  getAvailableProtocols: (
-    serverId?: number
-  ) => Array<{ protocol: string; port: number }>;
 }
 
 export const useServerStore = create<ServerState>((set, get) => ({
@@ -63,28 +58,6 @@ export const useServerStore = create<ServerState>((set, get) => ({
     const server = get().servers.find((s) => s.id === serverId);
     return server?.address ?? "—";
   },
-
-  getServerEnabledProtocols: (serverId: number) => {
-    const server = get().servers.find((s) => s.id === serverId);
-    return server?.protocols?.filter((p) => p.enable) || [];
-  },
-
-  getProtocolPort: (serverId?: number, protocol?: string) => {
-    if (!(serverId && protocol)) return "—";
-    const enabledProtocols = get().getServerEnabledProtocols(serverId);
-    const protocolConfig = enabledProtocols.find((p) => p.type === protocol);
-    return protocolConfig?.port ? String(protocolConfig.port) : "—";
-  },
-
-  getAvailableProtocols: (serverId?: number) => {
-    if (!serverId) return [];
-    return get()
-      .getServerEnabledProtocols(serverId)
-      .map((p) => ({
-        protocol: p.type,
-        port: p.port,
-      }));
-  },
 }));
 
 export const useServer = () => {
@@ -103,9 +76,6 @@ export const useServer = () => {
     getServerById: store.getServerById,
     getServerName: store.getServerName,
     getServerAddress: store.getServerAddress,
-    getServerEnabledProtocols: store.getServerEnabledProtocols,
-    getProtocolPort: store.getProtocolPort,
-    getAvailableProtocols: store.getAvailableProtocols,
   };
 };
 
