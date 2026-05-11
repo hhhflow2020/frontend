@@ -56,9 +56,12 @@ export default function Statistics() {
     },
   });
 
-  const [timeFrame, setTimeFrame] = useState<string | "today" | "yesterday">(
-    "today"
-  );
+  const [trafficTimeFrames, setTrafficTimeFrames] = useState<
+    Record<"nodes" | "users", "today" | "yesterday">
+  >({
+    nodes: "today",
+    users: "today",
+  });
 
   const trafficData = {
     nodes: {
@@ -88,7 +91,8 @@ export default function Statistics() {
   };
 
   const TrafficRankCard = ({ type }: { type: "nodes" | "users" }) => {
-    const currentData = trafficData[type][timeFrame as "today" | "yesterday"];
+    const timeFrame = trafficTimeFrames[type];
+    const currentData = trafficData[type][timeFrame];
 
     return (
       <Card>
@@ -98,7 +102,15 @@ export default function Statistics() {
               ? t("nodeTraffic", "Node Traffic")
               : t("userTraffic", "User Traffic")}
           </CardTitle>
-          <Tabs onValueChange={setTimeFrame} value={timeFrame}>
+          <Tabs
+            onValueChange={(value) =>
+              setTrafficTimeFrames((prev) => ({
+                ...prev,
+                [type]: value as "today" | "yesterday",
+              }))
+            }
+            value={timeFrame}
+          >
             <TabsList>
               <TabsTrigger value="today">{t("today", "Today")}</TabsTrigger>
               <TabsTrigger value="yesterday">

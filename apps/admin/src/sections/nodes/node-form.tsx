@@ -60,6 +60,19 @@ function normalizeInitialValues(values?: Partial<NodeFormValues>) {
   return {
     ...values,
     inbound_alias: legacy?.inbound_alias || legacy?.protocol || "",
+    tags: Array.isArray(legacy?.tags) ? legacy.tags : [],
+  };
+}
+
+function buildDefaultValues(values?: Partial<NodeFormValues>): NodeFormValues {
+  const normalized = normalizeInitialValues(values);
+  return {
+    name: normalized.name || "",
+    server_id: normalized.server_id,
+    inbound_alias: normalized.inbound_alias || "",
+    address: normalized.address || "",
+    port: normalized.port || 0,
+    tags: Array.isArray(normalized.tags) ? normalized.tags : [],
   };
 }
 
@@ -123,14 +136,7 @@ export default function NodeForm(props: {
 
   const form = useForm<NodeFormValues>({
     resolver: zodResolver(Scheme),
-    defaultValues: {
-      name: "",
-      server_id: undefined,
-      address: "",
-      port: 0,
-      tags: [],
-      ...normalizeInitialValues(initialValues),
-    },
+    defaultValues: buildDefaultValues(initialValues),
   });
 
   const serverId = form.watch("server_id");
@@ -175,14 +181,7 @@ export default function NodeForm(props: {
 
   useEffect(() => {
     if (initialValues) {
-      form.reset({
-        name: "",
-        server_id: undefined,
-        address: "",
-        port: 0,
-        tags: [],
-        ...normalizeInitialValues(initialValues),
-      });
+      form.reset(buildDefaultValues(initialValues));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues]);
@@ -283,7 +282,10 @@ export default function NodeForm(props: {
   }
 
   async function handleSubmit(values: NodeFormValues) {
-    const result = await onSubmit(values);
+    const result = await onSubmit({
+      ...values,
+      tags: Array.isArray(values.tags) ? values.tags : [],
+    });
     if (result) {
       setOpen(false);
       setAutoFilledFields(new Set());
@@ -432,7 +434,7 @@ export default function NodeForm(props: {
                     <FormLabel>{t("tags", "Tags")}</FormLabel>
                     <FormControl>
                       <TagInput
-                        onChange={(v) => form.setValue(field.name, v)}
+                        onChange={(v) => form.setValue(field.name, v || [])}
                         options={existingTags}
                         placeholder={t(
                           "tags_placeholder",

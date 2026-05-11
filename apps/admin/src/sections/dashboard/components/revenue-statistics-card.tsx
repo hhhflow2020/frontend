@@ -79,8 +79,8 @@ export function RevenueStatisticsCard() {
         </CardHeader>
         <TabsContent className="h-full" value="today">
           <CardContent className="h-80">
-            {RevenueStatistics?.today.new_order_amount ||
-            RevenueStatistics?.today.renewal_order_amount ? (
+            {RevenueStatistics?.today?.new_order_amount ||
+            RevenueStatistics?.today?.renewal_order_amount ? (
               <ChartContainer
                 className="mx-auto max-h-80"
                 config={IncomeStatisticsConfig}
@@ -97,7 +97,7 @@ export function RevenueStatisticsCard() {
                         type: "new_purchase",
                         value: unitConversion(
                           "centsToDollars",
-                          RevenueStatistics?.today.new_order_amount
+                          RevenueStatistics?.today?.new_order_amount
                         ),
                         fill: "var(--color-new_purchase)",
                       },
@@ -105,7 +105,7 @@ export function RevenueStatisticsCard() {
                         type: "repurchase",
                         value: unitConversion(
                           "centsToDollars",
-                          RevenueStatistics?.today.renewal_order_amount
+                          RevenueStatistics?.today?.renewal_order_amount
                         ),
                         fill: "var(--color-repurchase)",
                       },
@@ -132,7 +132,7 @@ export function RevenueStatisticsCard() {
                               >
                                 {unitConversion(
                                   "centsToDollars",
-                                  RevenueStatistics?.today.amount_total
+                                  RevenueStatistics?.today?.amount_total
                                 )}
                               </tspan>
                             </text>
@@ -158,7 +158,7 @@ export function RevenueStatisticsCard() {
                 <div className="font-bold text-xl tabular-nums leading-none">
                   <Display
                     type="currency"
-                    value={RevenueStatistics?.today.amount_total}
+                    value={RevenueStatistics?.today?.amount_total}
                   />
                 </div>
               </div>
@@ -170,7 +170,7 @@ export function RevenueStatisticsCard() {
                 <div className="font-bold text-xl tabular-nums leading-none">
                   <Display
                     type="currency"
-                    value={RevenueStatistics?.today.new_order_amount}
+                    value={RevenueStatistics?.today?.new_order_amount}
                   />
                 </div>
               </div>
@@ -182,7 +182,7 @@ export function RevenueStatisticsCard() {
                 <div className="font-bold text-xl tabular-nums leading-none">
                   <Display
                     type="currency"
-                    value={RevenueStatistics?.today.renewal_order_amount}
+                    value={RevenueStatistics?.today?.renewal_order_amount}
                   />
                 </div>
               </div>
@@ -192,8 +192,8 @@ export function RevenueStatisticsCard() {
 
         <TabsContent className="h-full" value="month">
           <CardContent className="h-80">
-            {RevenueStatistics?.monthly.list &&
-            RevenueStatistics?.monthly.list.length > 0 ? (
+            {RevenueStatistics?.monthly?.list &&
+            RevenueStatistics?.monthly?.list.length > 0 ? (
               <ChartContainer
                 className="max-h-80 w-full"
                 config={IncomeStatisticsConfig}
@@ -201,7 +201,7 @@ export function RevenueStatisticsCard() {
                 <BarChart
                   accessibilityLayer
                   data={
-                    RevenueStatistics?.monthly.list?.map((item) => ({
+                    RevenueStatistics?.monthly?.list?.map((item) => ({
                       date: item.date,
                       new_purchase: unitConversion(
                         "centsToDollars",
@@ -298,7 +298,7 @@ export function RevenueStatisticsCard() {
                 <div className="font-bold text-xl tabular-nums leading-none">
                   <Display
                     type="currency"
-                    value={RevenueStatistics?.monthly.amount_total}
+                    value={RevenueStatistics?.monthly?.amount_total}
                   />
                 </div>
               </div>
@@ -310,7 +310,7 @@ export function RevenueStatisticsCard() {
                 <div className="font-bold text-xl tabular-nums leading-none">
                   <Display
                     type="currency"
-                    value={RevenueStatistics?.monthly.new_order_amount}
+                    value={RevenueStatistics?.monthly?.new_order_amount}
                   />
                 </div>
               </div>
@@ -322,7 +322,7 @@ export function RevenueStatisticsCard() {
                 <div className="font-bold text-xl tabular-nums leading-none">
                   <Display
                     type="currency"
-                    value={RevenueStatistics?.monthly.renewal_order_amount}
+                    value={RevenueStatistics?.monthly?.renewal_order_amount}
                   />
                 </div>
               </div>
@@ -332,8 +332,8 @@ export function RevenueStatisticsCard() {
 
         <TabsContent className="h-full" value="total">
           <CardContent className="h-80">
-            {RevenueStatistics?.all.list &&
-            RevenueStatistics?.all.list.length > 0 ? (
+            {RevenueStatistics?.all?.list &&
+            RevenueStatistics?.all?.list.length > 0 ? (
               <ChartContainer
                 className="max-h-80 w-full"
                 config={IncomeStatisticsConfig}
@@ -341,7 +341,7 @@ export function RevenueStatisticsCard() {
                 <AreaChart
                   accessibilityLayer
                   data={
-                    RevenueStatistics?.all.list?.map((item) => ({
+                    RevenueStatistics?.all?.list?.map((item) => ({
                       date: item.date,
                       new_purchase: unitConversion(
                         "centsToDollars",
@@ -444,7 +444,7 @@ export function RevenueStatisticsCard() {
                 <div className="font-bold text-xl tabular-nums leading-none">
                   <Display
                     type="currency"
-                    value={RevenueStatistics?.all.amount_total}
+                    value={RevenueStatistics?.all?.amount_total}
                   />
                 </div>
               </div>

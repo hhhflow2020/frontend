@@ -78,9 +78,9 @@ export function UserStatisticsCard() {
 
         <TabsContent className="h-full" value="today">
           <CardContent className="h-80">
-            {UserStatistics?.today.register ||
-            UserStatistics?.today.new_order_users ||
-            UserStatistics?.today.renewal_order_users ? (
+            {UserStatistics?.today?.register ||
+            UserStatistics?.today?.new_order_users ||
+            UserStatistics?.today?.renewal_order_users ? (
               <ChartContainer
                 className="mx-auto max-h-80"
                 config={UserStatisticsConfig}
@@ -95,17 +95,17 @@ export function UserStatisticsCard() {
                     data={[
                       {
                         type: "register",
-                        value: UserStatistics?.today.register || 0,
+                        value: UserStatistics?.today?.register || 0,
                         fill: "var(--color-register)",
                       },
                       {
                         type: "new_purchase",
-                        value: UserStatistics?.today.new_order_users || 0,
+                        value: UserStatistics?.today?.new_order_users || 0,
                         fill: "var(--color-new_purchase)",
                       },
                       {
                         type: "repurchase",
-                        value: UserStatistics?.today.renewal_order_users || 0,
+                        value: UserStatistics?.today?.renewal_order_users || 0,
                         fill: "var(--color-repurchase)",
                       },
                     ]}
@@ -118,9 +118,9 @@ export function UserStatisticsCard() {
                       content={({ viewBox }) => {
                         if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                           const total =
-                            (UserStatistics?.today.register || 0) +
-                            (UserStatistics?.today.new_order_users || 0) +
-                            (UserStatistics?.today.renewal_order_users || 0);
+                            (UserStatistics?.today?.register || 0) +
+                            (UserStatistics?.today?.new_order_users || 0) +
+                            (UserStatistics?.today?.renewal_order_users || 0);
                           return (
                             <text
                               dominantBaseline="middle"
@@ -156,7 +156,7 @@ export function UserStatisticsCard() {
                   {UserStatisticsConfig.register.label}
                 </div>
                 <div className="font-bold text-xl tabular-nums leading-none">
-                  {UserStatistics?.today.register}
+                  {UserStatistics?.today?.register}
                 </div>
               </div>
               <Separator className="!h-10 mx-2 w-px" orientation="vertical" />
@@ -165,7 +165,7 @@ export function UserStatisticsCard() {
                   {UserStatisticsConfig.new_purchase.label}
                 </div>
                 <div className="font-bold text-xl tabular-nums leading-none">
-                  {UserStatistics?.today.new_order_users}
+                  {UserStatistics?.today?.new_order_users}
                 </div>
               </div>
               <Separator className="!h-10 mx-2 w-px" orientation="vertical" />
@@ -174,7 +174,7 @@ export function UserStatisticsCard() {
                   {UserStatisticsConfig.repurchase.label}
                 </div>
                 <div className="font-bold text-xl tabular-nums leading-none">
-                  {UserStatistics?.today.renewal_order_users}
+                  {UserStatistics?.today?.renewal_order_users}
                 </div>
               </div>
             </div>
@@ -183,8 +183,8 @@ export function UserStatisticsCard() {
 
         <TabsContent className="h-full" value="month">
           <CardContent className="h-80">
-            {UserStatistics?.monthly.list &&
-            UserStatistics?.monthly.list.length > 0 ? (
+            {UserStatistics?.monthly?.list &&
+            UserStatistics?.monthly?.list.length > 0 ? (
               <ChartContainer
                 className="max-h-80 w-full"
                 config={UserStatisticsConfig}
@@ -192,7 +192,7 @@ export function UserStatisticsCard() {
                 <BarChart
                   accessibilityLayer
                   data={
-                    UserStatistics?.monthly.list?.map((item) => ({
+                    UserStatistics?.monthly?.list?.map((item) => ({
                       date: item.date,
                       register: item.register,
                       new_purchase: item.new_order_users,
@@ -255,7 +255,7 @@ export function UserStatisticsCard() {
                   {UserStatisticsConfig.register.label}
                 </div>
                 <div className="font-bold text-xl tabular-nums leading-none">
-                  {UserStatistics?.monthly.register}
+                  {UserStatistics?.monthly?.register}
                 </div>
               </div>
               <Separator className="!h-10 mx-2 w-px" orientation="vertical" />
@@ -264,7 +264,7 @@ export function UserStatisticsCard() {
                   {UserStatisticsConfig.new_purchase.label}
                 </div>
                 <div className="font-bold text-xl tabular-nums leading-none">
-                  {UserStatistics?.monthly.new_order_users}
+                  {UserStatistics?.monthly?.new_order_users}
                 </div>
               </div>
               <Separator className="!h-10 mx-2 w-px" orientation="vertical" />
@@ -273,7 +273,7 @@ export function UserStatisticsCard() {
                   {UserStatisticsConfig.repurchase.label}
                 </div>
                 <div className="font-bold text-xl tabular-nums leading-none">
-                  {UserStatistics?.monthly.renewal_order_users}
+                  {UserStatistics?.monthly?.renewal_order_users}
                 </div>
               </div>
             </div>
@@ -282,7 +282,8 @@ export function UserStatisticsCard() {
 
         <TabsContent className="h-full" value="total">
           <CardContent className="h-80">
-            {UserStatistics?.all.list && UserStatistics?.all.list.length > 0 ? (
+            {UserStatistics?.all?.list &&
+            UserStatistics?.all?.list.length > 0 ? (
               <ChartContainer
                 className="max-h-80 w-full"
                 config={UserStatisticsConfig}
@@ -290,7 +291,7 @@ export function UserStatisticsCard() {
                 <AreaChart
                   accessibilityLayer
                   data={
-                    UserStatistics?.all.list?.map((item) => ({
+                    UserStatistics?.all?.list?.map((item) => ({
                       date: item.date,
                       register: item.register,
                       new_purchase: item.new_order_users,
@@ -361,7 +362,7 @@ export function UserStatisticsCard() {
                   {UserStatisticsConfig.register.label}
                 </div>
                 <div className="font-bold text-xl tabular-nums leading-none">
-                  {UserStatistics?.all.register}
+                  {UserStatistics?.all?.register}
                 </div>
               </div>
             </div>
