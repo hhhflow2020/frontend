@@ -102,6 +102,8 @@ export default function Servers() {
   const { fetchServers } = useServer();
 
   const [loading, setLoading] = useState(false);
+  const [xrayTemplateServer, setXrayTemplateServer] =
+    useState<API.Server | null>(null);
   const [realtimeStatus, setRealtimeStatus] = useState<
     Record<number, Partial<API.ServerStatus>>
   >({});
@@ -182,15 +184,13 @@ export default function Servers() {
               trigger={t("edit", "Edit")}
             />,
             <ServerInstall key="install" server={row} />,
-            <ServerXrayTemplateBindForm
+            <Button
               key="xray"
-              server={row}
-              trigger={
-                <Button variant="outline">
-                  {t("xrayTemplates", "Xray Templates")}
-                </Button>
-              }
-            />,
+              onClick={() => setXrayTemplateServer(row)}
+              variant="outline"
+            >
+              {t("xrayTemplates", "Xray Templates")}
+            </Button>,
             <ConfirmButton
               cancelText={t("cancel", "Cancel")}
               confirmText={t("confirm", "Confirm")}
@@ -445,6 +445,15 @@ export default function Servers() {
           return { list, total };
         }}
       />
+      {xrayTemplateServer ? (
+        <ServerXrayTemplateBindForm
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setXrayTemplateServer(null);
+          }}
+          open={Boolean(xrayTemplateServer)}
+          server={xrayTemplateServer}
+        />
+      ) : null}
     </div>
   );
 }

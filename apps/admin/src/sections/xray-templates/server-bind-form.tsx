@@ -324,16 +324,27 @@ function groupPreview(bindings: BindingRow[], templates: API.XrayTemplate[]) {
 }
 
 export default function ServerXrayTemplateBindForm({
+  onOpenChange,
+  open: controlledOpen,
   server,
   trigger,
 }: {
+  onOpenChange?: (open: boolean) => void;
+  open?: boolean;
   server: API.Server;
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
 }) {
   const { t } = useTranslation("xray-templates");
-  const [open, setOpen] = useState(false);
+  const [innerOpen, setInnerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [bindings, setBindings] = useState<BindingRow[]>([]);
+  const open = controlledOpen ?? innerOpen;
+  const setOpen = (value: boolean) => {
+    onOpenChange?.(value);
+    if (controlledOpen === undefined) {
+      setInnerOpen(value);
+    }
+  };
 
   const { data: templateData } = useQuery({
     enabled: open,
@@ -647,7 +658,7 @@ export default function ServerXrayTemplateBindForm({
 
   return (
     <Sheet onOpenChange={setOpen} open={open}>
-      <SheetTrigger asChild>{trigger}</SheetTrigger>
+      {trigger ? <SheetTrigger asChild>{trigger}</SheetTrigger> : null}
       <SheetContent className="w-[760px] max-w-full md:max-w-4xl">
         <SheetHeader>
           <SheetTitle>
