@@ -556,71 +556,70 @@ export default function Statistics() {
     (ServerTotal?.online_servers || 0) + (ServerTotal?.offline_servers || 0);
 
   return (
-    <div className="mx-auto max-w-[1680px] space-y-4">
-      <div className="rounded-[28px] border bg-gradient-to-br from-background via-muted/30 to-primary/5 p-4 shadow-sm md:p-5">
-        <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="text-muted-foreground text-sm">Dashboard</div>
-            <h1 className="font-semibold text-3xl tracking-tight">
-              Control Center
-            </h1>
-          </div>
-          <div className="text-muted-foreground text-xs">
-            Live updated{" "}
-            {realtime?.updated_at
-              ? new Date(realtime.updated_at).toLocaleTimeString()
-              : "--"}
-          </div>
+    <div className="w-full space-y-3">
+      <div className="flex flex-col gap-3 px-1 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="text-muted-foreground text-xs">Dashboard</div>
+          <h1 className="font-semibold text-2xl tracking-tight">
+            Control Center
+          </h1>
         </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <MiniMetric
-            href="/dashboard/user"
-            icon="uil:users-alt"
-            label={t("onlineUsersCount", "Online Users")}
-            sub={t("currentlyOnline", "Currently Online")}
-            tone="blue"
-            value={realtime?.online_users || ServerTotal?.online_users || 0}
-          />
-          <MiniMetric
-            icon="uil:exchange-alt"
-            label={t("todayTraffic", "Today Traffic")}
-            sub={`↑${formatBytes(ServerTotal?.today_upload || 0)} ↓${formatBytes(ServerTotal?.today_download || 0)}`}
-            tone="violet"
-            value={formatBytes(todayTraffic)}
-          />
-          <MiniMetric
-            href="/dashboard/servers"
-            icon="uil:server-network"
-            label={t("totalServers", "Total Servers")}
-            sub={`${realtime?.servers.online || ServerTotal?.online_servers || 0} online · ${realtime?.servers.offline || ServerTotal?.offline_servers || 0} offline`}
-            tone={realtime?.servers.config_failed || 0 ? "red" : "green"}
-            value={totalServers}
-          />
-          <MiniMetric
-            href="/dashboard/ticket"
-            icon="uil:clipboard-notes"
-            label={t("pendingTickets", "Pending Tickets")}
-            sub={t("pending", "Pending")}
-            tone={(TicketTotal || 0) > 0 ? "orange" : "green"}
-            value={TicketTotal || 0}
-          />
+        <div className="text-muted-foreground text-xs">
+          Live updated{" "}
+          {realtime?.updated_at
+            ? new Date(realtime.updated_at).toLocaleTimeString()
+            : "--"}
         </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <MiniMetric
+          href="/dashboard/user"
+          icon="uil:users-alt"
+          label={t("onlineUsersCount", "Online Users")}
+          sub={t("currentlyOnline", "Currently Online")}
+          tone="blue"
+          value={realtime?.online_users || ServerTotal?.online_users || 0}
+        />
+        <MiniMetric
+          icon="uil:exchange-alt"
+          label={t("todayTraffic", "Today Traffic")}
+          sub={`↑${formatBytes(ServerTotal?.today_upload || 0)} ↓${formatBytes(ServerTotal?.today_download || 0)}`}
+          tone="violet"
+          value={formatBytes(todayTraffic)}
+        />
+        <MiniMetric
+          href="/dashboard/servers"
+          icon="uil:server-network"
+          label={t("totalServers", "Total Servers")}
+          sub={`${realtime?.servers.online || ServerTotal?.online_servers || 0} online · ${realtime?.servers.offline || ServerTotal?.offline_servers || 0} offline`}
+          tone={realtime?.servers.config_failed || 0 ? "red" : "green"}
+          value={totalServers}
+        />
+        <MiniMetric
+          href="/dashboard/ticket"
+          icon="uil:clipboard-notes"
+          label={t("pendingTickets", "Pending Tickets")}
+          sub={t("pending", "Pending")}
+          tone={(TicketTotal || 0) > 0 ? "orange" : "green"}
+          value={TicketTotal || 0}
+        />
       </div>
 
       <LiveOperations realtime={realtime} />
 
-      <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="space-y-4">
-          <div className="grid items-start gap-4 xl:grid-cols-2">
+      <div className="grid items-start gap-3 2xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-3">
+          <div className="grid items-start gap-3 xl:grid-cols-2">
             <RevenueStatisticsCard />
             <UserStatisticsCard />
           </div>
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-3 xl:grid-cols-2">
             <TrafficRankCard type="nodes" />
             <TrafficRankCard type="users" />
           </div>
         </div>
-        <div className="space-y-4 2xl:sticky 2xl:top-4">
+        <div className="space-y-3 2xl:sticky 2xl:top-3">
           <LiveActivityCard realtime={realtime} />
           <AlertsCard realtime={realtime} />
           <MiniMetric
