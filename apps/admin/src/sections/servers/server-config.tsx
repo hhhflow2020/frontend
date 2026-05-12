@@ -29,15 +29,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@workspace/ui/components/sheet";
+import { Switch } from "@workspace/ui/components/switch";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@workspace/ui/components/tabs";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { EnhancedInput } from "@workspace/ui/composed/enhanced-input";
 import { Icon } from "@workspace/ui/composed/icon";
 import {
+  generateForwardMTLSCert,
   getNodeConfig,
   updateNodeConfig,
 } from "@workspace/ui/services/admin/system";
@@ -56,6 +59,12 @@ const nodeConfigSchema = z.object({
   node_push_interval: z.number().optional(),
   traffic_report_threshold: z.number().optional(),
   ip_strategy: z.enum(["prefer_ipv4", "prefer_ipv6"]).optional(),
+  forward_mtls_enabled: z.boolean().optional(),
+  forward_mtls_ca_cert: z.string().optional(),
+  forward_mtls_server_cert: z.string().optional(),
+  forward_mtls_server_key: z.string().optional(),
+  forward_mtls_client_cert: z.string().optional(),
+  forward_mtls_client_key: z.string().optional(),
 });
 type NodeConfigFormData = z.infer<typeof nodeConfigSchema>;
 
@@ -63,6 +72,7 @@ export default function ServerConfig() {
   const { t } = useTranslation("servers");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generatingMTLS, setGeneratingMTLS] = useState(false);
 
   const { data: cfgResp, refetch: refetchCfg } = useQuery({
     queryKey: ["getNodeConfig"],
@@ -81,6 +91,12 @@ export default function ServerConfig() {
       node_push_interval: undefined,
       traffic_report_threshold: undefined,
       ip_strategy: "prefer_ipv4",
+      forward_mtls_enabled: false,
+      forward_mtls_ca_cert: "",
+      forward_mtls_server_cert: "",
+      forward_mtls_server_key: "",
+      forward_mtls_client_cert: "",
+      forward_mtls_client_key: "",
     },
   });
 
@@ -96,9 +112,53 @@ export default function ServerConfig() {
         ip_strategy:
           (cfgResp.ip_strategy as "prefer_ipv4" | "prefer_ipv6" | undefined) ||
           "prefer_ipv4",
+        forward_mtls_enabled: cfgResp.forward_mtls_enabled ?? false,
+        forward_mtls_ca_cert: cfgResp.forward_mtls_ca_cert ?? "",
+        forward_mtls_server_cert: cfgResp.forward_mtls_server_cert ?? "",
+        forward_mtls_server_key: cfgResp.forward_mtls_server_key ?? "",
+        forward_mtls_client_cert: cfgResp.forward_mtls_client_cert ?? "",
+        forward_mtls_client_key: cfgResp.forward_mtls_client_key ?? "",
       });
     }
   }, [cfgResp, form]);
+
+  async function generateMTLSCertificates() {
+    setGeneratingMTLS(true);
+    try {
+      const { data } = await generateForwardMTLSCert({
+        common_name: "ppanel-forward",
+        days: 3650,
+      });
+      const certs = data.data;
+      if (!certs) return;
+      form.setValue("forward_mtls_enabled", true);
+      form.setValue("forward_mtls_ca_cert", certs.forward_mtls_ca_cert || "");
+      form.setValue(
+        "forward_mtls_server_cert",
+        certs.forward_mtls_server_cert || ""
+      );
+      form.setValue(
+        "forward_mtls_server_key",
+        certs.forward_mtls_server_key || ""
+      );
+      form.setValue(
+        "forward_mtls_client_cert",
+        certs.forward_mtls_client_cert || ""
+      );
+      form.setValue(
+        "forward_mtls_client_key",
+        certs.forward_mtls_client_key || ""
+      );
+      toast.success(
+        t(
+          "server_config.forward_mtls.generate_success",
+          "mTLS certificates generated"
+        )
+      );
+    } finally {
+      setGeneratingMTLS(false);
+    }
+  }
 
   async function onSubmit(values: NodeConfigFormData) {
     setSaving(true);
@@ -155,10 +215,11 @@ export default function ServerConfig() {
 
         <ScrollArea className="h-[calc(100dvh-48px-36px-36px-env(safe-area-inset-top))] px-6">
           <Tabs className="pt-4" defaultValue="basic">
-            <TabsList className="grid w-full grid-cols-1">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="basic">
                 {t("server_config.tabs.basic", "Basic Configuration")}
               </TabsTrigger>
+              <TabsTrigger value="mtls">Forward mTLS</TabsTrigger>
             </TabsList>
 
             <Form {...form}>
@@ -366,6 +427,79 @@ export default function ServerConfig() {
                       </FormItem>
                     )}
                   />
+                </TabsContent>
+                <TabsContent className="space-y-4" value="mtls">
+                  <div className="flex items-start justify-between gap-3 rounded-lg border p-4">
+                    <div>
+                      <div className="font-medium">Forward mTLS</div>
+                      <div className="mt-1 text-muted-foreground text-sm">
+                        Require client certificates when forwarders pull the TCP
+                        forwarding table.
+                      </div>
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="forward_mtls_enabled"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Switch
+                              checked={!!field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <Button
+                    disabled={generatingMTLS}
+                    onClick={generateMTLSCertificates}
+                    type="button"
+                    variant="outline"
+                  >
+                    <Icon
+                      className={generatingMTLS ? "mr-2 animate-spin" : "mr-2"}
+                      icon={generatingMTLS ? "mdi:loading" : "mdi:certificate"}
+                    />
+                    Generate certificates
+                  </Button>
+
+                  {(
+                    [
+                      ["forward_mtls_ca_cert", "CA Certificate"],
+                      ["forward_mtls_server_cert", "Server Certificate"],
+                      ["forward_mtls_server_key", "Server Private Key"],
+                      ["forward_mtls_client_cert", "Client Certificate"],
+                      ["forward_mtls_client_key", "Client Private Key"],
+                    ] as const
+                  ).map(([name, label]) => (
+                    <FormField
+                      control={form.control}
+                      key={name}
+                      name={name}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{label}</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              className="min-h-32 font-mono text-xs"
+                              onChange={field.onChange}
+                              placeholder={`Paste ${label}`}
+                              value={field.value || ""}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            {name.includes("_key")
+                              ? "Keep this private. Copy it only to the server or forwarder that needs it."
+                              : "PEM encoded certificate."}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
                 </TabsContent>
               </form>
             </Form>
