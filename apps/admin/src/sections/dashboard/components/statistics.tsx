@@ -70,11 +70,11 @@ function MiniMetric(props: {
   };
   const content = (
     <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-background to-muted/30 shadow-sm">
-      <CardContent className="p-4">
+      <CardContent className="p-3.5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="text-muted-foreground text-xs">{props.label}</div>
-            <div className="mt-2 truncate font-semibold text-2xl tracking-tight">
+            <div className="mt-1.5 truncate font-semibold text-2xl tracking-tight">
               {props.value}
             </div>
             {props.sub ? (
@@ -119,9 +119,9 @@ function LiveOperations({
     alerts.length > 0;
   return (
     <Card className="border-border/60 bg-gradient-to-br from-background via-background to-muted/40 shadow-sm">
-      <CardHeader className="flex-row items-center justify-between">
+      <CardHeader className="flex-row items-center justify-between pb-3">
         <div>
-          <CardTitle className="text-xl">Live Operations</CardTitle>
+          <CardTitle className="text-lg">Live Operations</CardTitle>
           <div className="mt-1 text-muted-foreground text-xs">
             WebSocket realtime health, network and connection summary
           </div>
@@ -131,7 +131,7 @@ function LiveOperations({
         </Badge>
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl border bg-background/70 p-4">
+        <div className="rounded-2xl border bg-background/70 p-3.5">
           <div className="text-muted-foreground text-xs">Servers</div>
           <div className="mt-2 font-semibold text-2xl">
             {realtime?.servers.online || 0}/{realtime?.servers.total || 0}
@@ -147,7 +147,7 @@ function LiveOperations({
             </span>
           </div>
         </div>
-        <div className="rounded-xl border bg-background/70 p-4">
+        <div className="rounded-2xl border bg-background/70 p-3.5">
           <div className="text-muted-foreground text-xs">Network</div>
           <div className="mt-2 space-y-2 text-sm">
             <div className="flex justify-between gap-3">
@@ -166,7 +166,7 @@ function LiveOperations({
             </div>
           </div>
         </div>
-        <div className="rounded-xl border bg-background/70 p-4">
+        <div className="rounded-2xl border bg-background/70 p-3.5">
           <div className="text-muted-foreground text-xs">Connections</div>
           <div className="mt-2 grid grid-cols-[52px_1fr_1fr] gap-1 text-sm">
             <span />
@@ -180,7 +180,7 @@ function LiveOperations({
             <span>{realtime?.connections.xray_outbound || 0}</span>
           </div>
         </div>
-        <div className="rounded-xl border bg-background/70 p-4">
+        <div className="rounded-2xl border bg-background/70 p-3.5">
           <div className="text-muted-foreground text-xs">Resources</div>
           <div className="mt-2 grid grid-cols-3 gap-2 text-center">
             <div>
@@ -446,7 +446,7 @@ export default function Statistics() {
             </TabsList>
           </Tabs>
         </CardHeader>
-        <CardContent className="h-80">
+        <CardContent className="h-64">
           {currentData.length > 0 ? (
             <ChartContainer
               className="max-h-80"
@@ -538,8 +538,8 @@ export default function Statistics() {
               </BarChart>
             </ChartContainer>
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <Empty />
+            <div className="flex h-full items-center justify-center rounded-2xl border border-dashed bg-background/45 px-4 text-center text-muted-foreground text-sm">
+              No traffic data yet.
             </div>
           )}
         </CardContent>
@@ -556,8 +556,8 @@ export default function Statistics() {
     (ServerTotal?.online_servers || 0) + (ServerTotal?.offline_servers || 0);
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-[28px] border bg-gradient-to-br from-background via-muted/30 to-primary/5 p-5 shadow-sm">
+    <div className="mx-auto max-w-[1680px] space-y-4">
+      <div className="rounded-[28px] border bg-gradient-to-br from-background via-muted/30 to-primary/5 p-4 shadow-sm md:p-5">
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="text-muted-foreground text-sm">Dashboard</div>
@@ -609,12 +609,18 @@ export default function Statistics() {
 
       <LiveOperations realtime={realtime} />
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
-        <div className="grid gap-4 md:grid-cols-2">
-          <RevenueStatisticsCard />
-          <UserStatisticsCard />
-        </div>
+      <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-4">
+          <div className="grid items-start gap-4 xl:grid-cols-2">
+            <RevenueStatisticsCard />
+            <UserStatisticsCard />
+          </div>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <TrafficRankCard type="nodes" />
+            <TrafficRankCard type="users" />
+          </div>
+        </div>
+        <div className="space-y-4 2xl:sticky 2xl:top-4">
           <LiveActivityCard realtime={realtime} />
           <AlertsCard realtime={realtime} />
           <MiniMetric
@@ -626,11 +632,6 @@ export default function Statistics() {
           />
           <SystemVersionCard />
         </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <TrafficRankCard type="nodes" />
-        <TrafficRankCard type="users" />
       </div>
     </div>
   );
