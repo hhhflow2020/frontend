@@ -9,7 +9,7 @@ export async function querySubscribeList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.QuerySubscribeListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/subscribe/list`,
+    "/v1/public/subscribe/list",
     {
       method: "GET",
       params: {
@@ -26,7 +26,7 @@ export async function queryUserSubscribeNodeList(options?: {
 }) {
   return request<
     API.Response & { data?: API.QueryUserSubscribeNodeListResponse }
-  >(`${import.meta.env.VITE_API_PREFIX || ""}/v1/public/subscribe/node/list`, {
+  >("/v1/public/subscribe/node/list", {
     method: "GET",
     ...(options || {}),
   });

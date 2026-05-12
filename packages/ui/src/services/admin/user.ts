@@ -7,17 +7,14 @@ export async function createUser(
   body: API.CreateUserRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Delete user DELETE /v1/admin/user/ */
@@ -26,22 +23,19 @@ export async function deleteUser(
   params: API.DeleteUserParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/`,
-    {
-      method: "DELETE",
-      params: {
-        ...params,
-      },
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/", {
+    method: "DELETE",
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
 }
 
 /** Get user auth method GET /v1/admin/user/auth_method */
 export async function getUserAuthMethod(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.GetUserAuthMethodResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/auth_method`,
+    "/v1/admin/user/auth_method",
     {
       method: "GET",
       ...(options || {}),
@@ -54,17 +48,14 @@ export async function updateUserAuthMethod(
   body: API.UpdateUserAuthMethodRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/auth_method`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/auth_method", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Create user auth method POST /v1/admin/user/auth_method */
@@ -72,17 +63,14 @@ export async function createUserAuthMethod(
   body: API.CreateUserAuthMethodRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/auth_method`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/auth_method", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Delete user auth method DELETE /v1/admin/user/auth_method */
@@ -90,17 +78,14 @@ export async function deleteUserAuthMethod(
   body: API.DeleteUserAuthMethodRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/auth_method`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/auth_method", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Update user basic info PUT /v1/admin/user/basic */
@@ -108,17 +93,14 @@ export async function updateUserBasicInfo(
   body: API.UpdateUserBasiceInfoRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/basic`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/basic", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Batch delete user DELETE /v1/admin/user/batch */
@@ -126,28 +108,22 @@ export async function batchDeleteUser(
   body: API.BatchDeleteUserRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/batch`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/batch", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Current user GET /v1/admin/user/current */
 export async function currentUser(options?: { [key: string]: any }) {
-  return request<API.Response & { data?: API.User }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/current`,
-    {
-      method: "GET",
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: API.User }>("/v1/admin/user/current", {
+    method: "GET",
+    ...(options || {}),
+  });
 }
 
 /** Get user detail GET /v1/admin/user/detail */
@@ -156,16 +132,13 @@ export async function getUserDetail(
   params: API.GetUserDetailParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: API.User }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/detail`,
-    {
-      method: "GET",
-      params: {
-        ...params,
-      },
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: API.User }>("/v1/admin/user/detail", {
+    method: "GET",
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
 }
 
 /** User device PUT /v1/admin/user/device */
@@ -173,17 +146,14 @@ export async function updateUserDevice(
   body: API.UserDevice,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/device`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/device", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Delete user device DELETE /v1/admin/user/device */
@@ -191,17 +161,14 @@ export async function deleteUserDevice(
   body: API.DeleteUserDeivceRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/device`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/device", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** kick offline user device PUT /v1/admin/user/device/kick_offline */
@@ -210,9 +177,7 @@ export async function kickOfflineByUserDevice(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/user/device/kick_offline`,
+    "/v1/admin/user/device/kick_offline",
     {
       method: "PUT",
       headers: {
@@ -231,7 +196,7 @@ export async function getUserList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetUserListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/list`,
+    "/v1/admin/user/list",
     {
       method: "GET",
       params: {
@@ -249,7 +214,7 @@ export async function getUserLoginLogs(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetUserLoginLogsResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/login/logs`,
+    "/v1/admin/user/login/logs",
     {
       method: "GET",
       params: {
@@ -265,17 +230,14 @@ export async function updateUserNotifySetting(
   body: API.UpdateUserNotifySettingRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/notify`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/notify", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Get user subcribe GET /v1/admin/user/subscribe */
@@ -285,7 +247,7 @@ export async function getUserSubscribe(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetUserSubscribeListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/subscribe`,
+    "/v1/admin/user/subscribe",
     {
       method: "GET",
       params: {
@@ -301,17 +263,14 @@ export async function updateUserSubscribe(
   body: API.UpdateUserSubscribeRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/subscribe`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/subscribe", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Create user subcribe POST /v1/admin/user/subscribe */
@@ -319,17 +278,14 @@ export async function createUserSubscribe(
   body: API.CreateUserSubscribeRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/subscribe`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/subscribe", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Delete user subcribe DELETE /v1/admin/user/subscribe */
@@ -337,17 +293,14 @@ export async function deleteUserSubscribe(
   body: API.DeleteUserSubscribeRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/subscribe`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/user/subscribe", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Get user subcribe by id GET /v1/admin/user/subscribe/detail */
@@ -357,7 +310,7 @@ export async function getUserSubscribeById(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.UserSubscribeDetail }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/subscribe/detail`,
+    "/v1/admin/user/subscribe/detail",
     {
       method: "GET",
       params: {
@@ -375,7 +328,7 @@ export async function getUserSubscribeDevices(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetUserSubscribeDevicesResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/subscribe/device`,
+    "/v1/admin/user/subscribe/device",
     {
       method: "GET",
       params: {
@@ -393,7 +346,7 @@ export async function getUserSubscribeLogs(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetUserSubscribeLogsResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/subscribe/logs`,
+    "/v1/admin/user/subscribe/logs",
     {
       method: "GET",
       params: {
@@ -412,18 +365,13 @@ export async function getUserSubscribeResetTrafficLogs(
 ) {
   return request<
     API.Response & { data?: API.GetUserSubscribeResetTrafficLogsResponse }
-  >(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/user/subscribe/reset/logs`,
-    {
-      method: "GET",
-      params: {
-        ...params,
-      },
-      ...(options || {}),
-    }
-  );
+  >("/v1/admin/user/subscribe/reset/logs", {
+    method: "GET",
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
 }
 
 /** Reset user subscribe token POST /v1/admin/user/subscribe/reset/token */
@@ -432,9 +380,7 @@ export async function resetUserSubscribeToken(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/user/subscribe/reset/token`,
+    "/v1/admin/user/subscribe/reset/token",
     {
       method: "POST",
       headers: {
@@ -452,9 +398,7 @@ export async function resetUserSubscribeTraffic(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/user/subscribe/reset/traffic`,
+    "/v1/admin/user/subscribe/reset/traffic",
     {
       method: "POST",
       headers: {
@@ -472,7 +416,7 @@ export async function toggleUserSubscribeStatus(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/user/subscribe/toggle`,
+    "/v1/admin/user/subscribe/toggle",
     {
       method: "POST",
       headers: {
@@ -492,16 +436,11 @@ export async function getUserSubscribeTrafficLogs(
 ) {
   return request<
     API.Response & { data?: API.GetUserSubscribeTrafficLogsResponse }
-  >(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/user/subscribe/traffic_logs`,
-    {
-      method: "GET",
-      params: {
-        ...params,
-      },
-      ...(options || {}),
-    }
-  );
+  >("/v1/admin/user/subscribe/traffic_logs", {
+    method: "GET",
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
 }

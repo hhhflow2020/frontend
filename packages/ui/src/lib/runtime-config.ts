@@ -1,0 +1,17 @@
+export type RuntimeConfig = {
+  API_BASE_URL?: string;
+  API_PREFIX?: string;
+};
+
+export function getRuntimeConfig(): RuntimeConfig {
+  if (typeof window === "undefined") return {};
+  return window.__APP_CONFIG__ || {};
+}
+
+export function getApiBaseURL() {
+  return getRuntimeConfig().API_BASE_URL;
+}
+
+export function getApiPrefix() {
+  return getRuntimeConfig().API_PREFIX || "";
+}

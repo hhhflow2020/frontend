@@ -9,7 +9,7 @@ export async function queryIpLocation(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.QueryIPLocationResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/tool/ip/location`,
+    "/v1/admin/tool/ip/location",
     {
       method: "GET",
       params: {
@@ -23,7 +23,7 @@ export async function queryIpLocation(
 /** Get System Log GET /v1/admin/tool/log */
 export async function getSystemLog(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.LogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/tool/log`,
+    "/v1/admin/tool/log",
     {
       method: "GET",
       ...(options || {}),
@@ -33,19 +33,16 @@ export async function getSystemLog(options?: { [key: string]: any }) {
 
 /** Restart System GET /v1/admin/tool/restart */
 export async function restartSystem(options?: { [key: string]: any }) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/tool/restart`,
-    {
-      method: "GET",
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/tool/restart", {
+    method: "GET",
+    ...(options || {}),
+  });
 }
 
 /** Get Version GET /v1/admin/tool/version */
 export async function getVersion(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.VersionResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/tool/version`,
+    "/v1/admin/tool/version",
     {
       method: "GET",
       ...(options || {}),

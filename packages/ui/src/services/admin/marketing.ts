@@ -10,18 +10,13 @@ export async function getBatchSendEmailTaskList(
 ) {
   return request<
     API.Response & { data?: API.GetBatchSendEmailTaskListResponse }
-  >(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/marketing/email/batch/list`,
-    {
-      method: "GET",
-      params: {
-        ...params,
-      },
-      ...(options || {}),
-    }
-  );
+  >("/v1/admin/marketing/email/batch/list", {
+    method: "GET",
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
 }
 
 /** Get pre-send email count POST /v1/admin/marketing/email/batch/pre-send-count */
@@ -30,9 +25,7 @@ export async function getPreSendEmailCount(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetPreSendEmailCountResponse }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/marketing/email/batch/pre-send-count`,
+    "/v1/admin/marketing/email/batch/pre-send-count",
     {
       method: "POST",
       headers: {
@@ -50,9 +43,7 @@ export async function createBatchSendEmailTask(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/marketing/email/batch/send`,
+    "/v1/admin/marketing/email/batch/send",
     {
       method: "POST",
       headers: {
@@ -71,19 +62,14 @@ export async function getBatchSendEmailTaskStatus(
 ) {
   return request<
     API.Response & { data?: API.GetBatchSendEmailTaskStatusResponse }
-  >(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/marketing/email/batch/status`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  >("/v1/admin/marketing/email/batch/status", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Stop a batch send email task POST /v1/admin/marketing/email/batch/stop */
@@ -92,9 +78,7 @@ export async function stopBatchSendEmailTask(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/marketing/email/batch/stop`,
+    "/v1/admin/marketing/email/batch/stop",
     {
       method: "POST",
       headers: {
@@ -112,7 +96,7 @@ export async function createQuotaTask(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/marketing/quota/create`,
+    "/v1/admin/marketing/quota/create",
     {
       method: "POST",
       headers: {
@@ -131,7 +115,7 @@ export async function queryQuotaTaskList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.QueryQuotaTaskListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/marketing/quota/list`,
+    "/v1/admin/marketing/quota/list",
     {
       method: "GET",
       params: {
@@ -148,9 +132,7 @@ export async function queryQuotaTaskPreCount(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.QueryQuotaTaskPreCountResponse }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/marketing/quota/pre-count`,
+    "/v1/admin/marketing/quota/pre-count",
     {
       method: "POST",
       headers: {

@@ -9,7 +9,7 @@ export async function checkUser(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.CheckUserResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/auth/check`,
+    "/v1/auth/check",
     {
       method: "GET",
       params: {
@@ -27,7 +27,7 @@ export async function checkUserTelephone(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.TelephoneCheckUserResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/auth/check/telephone`,
+    "/v1/auth/check/telephone",
     {
       method: "GET",
       params: {
@@ -44,7 +44,7 @@ export async function userLogin(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.LoginResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/auth/login`,
+    "/v1/auth/login",
     {
       method: "POST",
       headers: {
@@ -62,7 +62,7 @@ export async function deviceLogin(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.LoginResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/auth/login/device`,
+    "/v1/auth/login/device",
     {
       method: "POST",
       headers: {
@@ -80,7 +80,7 @@ export async function telephoneLogin(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.LoginResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/auth/login/telephone`,
+    "/v1/auth/login/telephone",
     {
       method: "POST",
       headers: {
@@ -98,7 +98,7 @@ export async function userRegister(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.LoginResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/auth/register`,
+    "/v1/auth/register",
     {
       method: "POST",
       headers: {
@@ -116,7 +116,7 @@ export async function telephoneUserRegister(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.LoginResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/auth/register/telephone`,
+    "/v1/auth/register/telephone",
     {
       method: "POST",
       headers: {
@@ -134,7 +134,7 @@ export async function resetPassword(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.LoginResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/auth/reset`,
+    "/v1/auth/reset",
     {
       method: "POST",
       headers: {
@@ -152,7 +152,7 @@ export async function telephoneResetPassword(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.LoginResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/auth/reset/telephone`,
+    "/v1/auth/reset/telephone",
     {
       method: "POST",
       headers: {

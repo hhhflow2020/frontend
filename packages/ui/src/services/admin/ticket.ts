@@ -7,17 +7,14 @@ export async function updateTicketStatus(
   body: API.UpdateTicketStatusRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/ticket/`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/ticket/", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Get ticket detail GET /v1/admin/ticket/detail */
@@ -27,7 +24,7 @@ export async function getTicket(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.Ticket }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/ticket/detail`,
+    "/v1/admin/ticket/detail",
     {
       method: "GET",
       params: {
@@ -43,17 +40,14 @@ export async function createTicketFollow(
   body: API.CreateTicketFollowRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/ticket/follow`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/ticket/follow", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Get ticket list GET /v1/admin/ticket/list */
@@ -63,7 +57,7 @@ export async function getTicketList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetTicketListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/ticket/list`,
+    "/v1/admin/ticket/list",
     {
       method: "GET",
       params: {

@@ -5,7 +5,7 @@ import request from "@workspace/ui/lib/request";
 /** Query User Affiliate Count GET /v1/public/user/affiliate/count */
 export async function queryUserAffiliate(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.QueryUserAffiliateCountResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/affiliate/count`,
+    "/v1/public/user/affiliate/count",
     {
       method: "GET",
       ...(options || {}),
@@ -20,7 +20,7 @@ export async function queryUserAffiliateList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.QueryUserAffiliateListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/affiliate/list`,
+    "/v1/public/user/affiliate/list",
     {
       method: "GET",
       params: {
@@ -34,7 +34,7 @@ export async function queryUserAffiliateList(
 /** Query User Balance Log GET /v1/public/user/balance_log */
 export async function queryUserBalanceLog(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.QueryUserBalanceLogListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/balance_log`,
+    "/v1/public/user/balance_log",
     {
       method: "GET",
       ...(options || {}),
@@ -47,17 +47,14 @@ export async function updateBindEmail(
   body: API.UpdateBindEmailRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/bind_email`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/public/user/bind_email", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Update Bind Mobile PUT /v1/public/user/bind_mobile */
@@ -65,17 +62,14 @@ export async function updateBindMobile(
   body: API.UpdateBindMobileRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/bind_mobile`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/public/user/bind_mobile", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Bind OAuth POST /v1/public/user/bind_oauth */
@@ -84,7 +78,7 @@ export async function bindOAuth(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.BindOAuthResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/bind_oauth`,
+    "/v1/public/user/bind_oauth",
     {
       method: "POST",
       headers: {
@@ -102,9 +96,7 @@ export async function bindOAuthCallback(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/public/user/bind_oauth/callback`,
+    "/v1/public/user/bind_oauth/callback",
     {
       method: "POST",
       headers: {
@@ -119,7 +111,7 @@ export async function bindOAuthCallback(
 /** Bind Telegram GET /v1/public/user/bind_telegram */
 export async function bindTelegram(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.BindTelegramResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/bind_telegram`,
+    "/v1/public/user/bind_telegram",
     {
       method: "GET",
       ...(options || {}),
@@ -135,7 +127,7 @@ export async function queryUserCommissionLog(
 ) {
   return request<
     API.Response & { data?: API.QueryUserCommissionLogListResponse }
-  >(`${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/commission_log`, {
+  >("/v1/public/user/commission_log", {
     method: "GET",
     params: {
       ...params,
@@ -150,9 +142,7 @@ export async function commissionWithdraw(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.WithdrawalLog }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/public/user/commission_withdraw`,
+    "/v1/public/user/commission_withdraw",
     {
       method: "POST",
       headers: {
@@ -167,7 +157,7 @@ export async function commissionWithdraw(
 /** Get Device List GET /v1/public/user/devices */
 export async function getDeviceList(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.GetDeviceListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/devices`,
+    "/v1/public/user/devices",
     {
       method: "GET",
       ...(options || {}),
@@ -177,13 +167,10 @@ export async function getDeviceList(options?: { [key: string]: any }) {
 
 /** Query User Info GET /v1/public/user/info */
 export async function queryUserInfo(options?: { [key: string]: any }) {
-  return request<API.Response & { data?: API.User }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/info`,
-    {
-      method: "GET",
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: API.User }>("/v1/public/user/info", {
+    method: "GET",
+    ...(options || {}),
+  });
 }
 
 /** Get Login Log GET /v1/public/user/login_log */
@@ -193,7 +180,7 @@ export async function getLoginLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetLoginLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/login_log`,
+    "/v1/public/user/login_log",
     {
       method: "GET",
       params: {
@@ -209,23 +196,20 @@ export async function updateUserNotify(
   body: API.UpdateUserNotifyRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/notify`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/public/user/notify", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Get OAuth Methods GET /v1/public/user/oauth_methods */
 export async function getOAuthMethods(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.GetOAuthMethodsResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/oauth_methods`,
+    "/v1/public/user/oauth_methods",
     {
       method: "GET",
       ...(options || {}),
@@ -238,17 +222,14 @@ export async function updateUserPassword(
   body: API.UpdateUserPasswordRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/password`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/public/user/password", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Update User Rules PUT /v1/public/user/rules */
@@ -256,23 +237,20 @@ export async function updateUserRules(
   body: API.UpdateUserRulesRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/rules`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/public/user/rules", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Query User Subscribe GET /v1/public/user/subscribe */
 export async function queryUserSubscribe(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.QueryUserSubscribeListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/subscribe`,
+    "/v1/public/user/subscribe",
     {
       method: "GET",
       ...(options || {}),
@@ -287,7 +265,7 @@ export async function getSubscribeLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetSubscribeLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/subscribe_log`,
+    "/v1/public/user/subscribe_log",
     {
       method: "GET",
       params: {
@@ -304,7 +282,7 @@ export async function updateUserSubscribeNote(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/subscribe_note`,
+    "/v1/public/user/subscribe_note",
     {
       method: "PUT",
       headers: {
@@ -322,7 +300,7 @@ export async function resetUserSubscribeToken(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/subscribe_token`,
+    "/v1/public/user/subscribe_token",
     {
       method: "PUT",
       headers: {
@@ -340,7 +318,7 @@ export async function unbindDevice(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/unbind_device`,
+    "/v1/public/user/unbind_device",
     {
       method: "PUT",
       headers: {
@@ -358,7 +336,7 @@ export async function unbindOAuth(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/unbind_oauth`,
+    "/v1/public/user/unbind_oauth",
     {
       method: "POST",
       headers: {
@@ -373,7 +351,7 @@ export async function unbindOAuth(
 /** Unbind Telegram POST /v1/public/user/unbind_telegram */
 export async function unbindTelegram(options?: { [key: string]: any }) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/unbind_telegram`,
+    "/v1/public/user/unbind_telegram",
     {
       method: "POST",
       ...(options || {}),
@@ -386,17 +364,14 @@ export async function unsubscribe(
   body: API.UnsubscribeRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/unsubscribe`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/public/user/unsubscribe", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Pre Unsubscribe POST /v1/public/user/unsubscribe/pre */
@@ -405,7 +380,7 @@ export async function preUnsubscribe(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.PreUnsubscribeResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/unsubscribe/pre`,
+    "/v1/public/user/unsubscribe/pre",
     {
       method: "POST",
       headers: {
@@ -423,7 +398,7 @@ export async function verifyEmail(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/verify_email`,
+    "/v1/public/user/verify_email",
     {
       method: "POST",
       headers: {
@@ -442,7 +417,7 @@ export async function queryWithdrawalLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.QueryWithdrawalLogListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/user/withdrawal_log`,
+    "/v1/public/user/withdrawal_log",
     {
       method: "GET",
       params: {

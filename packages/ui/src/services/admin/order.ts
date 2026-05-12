@@ -7,17 +7,14 @@ export async function createOrder(
   body: API.CreateOrderRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/order/`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/order/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Get order list GET /v1/admin/order/list */
@@ -27,7 +24,7 @@ export async function getOrderList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetOrderListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/order/list`,
+    "/v1/admin/order/list",
     {
       method: "GET",
       params: {
@@ -43,15 +40,12 @@ export async function updateOrderStatus(
   body: API.UpdateOrderStatusRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/order/status`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/order/status", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }

@@ -19,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import Empty from "@workspace/ui/composed/empty";
 import { Icon } from "@workspace/ui/composed/icon";
 import { getCookie } from "@workspace/ui/lib/cookies";
+import { getApiBaseURL, getApiPrefix } from "@workspace/ui/lib/runtime-config";
 import { cn } from "@workspace/ui/lib/utils";
 import {
   queryServerTotalData,
@@ -35,8 +36,8 @@ import SystemVersionCard from "./system-version-card";
 import { UserStatisticsCard } from "./user-statistics-card";
 
 function buildDashboardRealtimeWsUrl() {
-  const base = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-  const prefix = import.meta.env.VITE_API_PREFIX || "";
+  const base = getApiBaseURL() || window.location.origin;
+  const prefix = getApiPrefix();
   const url = new URL(`${prefix}/v1/admin/console/realtime/ws`, base);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   const token = getCookie("Authorization");

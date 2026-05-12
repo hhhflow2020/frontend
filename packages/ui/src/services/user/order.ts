@@ -7,17 +7,14 @@ export async function closeOrder(
   body: API.CloseOrderRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/order/close`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/public/order/close", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Get order GET /v1/public/order/detail */
@@ -27,7 +24,7 @@ export async function queryOrderDetail(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.OrderDetail }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/order/detail`,
+    "/v1/public/order/detail",
     {
       method: "GET",
       params: {
@@ -45,7 +42,7 @@ export async function queryOrderList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.QueryOrderListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/order/list`,
+    "/v1/public/order/list",
     {
       method: "GET",
       params: {
@@ -62,7 +59,7 @@ export async function preCreateOrder(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.PreOrderResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/order/pre`,
+    "/v1/public/order/pre",
     {
       method: "POST",
       headers: {
@@ -80,7 +77,7 @@ export async function purchase(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.PurchaseOrderResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/order/purchase`,
+    "/v1/public/order/purchase",
     {
       method: "POST",
       headers: {
@@ -98,7 +95,7 @@ export async function recharge(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.RechargeOrderResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/order/recharge`,
+    "/v1/public/order/recharge",
     {
       method: "POST",
       headers: {
@@ -116,7 +113,7 @@ export async function renewal(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.RenewalOrderResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/order/renewal`,
+    "/v1/public/order/renewal",
     {
       method: "POST",
       headers: {
@@ -134,7 +131,7 @@ export async function resetTraffic(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.ResetTrafficOrderResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/order/reset`,
+    "/v1/public/order/reset",
     {
       method: "POST",
       headers: {

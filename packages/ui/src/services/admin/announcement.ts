@@ -7,17 +7,14 @@ export async function updateAnnouncement(
   body: API.UpdateAnnouncementRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/announcement/`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/announcement/", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Create announcement POST /v1/admin/announcement/ */
@@ -25,17 +22,14 @@ export async function createAnnouncement(
   body: API.CreateAnnouncementRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/announcement/`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/announcement/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Delete announcement DELETE /v1/admin/announcement/ */
@@ -43,17 +37,14 @@ export async function deleteAnnouncement(
   body: API.DeleteAnnouncementRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/announcement/`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/announcement/", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Get announcement GET /v1/admin/announcement/detail */
@@ -63,7 +54,7 @@ export async function getAnnouncement(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.Announcement }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/announcement/detail`,
+    "/v1/admin/announcement/detail",
     {
       method: "GET",
       params: {
@@ -81,7 +72,7 @@ export async function getAnnouncementList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetAnnouncementListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/announcement/list`,
+    "/v1/admin/announcement/list",
     {
       method: "GET",
       params: {

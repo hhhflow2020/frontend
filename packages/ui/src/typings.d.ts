@@ -4,6 +4,10 @@ import type i18n from "i18next";
 
 declare global {
   interface Window {
+    __APP_CONFIG__?: {
+      API_BASE_URL?: string;
+      API_PREFIX?: string;
+    };
     logout: () => void;
     i18n: typeof i18n;
   }

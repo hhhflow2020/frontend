@@ -1,5 +1,6 @@
 /// <reference path="../typings.d.ts" />
 import { getCookie } from "@workspace/ui/lib/cookies";
+import { getApiBaseURL, getApiPrefix } from "@workspace/ui/lib/runtime-config";
 import { isBrowser } from "@workspace/ui/utils/index";
 import axios, { type InternalAxiosRequestConfig } from "axios";
 import { toast } from "sonner";
@@ -173,8 +174,19 @@ function handleError(response: {
 }
 
 const request = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: getApiBaseURL(),
 });
+
+function withApiPrefix(url?: string) {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+
+  const prefix = getApiPrefix();
+  if (!prefix) return url;
+  if (url === prefix || url.startsWith(`${prefix}/`)) return url;
+
+  return `${prefix.replace(/\/$/, "")}/${url.replace(/^\//, "")}`;
+}
 
 request.interceptors.request.use(
   (
@@ -185,6 +197,8 @@ request.interceptors.request.use(
   ) => {
     const Authorization = getCookie("Authorization");
     if (Authorization) config.headers.Authorization = Authorization;
+    config.baseURL = getApiBaseURL();
+    config.url = withApiPrefix(config.url);
     return config;
   },
   (error: Error) => Promise.reject(error)

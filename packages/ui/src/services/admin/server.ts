@@ -7,17 +7,14 @@ export async function createServer(
   body: API.CreateServerRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/create`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/server/create", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Delete Server POST /v1/admin/server/delete */
@@ -25,17 +22,14 @@ export async function deleteServer(
   body: API.DeleteServerRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/delete`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/server/delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Filter Server List GET /v1/admin/server/list */
@@ -45,7 +39,7 @@ export async function filterServerList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterServerListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/list`,
+    "/v1/admin/server/list",
     {
       method: "GET",
       params: {
@@ -62,7 +56,7 @@ export async function createNode(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/node/create`,
+    "/v1/admin/server/node/create",
     {
       method: "POST",
       headers: {
@@ -80,7 +74,7 @@ export async function deleteNode(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/node/delete`,
+    "/v1/admin/server/node/delete",
     {
       method: "POST",
       headers: {
@@ -99,7 +93,7 @@ export async function filterNodeList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterNodeListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/node/list`,
+    "/v1/admin/server/node/list",
     {
       method: "GET",
       params: {
@@ -115,17 +109,14 @@ export async function resetSortWithNode(
   body: API.ResetSortRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/node/sort`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/server/node/sort", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Toggle Node Status POST /v1/admin/server/node/status/toggle */
@@ -134,9 +125,7 @@ export async function toggleNodeStatus(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/server/node/status/toggle`,
+    "/v1/admin/server/node/status/toggle",
     {
       method: "POST",
       headers: {
@@ -151,7 +140,7 @@ export async function toggleNodeStatus(
 /** Query all node tags GET /v1/admin/server/node/tags */
 export async function queryNodeTag(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.QueryNodeTagResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/node/tags`,
+    "/v1/admin/server/node/tags",
     {
       method: "GET",
       ...(options || {}),
@@ -165,7 +154,7 @@ export async function updateNode(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/node/update`,
+    "/v1/admin/server/node/update",
     {
       method: "POST",
       headers: {
@@ -183,7 +172,7 @@ export async function resetSortWithServer(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/server/sort`,
+    "/v1/admin/server/server/sort",
     {
       method: "POST",
       headers: {
@@ -200,17 +189,14 @@ export async function updateServer(
   body: API.UpdateServerRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/update`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/server/update", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Create Xray Template POST /v1/admin/server/xray-template/create */
@@ -219,7 +205,7 @@ export async function createXrayTemplate(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/create`,
+    "/v1/admin/server/xray-template/create",
     {
       method: "POST",
       headers: {
@@ -237,7 +223,7 @@ export async function updateXrayTemplate(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/update`,
+    "/v1/admin/server/xray-template/update",
     {
       method: "POST",
       headers: {
@@ -255,7 +241,7 @@ export async function deleteXrayTemplate(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/delete`,
+    "/v1/admin/server/xray-template/delete",
     {
       method: "POST",
       headers: {
@@ -273,7 +259,7 @@ export async function getXrayTemplateDetail(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.XrayTemplate }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/detail`,
+    "/v1/admin/server/xray-template/detail",
     {
       method: "GET",
       params: {
@@ -290,7 +276,7 @@ export async function filterXrayTemplateList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterXrayTemplateListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/list`,
+    "/v1/admin/server/xray-template/list",
     {
       method: "GET",
       params: {
@@ -307,7 +293,7 @@ export async function bindServerXrayTemplates(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/bind`,
+    "/v1/admin/server/xray-template/bind",
     {
       method: "POST",
       headers: {
@@ -325,7 +311,7 @@ export async function previewServerXrayConfig(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.PreviewServerXrayConfigResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/preview`,
+    "/v1/admin/server/xray-template/preview",
     {
       method: "POST",
       headers: {
@@ -344,14 +330,11 @@ export async function queryServerXrayTemplateList(
 ) {
   return request<
     API.Response & { data?: API.QueryServerXrayTemplateListResponse }
-  >(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/server/xray-template/server`,
-    {
-      method: "GET",
-      params: {
-        ...params,
-      },
-      ...(options || {}),
-    }
-  );
+  >("/v1/admin/server/xray-template/server", {
+    method: "GET",
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
 }

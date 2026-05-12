@@ -9,7 +9,7 @@ export async function filterBalanceLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterBalanceLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/balance/list`,
+    "/v1/admin/log/balance/list",
     {
       method: "GET",
       params: {
@@ -27,7 +27,7 @@ export async function filterCommissionLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterCommissionLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/commission/list`,
+    "/v1/admin/log/commission/list",
     {
       method: "GET",
       params: {
@@ -45,7 +45,7 @@ export async function filterEmailLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterEmailLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/email/list`,
+    "/v1/admin/log/email/list",
     {
       method: "GET",
       params: {
@@ -63,7 +63,7 @@ export async function filterGiftLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterGiftLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/gift/list`,
+    "/v1/admin/log/gift/list",
     {
       method: "GET",
       params: {
@@ -81,7 +81,7 @@ export async function filterLoginLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterLoginLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/login/list`,
+    "/v1/admin/log/login/list",
     {
       method: "GET",
       params: {
@@ -99,7 +99,7 @@ export async function getMessageLogList(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetMessageLogListResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/message/list`,
+    "/v1/admin/log/message/list",
     {
       method: "GET",
       params: {
@@ -117,7 +117,7 @@ export async function filterMobileLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterMobileLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/mobile/list`,
+    "/v1/admin/log/mobile/list",
     {
       method: "GET",
       params: {
@@ -135,7 +135,7 @@ export async function filterRegisterLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterRegisterLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/register/list`,
+    "/v1/admin/log/register/list",
     {
       method: "GET",
       params: {
@@ -153,7 +153,7 @@ export async function filterServerTrafficLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterServerTrafficLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/server/traffic/list`,
+    "/v1/admin/log/server/traffic/list",
     {
       method: "GET",
       params: {
@@ -167,7 +167,7 @@ export async function filterServerTrafficLog(
 /** Get log setting GET /v1/admin/log/setting */
 export async function getLogSetting(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.LogSetting }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/setting`,
+    "/v1/admin/log/setting",
     {
       method: "GET",
       ...(options || {}),
@@ -180,17 +180,14 @@ export async function updateLogSetting(
   body: API.LogSetting,
   options?: { [key: string]: any }
 ) {
-  return request<API.Response & { data?: any }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/setting`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
+  return request<API.Response & { data?: any }>("/v1/admin/log/setting", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
 }
 
 /** Filter subscribe log GET /v1/admin/log/subscribe/list */
@@ -200,7 +197,7 @@ export async function filterSubscribeLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterSubscribeLogResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/subscribe/list`,
+    "/v1/admin/log/subscribe/list",
     {
       method: "GET",
       params: {
@@ -218,9 +215,7 @@ export async function filterResetSubscribeLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterResetSubscribeLogResponse }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/log/subscribe/reset/list`,
+    "/v1/admin/log/subscribe/reset/list",
     {
       method: "GET",
       params: {
@@ -238,9 +233,7 @@ export async function filterUserSubscribeTrafficLog(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterSubscribeTrafficResponse }>(
-    `${
-      import.meta.env.VITE_API_PREFIX || ""
-    }/v1/admin/log/subscribe/traffic/list`,
+    "/v1/admin/log/subscribe/traffic/list",
     {
       method: "GET",
       params: {
@@ -258,7 +251,7 @@ export async function filterTrafficLogDetails(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.FilterTrafficLogDetailsResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/admin/log/traffic/details`,
+    "/v1/admin/log/traffic/details",
     {
       method: "GET",
       params: {

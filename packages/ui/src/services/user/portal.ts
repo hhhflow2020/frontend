@@ -8,7 +8,7 @@ export async function purchaseCheckout(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.CheckoutOrderResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/portal/order/checkout`,
+    "/v1/public/portal/order/checkout",
     {
       method: "POST",
       headers: {
@@ -27,7 +27,7 @@ export async function queryPurchaseOrder(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.QueryPurchaseOrderResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/portal/order/status`,
+    "/v1/public/portal/order/status",
     {
       method: "GET",
       params: {
@@ -44,13 +44,10 @@ export async function getAvailablePaymentMethods(options?: {
 }) {
   return request<
     API.Response & { data?: API.GetAvailablePaymentMethodsResponse }
-  >(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/portal/payment-method`,
-    {
-      method: "GET",
-      ...(options || {}),
-    }
-  );
+  >("/v1/public/portal/payment-method", {
+    method: "GET",
+    ...(options || {}),
+  });
 }
 
 /** Pre Purchase Order POST /v1/public/portal/pre */
@@ -59,7 +56,7 @@ export async function prePurchaseOrder(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.PrePurchaseOrderResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/portal/pre`,
+    "/v1/public/portal/pre",
     {
       method: "POST",
       headers: {
@@ -77,7 +74,7 @@ export async function purchase(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.PortalPurchaseResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/portal/purchase`,
+    "/v1/public/portal/purchase",
     {
       method: "POST",
       headers: {
@@ -96,7 +93,7 @@ export async function getSubscription(
   options?: { [key: string]: any }
 ) {
   return request<API.Response & { data?: API.GetSubscriptionResponse }>(
-    `${import.meta.env.VITE_API_PREFIX || ""}/v1/public/portal/subscribe`,
+    "/v1/public/portal/subscribe",
     {
       method: "GET",
       params: {
