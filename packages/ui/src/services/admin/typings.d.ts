@@ -2040,6 +2040,51 @@ declare namespace API {
     user_traffic_ranking_yesterday: UserTrafficData[];
   };
 
+  type DashboardRealtimeResponse = {
+    type: string;
+    updated_at: number;
+    online_users: number;
+    servers: {
+      total: number;
+      online: number;
+      offline: number;
+      xray_running: number;
+      xray_stopped: number;
+      config_ok: number;
+      config_pending: number;
+      config_failed: number;
+      stats_error: number;
+      reported: number;
+      not_reported: number;
+    };
+    network: {
+      system_rx_bps: number;
+      system_tx_bps: number;
+      xray_rx_bps: number;
+      xray_tx_bps: number;
+    };
+    connections: {
+      system_inbound: number;
+      system_outbound: number;
+      xray_inbound: number;
+      xray_outbound: number;
+    };
+    resources: {
+      avg_cpu: number;
+      avg_mem: number;
+      avg_disk: number;
+      max_cpu: number;
+      max_mem: number;
+      max_disk: number;
+    };
+    alerts: Array<{
+      level: string;
+      server_id?: number;
+      title: string;
+      message?: string;
+    }>;
+  };
+
   type ServerTrafficData = {
     server_id: number;
     name: string;
