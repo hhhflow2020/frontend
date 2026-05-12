@@ -2,9 +2,14 @@ name: Build and Release
 
 on:
   push:
-    branches: [main, next, beta, develop]
-    paths-ignore:
-      - 'docs/**'
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag, for example v1.4.3. Leave empty to use package.json version."
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -45,8 +50,30 @@ jobs:
           name: frontend-release-packages
           path: release/*.tar.gz
 
-      - name: Release
-        id: release
-        run: bun run release
+      - name: Resolve release tag
+        id: release_tag
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            tag="${GITHUB_REF_NAME}"
+          elif [ -n "${{ inputs.tag_name }}" ]; then
+            tag="${{ inputs.tag_name }}"
+          else
+            version="$(bun -e "console.log(require('./package.json').version)")"
+            tag="v${version}"
+          fi
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish GitHub Release
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release_tag.outputs.tag }}
+        run: |
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release upload "${RELEASE_TAG}" release/*.tar.gz --clobber
+          else
+            gh release create "${RELEASE_TAG}" release/*.tar.gz \
+              --target "${GITHUB_SHA}" \
+              --title "${RELEASE_TAG}" \
+              --generate-notes
+          fi
