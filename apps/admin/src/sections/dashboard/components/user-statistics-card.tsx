@@ -14,8 +14,7 @@ import {
 } from "@workspace/ui/components/chart";
 import { queryUserStatistics } from "@workspace/ui/services/admin/console";
 import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, XAxis } from "recharts";
 
 function miniValue(label: string, value?: number) {
   return (
@@ -29,9 +28,6 @@ function miniValue(label: string, value?: number) {
 }
 
 export function UserStatisticsCard() {
-  const { t, i18n } = useTranslation("dashboard");
-  const locale = i18n.language;
-
   const { data: users } = useQuery({
     queryKey: ["queryUserStatistics"],
     queryFn: async () => {
@@ -66,19 +62,15 @@ export function UserStatisticsCard() {
     (users?.today?.renewal_order_users || 0);
 
   return (
-    <Card className="h-full overflow-hidden border-border/60 bg-gradient-to-br from-background to-muted/30 shadow-sm">
+    <Card className="h-full overflow-hidden border-border/50 bg-gradient-to-br from-background via-background to-violet-500/5 shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-muted-foreground text-xs">Audience</div>
-            <CardTitle className="mt-1 text-xl">
-              {t("userTitle", "User Statistics")}
-            </CardTitle>
+            <CardTitle className="mt-1 text-xl">Users</CardTitle>
           </div>
           <div className="text-right">
-            <div className="text-muted-foreground text-xs">
-              {t("today", "Today")}
-            </div>
+            <div className="text-muted-foreground text-xs">Today</div>
             <div className="font-semibold text-2xl tabular-nums">
               {todayTotal}
             </div>
@@ -87,15 +79,9 @@ export function UserStatisticsCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-2">
-          {miniValue(t("register", "Register"), users?.today?.register)}
-          {miniValue(
-            t("newPurchase", "New Purchase"),
-            users?.today?.new_order_users
-          )}
-          {miniValue(
-            t("repurchase", "Repurchase"),
-            users?.today?.renewal_order_users
-          )}
+          {miniValue("Register", users?.today?.register)}
+          {miniValue("New Purchase", users?.today?.new_order_users)}
+          {miniValue("Repurchase", users?.today?.renewal_order_users)}
         </div>
 
         <div className="h-56">
@@ -104,21 +90,42 @@ export function UserStatisticsCard() {
               className="h-full w-full"
               config={{
                 register: {
-                  label: t("register", "Register"),
-                  color: "var(--color-chart-1)",
+                  label: "Register",
+                  color: "#0A84FF",
                 },
                 new_purchase: {
-                  label: t("newPurchase", "New Purchase"),
-                  color: "var(--color-chart-2)",
+                  label: "New Purchase",
+                  color: "#AF52DE",
                 },
                 repurchase: {
-                  label: t("repurchase", "Repurchase"),
-                  color: "var(--color-chart-3)",
+                  label: "Repurchase",
+                  color: "#FF9F0A",
                 },
               }}
             >
-              <BarChart data={monthlyData}>
-                <CartesianGrid vertical={false} />
+              <BarChart barGap={4} barSize={14} data={monthlyData}>
+                <defs>
+                  <linearGradient id="userRegister" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#0A84FF" stopOpacity={0.95} />
+                    <stop
+                      offset="100%"
+                      stopColor="#0A84FF"
+                      stopOpacity={0.45}
+                    />
+                  </linearGradient>
+                  <linearGradient id="userNew" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#AF52DE" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#AF52DE" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="userRenew" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#FF9F0A" stopOpacity={0.95} />
+                    <stop
+                      offset="100%"
+                      stopColor="#FF9F0A"
+                      stopOpacity={0.45}
+                    />
+                  </linearGradient>
+                </defs>
                 <XAxis
                   axisLine={false}
                   dataKey="date"
@@ -128,7 +135,7 @@ export function UserStatisticsCard() {
                       Number(year),
                       Number(month) - 1,
                       Number(day)
-                    ).toLocaleDateString(locale, {
+                    ).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                     });
@@ -138,24 +145,24 @@ export function UserStatisticsCard() {
                 />
                 <ChartTooltip
                   content={<ChartTooltipContent />}
-                  cursor={false}
+                  cursor={{ fill: "hsl(var(--muted) / 0.35)" }}
                 />
                 <Bar
                   dataKey="register"
-                  fill="var(--color-register)"
-                  radius={[0, 0, 4, 4]}
+                  fill="url(#userRegister)"
+                  radius={[8, 8, 4, 4]}
                   stackId="a"
                 />
                 <Bar
                   dataKey="new_purchase"
-                  fill="var(--color-new_purchase)"
+                  fill="url(#userNew)"
                   radius={0}
                   stackId="a"
                 />
                 <Bar
                   dataKey="repurchase"
-                  fill="var(--color-repurchase)"
-                  radius={[4, 4, 0, 0]}
+                  fill="url(#userRenew)"
+                  radius={[8, 8, 0, 0]}
                   stackId="a"
                 />
               </BarChart>
@@ -173,12 +180,18 @@ export function UserStatisticsCard() {
               className="h-full w-full"
               config={{
                 register: {
-                  label: t("register", "Register"),
-                  color: "var(--color-chart-1)",
+                  label: "Register",
+                  color: "#0A84FF",
                 },
               }}
             >
               <AreaChart data={allData} margin={{ left: 8, right: 8 }}>
+                <defs>
+                  <linearGradient id="userTotal" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#0A84FF" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#0A84FF" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <XAxis
                   axisLine={false}
                   dataKey="date"
@@ -187,7 +200,7 @@ export function UserStatisticsCard() {
                     return new Date(
                       Number(year),
                       Number(month) - 1
-                    ).toLocaleDateString(locale, { month: "short" });
+                    ).toLocaleDateString("en-US", { month: "short" });
                   }}
                   tickLine={false}
                 />
@@ -197,9 +210,9 @@ export function UserStatisticsCard() {
                 />
                 <Area
                   dataKey="register"
-                  fill="var(--color-register)"
-                  fillOpacity={0.2}
-                  stroke="var(--color-register)"
+                  fill="url(#userTotal)"
+                  stroke="#0A84FF"
+                  strokeWidth={2.5}
                   type="natural"
                 />
               </AreaChart>

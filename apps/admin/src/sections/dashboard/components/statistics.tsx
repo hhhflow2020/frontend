@@ -27,14 +27,7 @@ import {
 import { formatBytes } from "@workspace/ui/utils/formatting";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  LabelList,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, LabelList, XAxis, YAxis } from "recharts";
 import { Display } from "@/components/display";
 import { UserSubscribeDetail } from "@/sections/user/user-detail";
 import { RevenueStatisticsCard } from "./revenue-statistics-card";
@@ -433,12 +426,10 @@ export default function Statistics() {
     const currentData = trafficData[type][timeFrame];
 
     return (
-      <Card className="border-border/60 shadow-sm">
+      <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-background via-background to-muted/30 shadow-sm">
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>
-            {type === "nodes"
-              ? t("nodeTraffic", "Node Traffic")
-              : t("userTraffic", "User Traffic")}
+            {type === "nodes" ? "Node Traffic" : "User Traffic"}
           </CardTitle>
           <Tabs
             onValueChange={(value) =>
@@ -450,10 +441,8 @@ export default function Statistics() {
             value={timeFrame}
           >
             <TabsList>
-              <TabsTrigger value="today">{t("today", "Today")}</TabsTrigger>
-              <TabsTrigger value="yesterday">
-                {t("yesterday", "Yesterday")}
-              </TabsTrigger>
+              <TabsTrigger value="today">Today</TabsTrigger>
+              <TabsTrigger value="yesterday">Yesterday</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
@@ -463,11 +452,11 @@ export default function Statistics() {
               className="max-h-80"
               config={{
                 traffic: {
-                  label: t("traffic", "Traffic"),
-                  color: "var(--primary)",
+                  label: "Traffic",
+                  color: "#0A84FF",
                 },
                 type: {
-                  label: t("type", "Type"),
+                  label: "Type",
                   color: "var(--muted-foreground)",
                 },
                 label: {
@@ -476,7 +465,22 @@ export default function Statistics() {
               }}
             >
               <BarChart data={currentData} height={400} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
+                <defs>
+                  <linearGradient
+                    id={`${type}Traffic`}
+                    x1="0"
+                    x2="1"
+                    y1="0"
+                    y2="0"
+                  >
+                    <stop offset="0%" stopColor="#0A84FF" stopOpacity={0.45} />
+                    <stop
+                      offset="100%"
+                      stopColor="#0A84FF"
+                      stopOpacity={0.95}
+                    />
+                  </linearGradient>
+                </defs>
                 <XAxis
                   axisLine={false}
                   tickFormatter={(value) => formatBytes(value || 0)}
@@ -500,7 +504,7 @@ export default function Statistics() {
                       label={true}
                       labelFormatter={(label, [payload]) =>
                         type === "nodes" ? (
-                          `${t("nodes", "Nodes")}: ${label}`
+                          `Node: ${label}`
                         ) : (
                           <>
                             <div className="w-80">
@@ -510,7 +514,7 @@ export default function Statistics() {
                               />
                             </div>
                             <Separator className="my-2" />
-                            <div>{`${t("users", "Users")}: ${label}`}</div>
+                            <div>{`User: ${label}`}</div>
                           </>
                         )
                       }
@@ -520,8 +524,8 @@ export default function Statistics() {
                 />
                 <Bar
                   dataKey="traffic"
-                  fill="var(--primary)"
-                  radius={[0, 4, 4, 0]}
+                  fill={`url(#${type}Traffic)`}
+                  radius={[0, 8, 8, 0]}
                 >
                   <LabelList
                     className="fill-foreground"
