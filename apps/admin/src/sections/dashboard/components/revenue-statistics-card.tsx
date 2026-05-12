@@ -24,11 +24,19 @@ function cents(value?: number) {
 
 function miniValue(label: string, value?: number) {
   return (
-    <div className="rounded-xl border bg-background/70 p-3">
+    <div className="rounded-2xl border border-border/60 bg-background/70 p-3">
       <div className="text-muted-foreground text-xs">{label}</div>
       <div className="mt-1 font-semibold text-lg tabular-nums">
         <Display type="currency" value={value || 0} />
       </div>
+    </div>
+  );
+}
+
+function EmptyChartState({ message }: { message: string }) {
+  return (
+    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed bg-background/45 px-4 text-center text-muted-foreground text-sm">
+      {message}
     </div>
   );
 }
@@ -62,9 +70,13 @@ export function RevenueStatisticsCard() {
       })) || [],
     [revenue]
   );
+  const hasMonthlyData = monthlyData.some((item) => item.total > 0);
+  const canShowMonthlyChart = monthlyData.length > 1 && hasMonthlyData;
+  const canShowTrendChart =
+    allData.length > 1 && allData.some((item) => item.total > 0);
 
   return (
-    <Card className="h-full overflow-hidden border-border/50 bg-gradient-to-br from-background via-background to-sky-500/5 shadow-sm">
+    <Card className="self-start overflow-hidden border-border/50 bg-gradient-to-br from-background via-background to-sky-500/5 shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -89,8 +101,8 @@ export function RevenueStatisticsCard() {
           {miniValue("Month", revenue?.monthly?.amount_total)}
         </div>
 
-        <div className="h-56">
-          {monthlyData.length ? (
+        <div className="h-52">
+          {canShowMonthlyChart ? (
             <ChartContainer
               className="h-full w-full"
               config={{
@@ -155,14 +167,18 @@ export function RevenueStatisticsCard() {
               </BarChart>
             </ChartContainer>
           ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-              No revenue data
-            </div>
+            <EmptyChartState
+              message={
+                hasMonthlyData
+                  ? "More revenue history is needed to draw a trend."
+                  : "No revenue data yet."
+              }
+            />
           )}
         </div>
 
-        <div className="h-32 rounded-xl border bg-background/60 p-2">
-          {allData.length ? (
+        {canShowTrendChart ? (
+          <div className="h-28 rounded-2xl border border-border/60 bg-background/60 p-2">
             <ChartContainer
               className="h-full w-full"
               config={{
@@ -208,8 +224,8 @@ export function RevenueStatisticsCard() {
                 />
               </AreaChart>
             </ChartContainer>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

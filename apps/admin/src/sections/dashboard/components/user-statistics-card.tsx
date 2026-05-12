@@ -18,11 +18,19 @@ import { Area, AreaChart, Bar, BarChart, XAxis } from "recharts";
 
 function miniValue(label: string, value?: number) {
   return (
-    <div className="rounded-xl border bg-background/70 p-3">
+    <div className="rounded-2xl border border-border/60 bg-background/70 p-3">
       <div className="text-muted-foreground text-xs">{label}</div>
       <div className="mt-1 font-semibold text-lg tabular-nums">
         {value || 0}
       </div>
+    </div>
+  );
+}
+
+function EmptyChartState({ message }: { message: string }) {
+  return (
+    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed bg-background/45 px-4 text-center text-muted-foreground text-sm">
+      {message}
     </div>
   );
 }
@@ -60,9 +68,15 @@ export function UserStatisticsCard() {
     (users?.today?.register || 0) +
     (users?.today?.new_order_users || 0) +
     (users?.today?.renewal_order_users || 0);
+  const hasMonthlyData = monthlyData.some(
+    (item) => item.register + item.new_purchase + item.repurchase > 0
+  );
+  const canShowMonthlyChart = monthlyData.length > 1 && hasMonthlyData;
+  const canShowTrendChart =
+    allData.length > 1 && allData.some((item) => item.register > 0);
 
   return (
-    <Card className="h-full overflow-hidden border-border/50 bg-gradient-to-br from-background via-background to-violet-500/5 shadow-sm">
+    <Card className="self-start overflow-hidden border-border/50 bg-gradient-to-br from-background via-background to-violet-500/5 shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -84,8 +98,8 @@ export function UserStatisticsCard() {
           {miniValue("Repurchase", users?.today?.renewal_order_users)}
         </div>
 
-        <div className="h-56">
-          {monthlyData.length ? (
+        <div className="h-52">
+          {canShowMonthlyChart ? (
             <ChartContainer
               className="h-full w-full"
               config={{
@@ -168,14 +182,18 @@ export function UserStatisticsCard() {
               </BarChart>
             </ChartContainer>
           ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-              No user data
-            </div>
+            <EmptyChartState
+              message={
+                hasMonthlyData
+                  ? "More audience history is needed to draw a trend."
+                  : "No audience data yet."
+              }
+            />
           )}
         </div>
 
-        <div className="h-32 rounded-xl border bg-background/60 p-2">
-          {allData.length ? (
+        {canShowTrendChart ? (
+          <div className="h-28 rounded-2xl border border-border/60 bg-background/60 p-2">
             <ChartContainer
               className="h-full w-full"
               config={{
@@ -217,8 +235,8 @@ export function UserStatisticsCard() {
                 />
               </AreaChart>
             </ChartContainer>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
