@@ -2083,6 +2083,17 @@ declare namespace API {
       title: string;
       message?: string;
     }>;
+    activities: Array<{
+      id: string;
+      type: string;
+      title: string;
+      subject?: string;
+      detail?: string;
+      status?: string;
+      amount?: number;
+      user_id?: number;
+      created_at: number;
+    }>;
   };
 
   type ServerTrafficData = {

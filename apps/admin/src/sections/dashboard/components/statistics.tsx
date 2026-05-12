@@ -35,6 +35,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Display } from "@/components/display";
 import { UserSubscribeDetail } from "@/sections/user/user-detail";
 import { RevenueStatisticsCard } from "./revenue-statistics-card";
 import SystemVersionCard from "./system-version-card";
@@ -259,6 +260,95 @@ function AlertsCard({
           </div>
         ) : (
           <div className="flex h-36 items-center justify-center">
+            <Empty />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ActivityIcon({ type }: { type: string }) {
+  const iconMap: Record<string, string> = {
+    login: "uil:signin",
+    register: "uil:user-plus",
+    order: "uil:shopping-bag",
+    ticket: "uil:comment-alt-notes",
+  };
+  return (
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
+      <Icon
+        className="h-4 w-4 text-muted-foreground"
+        icon={iconMap[type] || "uil:bell"}
+      />
+    </div>
+  );
+}
+
+function LiveActivityCard({
+  realtime,
+}: {
+  realtime?: API.DashboardRealtimeResponse;
+}) {
+  const activities = (realtime?.activities || []).slice(0, 8);
+  return (
+    <Card className="border-border/60 shadow-sm">
+      <CardHeader className="flex-row items-center justify-between">
+        <div>
+          <CardTitle>Live Activity</CardTitle>
+          <div className="mt-1 text-muted-foreground text-xs">
+            Logins, orders, registrations and tickets
+          </div>
+        </div>
+        <Badge variant="outline">{activities.length}</Badge>
+      </CardHeader>
+      <CardContent>
+        {activities.length ? (
+          <div className="space-y-3">
+            {activities.map((item) => (
+              <div className="flex gap-3" key={item.id}>
+                <ActivityIcon type={item.type} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-sm">
+                        {item.title}
+                      </div>
+                      <div className="truncate text-muted-foreground text-xs">
+                        {item.subject || "Unknown user"}
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-muted-foreground text-xs">
+                      {item.created_at
+                        ? new Date(item.created_at).toLocaleTimeString()
+                        : "--"}
+                    </div>
+                  </div>
+                  {item.detail ? (
+                    <div className="mt-1 truncate text-xs">{item.detail}</div>
+                  ) : null}
+                  <div className="mt-1 flex items-center gap-2">
+                    {item.status ? (
+                      <Badge
+                        variant={
+                          item.status === "failed" ? "destructive" : "outline"
+                        }
+                      >
+                        {item.status}
+                      </Badge>
+                    ) : null}
+                    {item.amount ? (
+                      <span className="text-muted-foreground text-xs">
+                        <Display type="currency" value={item.amount} />
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex h-40 items-center justify-center">
             <Empty />
           </div>
         )}
@@ -521,6 +611,7 @@ export default function Statistics() {
           <UserStatisticsCard />
         </div>
         <div className="space-y-4">
+          <LiveActivityCard realtime={realtime} />
           <AlertsCard realtime={realtime} />
           <MiniMetric
             icon="uil:cloud-data-connection"
