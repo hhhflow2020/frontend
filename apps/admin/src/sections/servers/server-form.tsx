@@ -21,7 +21,7 @@ import {
 } from "@workspace/ui/components/sheet";
 import { EnhancedInput } from "@workspace/ui/composed/enhanced-input";
 import { Icon } from "@workspace/ui/composed/icon";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -37,15 +37,32 @@ const serverFormSchema = z.object({
 type ServerFormValues = z.infer<typeof serverFormSchema>;
 
 export default function ServerForm(props: {
-  trigger: string;
+  trigger?: ReactNode;
   title: string;
   loading?: boolean;
   initialValues?: Partial<API.Server>;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onSubmit: (values: ServerFormValues) => Promise<boolean> | boolean;
 }) {
-  const { trigger, title, loading, initialValues, onSubmit } = props;
+  const {
+    trigger,
+    title,
+    loading,
+    initialValues,
+    open: controlledOpen,
+    onOpenChange,
+    onSubmit,
+  } = props;
   const { t } = useTranslation("servers");
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = (nextOpen: boolean) => {
+    onOpenChange?.(nextOpen);
+    if (controlledOpen === undefined) {
+      setUncontrolledOpen(nextOpen);
+    }
+  };
 
   const form = useForm<ServerFormValues>({
     resolver: zodResolver(serverFormSchema),
@@ -77,23 +94,25 @@ export default function ServerForm(props: {
 
   return (
     <Sheet onOpenChange={setOpen} open={open}>
-      <SheetTrigger asChild>
-        <Button
-          onClick={() => {
-            if (!initialValues) {
-              form.reset({
-                name: "",
-                address: "",
-                country: "",
-                city: "",
-              });
-            }
-            setOpen(true);
-          }}
-        >
-          {trigger}
-        </Button>
-      </SheetTrigger>
+      {trigger ? (
+        <SheetTrigger asChild>
+          <Button
+            onClick={() => {
+              if (!initialValues) {
+                form.reset({
+                  name: "",
+                  address: "",
+                  country: "",
+                  city: "",
+                });
+              }
+              setOpen(true);
+            }}
+          >
+            {trigger}
+          </Button>
+        </SheetTrigger>
+      ) : null}
       <SheetContent className="w-[560px] max-w-full gap-0">
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>

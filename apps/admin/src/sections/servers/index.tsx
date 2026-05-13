@@ -242,6 +242,7 @@ export default function Servers() {
   const [loading, setLoading] = useState(false);
   const [xrayTemplateServer, setXrayTemplateServer] =
     useState<API.Server | null>(null);
+  const [editingServer, setEditingServer] = useState<API.Server | null>(null);
   const [realtimeStatus, setRealtimeStatus] = useState<
     Record<number, Partial<API.ServerStatus>>
   >({});
@@ -294,33 +295,9 @@ export default function Servers() {
         action={ref}
         actions={{
           render: (row) => [
-            <ServerForm
-              initialValues={row}
-              key="edit"
-              loading={loading}
-              onSubmit={async (values) => {
-                setLoading(true);
-                try {
-                  await updateServer({
-                    id: row.id,
-                    ...(values as unknown as Omit<
-                      API.UpdateServerRequest,
-                      "id"
-                    >),
-                  });
-                  toast.success(t("updated", "Updated"));
-                  ref.current?.refresh();
-                  fetchServers();
-                  setLoading(false);
-                  return true;
-                } catch {
-                  setLoading(false);
-                  return false;
-                }
-              }}
-              title={t("drawerEditTitle", "Edit Server")}
-              trigger={t("edit", "Edit")}
-            />,
+            <Button key="edit" onClick={() => setEditingServer(row)}>
+              {t("edit", "Edit")}
+            </Button>,
             <ServerInstall key="install" server={row} />,
             <Button
               key="xray"
@@ -574,6 +551,34 @@ export default function Servers() {
           }}
           open={Boolean(xrayTemplateServer)}
           server={xrayTemplateServer}
+        />
+      ) : null}
+      {editingServer ? (
+        <ServerForm
+          initialValues={editingServer}
+          loading={loading}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setEditingServer(null);
+          }}
+          onSubmit={async (values) => {
+            setLoading(true);
+            try {
+              await updateServer({
+                id: editingServer.id,
+                ...(values as unknown as Omit<API.UpdateServerRequest, "id">),
+              });
+              toast.success(t("updated", "Updated"));
+              ref.current?.refresh();
+              fetchServers();
+              setLoading(false);
+              return true;
+            } catch {
+              setLoading(false);
+              return false;
+            }
+          }}
+          open={Boolean(editingServer)}
+          title={t("drawerEditTitle", "Edit Server")}
         />
       ) : null}
     </div>
