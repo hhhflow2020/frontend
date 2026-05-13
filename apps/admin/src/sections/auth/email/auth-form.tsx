@@ -6,7 +6,6 @@ import {
   userLogin,
   userRegister,
 } from "@workspace/ui/services/common/auth";
-import type { ReactNode } from "react";
 import { useState, useTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -65,10 +64,9 @@ export default function EmailAuthForm() {
     });
   };
 
-  let UserForm: ReactNode = null;
   switch (type) {
     case "login":
-      UserForm = (
+      return (
         <LoginForm
           initialValues={initialValues}
           loading={loading}
@@ -77,9 +75,8 @@ export default function EmailAuthForm() {
           setInitialValues={setInitialValues}
         />
       );
-      break;
     case "register":
-      UserForm = (
+      return (
         <RegisterForm
           initialValues={initialValues}
           loading={loading}
@@ -88,9 +85,8 @@ export default function EmailAuthForm() {
           setInitialValues={setInitialValues}
         />
       );
-      break;
     case "reset":
-      UserForm = (
+      return (
         <ResetForm
           initialValues={initialValues}
           loading={loading}
@@ -99,32 +95,7 @@ export default function EmailAuthForm() {
           setInitialValues={setInitialValues}
         />
       );
-      break;
+    default:
+      return null;
   }
-
-  return (
-    <>
-      <div className="mb-11 text-center">
-        <h1 className="mb-3 font-bold text-2xl">
-          {type === "login"
-            ? t("login.title", "Login")
-            : type === "register"
-              ? t("register.title", "Register")
-              : type === "reset"
-                ? t("reset.title", "Reset Password")
-                : t("check.title", "Verify")}
-        </h1>
-        <div className="font-medium text-muted-foreground">
-          {type === "login"
-            ? t("login.description", "Enter your credentials to continue")
-            : type === "register"
-              ? t("register.description", "Create a new account")
-              : type === "reset"
-                ? t("reset.description", "Reset your password")
-                : t("check.description", "Verify your identity")}
-        </div>
-      </div>
-      {UserForm}
-    </>
-  );
 }

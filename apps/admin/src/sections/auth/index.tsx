@@ -1,6 +1,5 @@
 "use client";
 
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { LanguageSwitch } from "@workspace/ui/composed/language-switch";
 import { ThemeSwitch } from "@workspace/ui/composed/theme-switch";
@@ -20,47 +19,61 @@ export default function Auth() {
   }, [navigate, user]);
 
   return (
-    <main className="flex h-full min-h-screen items-center bg-muted/50">
-      <div className="flex size-full flex-auto flex-col justify-center lg:flex-row">
-        <div className="flex lg:w-1/2 lg:flex-auto">
-          <div className="flex w-full flex-col items-center justify-center px-5 py-4 md:px-14 lg:py-14">
-            <Link className="mb-0 flex flex-col items-center lg:mb-12" to="/">
-              <img
-                alt="logo"
-                height={48}
-                src={site.site_logo || "/favicon.svg"}
-                width={48}
-              />
-              <span className="font-semibold text-2xl">{site.site_name}</span>
-            </Link>
-            <DotLottieReact
-              autoplay
-              className="mx-auto hidden w-full lg:block"
-              loop
-              src="./assets/lotties/login.json"
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-5 md:px-8">
+        <header className="flex items-center justify-between">
+          <Link className="flex items-center gap-3" to="/">
+            <img
+              alt="logo"
+              className="size-8 rounded-md"
+              height={32}
+              src={site.site_logo || "/favicon.svg"}
+              width={32}
             />
-            <p className="hidden w-[275px] text-center md:w-1/2 lg:block xl:w-[500px]">
-              {site.site_desc}
+            <span className="font-medium text-sm">{site.site_name}</span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <LanguageSwitch />
+            <ThemeSwitch />
+          </div>
+        </header>
+
+        <div className="grid flex-1 items-center gap-12 py-14 lg:grid-cols-[minmax(0,1fr)_420px] lg:py-20">
+          <section className="mx-auto max-w-2xl text-center lg:mx-0 lg:text-left">
+            <p className="mb-5 font-medium text-muted-foreground text-sm">
+              Admin Console
             </p>
-          </div>
-        </div>
-        <div className="flex flex-initial justify-center p-8 lg:flex-auto lg:justify-end">
-          <div className="flex flex-col items-center rounded-2xl md:w-[600px] lg:flex-auto lg:bg-background lg:p-10 lg:shadow">
-            <div className="flex flex-col items-stretch justify-center md:w-[400px] lg:h-full">
-              <div className="flex flex-col justify-center pb-14 lg:flex-auto lg:pb-20">
-                <EmailAuthForm />
-              </div>
-              <div className="flex items-center justify-end">
-                {/* <div className='text-primary flex gap-5 text-sm font-semibold'>
-                  <Link href='/tos'>{t('tos')}</Link>
-                </div> */}
-                <div className="flex items-center gap-5">
-                  <LanguageSwitch />
-                  <ThemeSwitch />
-                </div>
-              </div>
+            <h1 className="text-balance font-semibold text-4xl tracking-normal md:text-6xl">
+              Manage everything from one quiet place.
+            </h1>
+            <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground leading-8 lg:mx-0">
+              {site.site_desc ||
+                "A focused workspace for users, products, nodes, orders, and daily operations."}
+            </p>
+          </section>
+
+          <section className="mx-auto w-full max-w-[420px]">
+            <div className="mb-8 flex justify-center lg:hidden">
+              <Link className="flex flex-col items-center" to="/">
+                <img
+                  alt="logo"
+                  className="size-12 rounded-xl"
+                  height={48}
+                  src={site.site_logo || "/favicon.svg"}
+                  width={48}
+                />
+              </Link>
             </div>
-          </div>
+            <div className="rounded-lg border bg-card/80 px-6 py-8 shadow-sm backdrop-blur md:px-8">
+              <div className="mb-8 text-center">
+                <h2 className="font-semibold text-2xl">Sign in</h2>
+                <p className="mt-2 text-muted-foreground text-sm">
+                  Continue to {site.site_name}
+                </p>
+              </div>
+              <EmailAuthForm />
+            </div>
+          </section>
         </div>
       </div>
     </main>
