@@ -111,24 +111,6 @@ export async function updateNodeConfig(
   );
 }
 
-/** Generate forward mTLS certificates POST /v1/admin/system/node_config/forward_mtls/generate */
-export async function generateForwardMTLSCert(
-  body: API.GenerateForwardMTLSCertRequest,
-  options?: { [key: string]: any }
-) {
-  return request<API.Response & { data?: API.NodeConfig }>(
-    "/v1/admin/system/node_config/forward_mtls/generate",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: body,
-      ...(options || {}),
-    }
-  );
-}
-
 /** PreView Node Multiplier GET /v1/admin/system/node_multiplier/preview */
 export async function preViewNodeMultiplier(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.PreViewNodeMultiplierResponse }>(

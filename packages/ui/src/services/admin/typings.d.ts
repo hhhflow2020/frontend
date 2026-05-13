@@ -1389,17 +1389,6 @@ declare namespace API {
     node_push_interval: number;
     traffic_report_threshold: number;
     ip_strategy: string;
-    forward_mtls_enabled: boolean;
-    forward_mtls_ca_cert: string;
-    forward_mtls_server_cert: string;
-    forward_mtls_server_key: string;
-    forward_mtls_client_cert: string;
-    forward_mtls_client_key: string;
-  };
-
-  type GenerateForwardMTLSCertRequest = {
-    common_name?: string;
-    days?: number;
   };
 
   type NodeRelay = {
