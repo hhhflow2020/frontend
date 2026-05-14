@@ -13,6 +13,8 @@
   "deviceLimit": "IP Limit",
   "edit": "Edit",
   "editSubscribe": "Edit Subscription",
+  "guestVisible": "Guest Visible",
+  "guestVisibleDescription": "Allow visitors to view this product on the user site before login",
   "sortSuccess": "Sort completed successfully",
   "form": {
     "annualReset": "Annual Reset",
@@ -69,9 +71,12 @@
   "quota": "Purchase Limit/Time",
   "replacement": "Reset Price/Time",
   "sell": "Sell",
+  "sellable": "Sellable",
+  "sellableDescription": "Allow logged-in users to purchase this product",
   "show": "Display",
   "sold": "Subscription Count",
   "traffic": "Traffic",
   "unitPrice": "Unit Price",
+  "updateFailed": "Update failed",
   "updateSuccess": "Update Successful"
 }

@@ -1,22 +1,18 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@workspace/ui/components/card";
-import { Separator } from "@workspace/ui/components/separator";
+import { Card, CardContent } from "@workspace/ui/components/card";
 import Empty from "@workspace/ui/composed/empty";
 import { Icon } from "@workspace/ui/composed/icon";
 import { cn } from "@workspace/ui/lib/utils";
 import { querySubscribeList } from "@workspace/ui/services/user/subscribe";
+import { Check, Gauge, HardDrive, Router, Sparkles, Zap } from "lucide-react";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Display } from "@/components/display";
-import { SubscribeDetail } from "./detail";
 import Purchase from "./purchase";
 
 export default function Subscribe() {
@@ -35,7 +31,6 @@ export default function Subscribe() {
   const { data } = useQuery({
     queryKey: ["querySubscribeList", locale],
     queryFn: async () => {
-      console.log("Fetching subscription list...");
       const { data } = await querySubscribeList({ language: locale });
       return data.data?.list || [];
     },
@@ -46,130 +41,216 @@ export default function Subscribe() {
   return (
     <>
       <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-          {filteredData?.map((item) => (
-            <Card className="relative flex flex-col" key={item.id}>
-              <CardHeader className="font-medium text-xl">
-                {item.name}
-              </CardHeader>
-              <CardContent className="*:!text-sm flex flex-grow flex-col gap-3">
-                {/* <div className='font-semibold'>{t('productDescription')}</div> */}
-                <ul className="flex flex-grow flex-col gap-3">
-                  {(() => {
-                    let parsedDescription: {
-                      description: string;
-                      features: Array<{
-                        icon: string;
-                        label: string;
-                        type: "default" | "success" | "destructive";
-                      }>;
-                    };
-                    try {
-                      parsedDescription = JSON.parse(item.description);
-                    } catch {
-                      parsedDescription = { description: "", features: [] };
-                    }
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filteredData?.map((item) => {
+            const parsed = parseSubscribeDescription(item.description);
+            const price = getDisplayPrice(item);
+            const unitTime =
+              unitTimeMap[item.unit_time!] ||
+              t(item.unit_time || "Month", item.unit_time || "Month");
+            const hasDiscount = item.discount && item.discount.length > 0;
 
-                    const { description, features } = parsedDescription;
-                    return (
-                      <>
-                        {description && (
-                          <li className="text-muted-foreground">
-                            {description}
-                          </li>
+            return (
+              <Card
+                className="group hover:-translate-y-0.5 relative overflow-hidden border-muted/70 transition hover:border-primary/30 hover:shadow-lg"
+                key={item.id}
+              >
+                <CardContent className="flex min-h-full flex-col gap-6 p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-2xl leading-tight">
+                          {item.name}
+                        </h3>
+                        {hasDiscount && (
+                          <Badge variant="secondary">
+                            <Sparkles className="size-3" />
+                            {t("discount", "Discount")}
+                          </Badge>
                         )}
-                        {features?.map(
-                          (
-                            feature: {
-                              icon: string;
-                              label: string;
-                              type: "default" | "success" | "destructive";
-                            },
-                            index: number
-                          ) => (
-                            <li
-                              className={cn("flex items-center gap-1", {
-                                "text-muted-foreground line-through":
+                      </div>
+                      {parsed.description && (
+                        <p className="line-clamp-2 text-muted-foreground text-sm leading-6">
+                          {parsed.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-end gap-1">
+                      <div className="font-semibold text-4xl tracking-normal">
+                        <Display type="currency" value={price.amount} />
+                      </div>
+                      <span className="pb-1 text-muted-foreground text-sm">
+                        {price.quantity === 1
+                          ? `/${unitTime}`
+                          : `/${price.quantity} ${unitTime}`}
+                      </span>
+                    </div>
+                    {item.show_original_price !== false &&
+                      hasDiscount &&
+                      item.discount?.[0] && (
+                        <p className="text-muted-foreground text-sm">
+                          {t("from", "From")}{" "}
+                          <span className="line-through">
+                            <Display
+                              type="currency"
+                              value={
+                                item.unit_price * item.discount[0].quantity
+                              }
+                            />
+                          </span>
+                        </p>
+                      )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <PlanMetric
+                      icon={<HardDrive className="size-4" />}
+                      label={t("detail.traffic", "Traffic")}
+                      value={
+                        <Display
+                          type="traffic"
+                          unlimited
+                          value={item.traffic}
+                        />
+                      }
+                    />
+                    <PlanMetric
+                      icon={<Gauge className="size-4" />}
+                      label={t("detail.speedLimit", "Speed")}
+                      value={
+                        <Display
+                          type="trafficSpeed"
+                          unlimited
+                          value={item.speed_limit}
+                        />
+                      }
+                    />
+                    <PlanMetric
+                      icon={<Router className="size-4" />}
+                      label={t("detail.deviceLimit", "Devices")}
+                      value={
+                        <Display
+                          type="number"
+                          unlimited
+                          value={item.device_limit}
+                        />
+                      }
+                    />
+                  </div>
+
+                  {parsed.features.length > 0 && (
+                    <ul className="grid gap-3 text-sm">
+                      {parsed.features.slice(0, 5).map((feature, index) => (
+                        <li
+                          className={cn("flex items-start gap-2", {
+                            "text-muted-foreground line-through":
+                              feature.type === "destructive",
+                          })}
+                          key={`${feature.label}-${index}`}
+                        >
+                          {feature.icon ? (
+                            <Icon
+                              className={cn("mt-0.5 size-4 text-primary", {
+                                "text-emerald-500": feature.type === "success",
+                                "text-destructive":
                                   feature.type === "destructive",
                               })}
-                              key={index}
-                            >
-                              {feature.icon && (
-                                <Icon
-                                  className={cn("size-5 text-primary", {
-                                    "text-green-500":
-                                      feature.type === "success",
-                                    "text-destructive":
-                                      feature.type === "destructive",
-                                  })}
-                                  icon={feature.icon}
-                                />
-                              )}
-                              {feature.label}
-                            </li>
-                          )
-                        )}
-                      </>
-                    );
-                  })()}
-                </ul>
-                <SubscribeDetail
-                  subscribe={{
-                    ...item,
-                    name: undefined,
-                  }}
-                />
-              </CardContent>
-              <Separator />
-              <CardFooter className="flex flex-col gap-2">
-                {(() => {
-                  const hasDiscount = item.discount && item.discount.length > 0;
-                  const shouldShowOriginal = item.show_original_price !== false;
+                              icon={feature.icon}
+                            />
+                          ) : (
+                            <Check className="mt-0.5 size-4 text-emerald-500" />
+                          )}
+                          <span className="leading-5">{feature.label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
 
-                  const displayPrice =
-                    shouldShowOriginal || !hasDiscount
-                      ? item.unit_price
-                      : Math.round(
-                          item.unit_price *
-                            (item.discount?.[0]?.quantity ?? 1) *
-                            ((item.discount?.[0]?.discount ?? 100) / 100)
-                        );
-
-                  const displayQuantity =
-                    shouldShowOriginal || !hasDiscount
-                      ? 1
-                      : (item.discount?.[0]?.quantity ?? 1);
-
-                  const unitTime =
-                    unitTimeMap[item.unit_time!] ||
-                    t(item.unit_time || "Month", item.unit_time || "Month");
-
-                  return (
-                    <h2 className="pb-8 font-semibold text-2xl sm:text-3xl">
-                      <Display type="currency" value={displayPrice} />
-                      <span className="font-medium text-base">
-                        {displayQuantity === 1
-                          ? `/${unitTime}`
-                          : `/${displayQuantity} ${unitTime}`}
-                      </span>
-                    </h2>
-                  );
-                })()}
-                <Button
-                  className="absolute bottom-0 w-full rounded-t-none rounded-b-xl"
-                  onClick={() => {
-                    setSubscribe(item);
-                  }}
-                >
-                  {t("buy", "Buy")}
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                  <Button
+                    className="mt-auto h-11 w-full"
+                    disabled={!item.sell}
+                    onClick={() => {
+                      setSubscribe(item);
+                    }}
+                  >
+                    <Zap className="size-4" />
+                    {item.sell ? t("buy", "Buy") : t("soldOut", "Unavailable")}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
         {filteredData?.length === 0 && <Empty />}
       </div>
       <Purchase setSubscribe={setSubscribe} subscribe={subscribe} />
     </>
   );
+}
+
+function PlanMetric({
+  icon,
+  label,
+  value,
+}: Readonly<{
+  icon: ReactNode;
+  label: string;
+  value: ReactNode;
+}>) {
+  return (
+    <div className="rounded-md border bg-muted/30 p-3">
+      <div className="mb-2 flex items-center gap-1.5 text-muted-foreground text-xs">
+        {icon}
+        <span className="truncate">{label}</span>
+      </div>
+      <div className="truncate font-medium text-sm">{value}</div>
+    </div>
+  );
+}
+
+function getDisplayPrice(item: API.Subscribe) {
+  const firstDiscount = item.discount?.[0];
+  const shouldShowOriginal = item.show_original_price !== false;
+  if (shouldShowOriginal || !firstDiscount) {
+    return {
+      amount: item.unit_price,
+      quantity: 1,
+    };
+  }
+
+  return {
+    amount: Math.round(
+      item.unit_price *
+        (firstDiscount.quantity ?? 1) *
+        ((firstDiscount.discount ?? 100) / 100)
+    ),
+    quantity: firstDiscount.quantity ?? 1,
+  };
+}
+
+function parseSubscribeDescription(value?: string): {
+  description: string;
+  features: Array<{
+    icon?: string;
+    label: string;
+    type?: "default" | "success" | "destructive";
+  }>;
+} {
+  if (!value) {
+    return { description: "", features: [] };
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return {
+      description:
+        typeof parsed.description === "string" ? parsed.description : "",
+      features: Array.isArray(parsed.features) ? parsed.features : [],
+    };
+  } catch {
+    return { description: value, features: [] };
+  }
 }

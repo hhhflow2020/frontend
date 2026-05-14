@@ -20,7 +20,10 @@
     "availableTraffic": "Available Traffic",
     "connectedDevices": "Connected Devices",
     "connectionSpeed": "Connection Speed",
-    "productDetail": "Product Details"
+    "deviceLimit": "Devices",
+    "productDetail": "Product Details",
+    "speedLimit": "Speed",
+    "traffic": "Traffic"
   },
   "discount": "Discount",
   "discountInfo": "Discount Info",
@@ -49,6 +52,7 @@
   "resetTrafficDescription": "Reset traffic to zero, and start a new billing cycle",
   "resetTrafficTitle": "Reset Traffic",
   "subscriptionNotFound": "Subscription not found",
+  "soldOut": "Unavailable",
   "unsubscribe": {
     "cancel": "Cancel",
     "confirm": "Confirm",

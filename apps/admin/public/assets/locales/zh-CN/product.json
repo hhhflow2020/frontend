@@ -13,6 +13,8 @@
   "deviceLimit": "IP限制",
   "edit": "编辑",
   "editSubscribe": "编辑订阅",
+  "guestVisible": "访客可见",
+  "guestVisibleDescription": "允许未登录用户在用户端查看该商品",
   "sortSuccess": "排序成功",
   "form": {
     "annualReset": "年度重置",
@@ -69,9 +71,12 @@
   "quota": "购买限制/次",
   "replacement": "重置价格/次",
   "sell": "销售",
+  "sellable": "可购买",
+  "sellableDescription": "允许登录用户购买该商品",
   "show": "显示",
   "sold": "订阅数量",
   "traffic": "流量",
   "unitPrice": "单价",
+  "updateFailed": "更新失败",
   "updateSuccess": "更新成功"
 }

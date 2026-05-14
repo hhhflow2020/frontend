@@ -16,7 +16,7 @@ import {
   subscribeSort,
   updateSubscribe,
 } from "@workspace/ui/services/admin/subscribe";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Display } from "@/components/display";
@@ -130,35 +130,37 @@ export default function SubscribeTable() {
       columns={[
         {
           accessorKey: "show",
-          header: t("show"),
+          header: t("guestVisible", "Guest Visible"),
           cell: ({ row }) => (
-            <Switch
-              defaultChecked={row.getValue("show")}
-              onCheckedChange={async (checked) => {
-                await updateSubscribe({
-                  ...row.original,
-                  show: checked,
-                } as API.UpdateSubscribeRequest);
-                ref.current?.refresh();
-                fetchSubscribes();
+            <SubscribeStatusSwitch
+              label={t(
+                "guestVisibleDescription",
+                "Visible on the user site before login"
+              )}
+              onChange={(checked) => {
+                row.original.show = checked;
               }}
+              subscribe={row.original}
+              value={!!row.getValue("show")}
+              valueKey="show"
             />
           ),
         },
         {
           accessorKey: "sell",
-          header: t("sell"),
+          header: t("sellable", "Sellable"),
           cell: ({ row }) => (
-            <Switch
-              defaultChecked={row.getValue("sell")}
-              onCheckedChange={async (checked) => {
-                await updateSubscribe({
-                  ...row.original,
-                  sell: checked,
-                } as API.UpdateSubscribeRequest);
-                ref.current?.refresh();
-                fetchSubscribes();
+            <SubscribeStatusSwitch
+              label={t(
+                "sellableDescription",
+                "Available for purchase after user login"
+              )}
+              onChange={(checked) => {
+                row.original.sell = checked;
               }}
+              subscribe={row.original}
+              value={!!row.getValue("sell")}
+              valueKey="sell"
             />
           ),
         },
@@ -323,6 +325,58 @@ export default function SubscribeTable() {
           total: data.data?.total || 0,
         };
       }}
+    />
+  );
+}
+
+function SubscribeStatusSwitch({
+  label,
+  onChange,
+  subscribe,
+  value,
+  valueKey,
+}: Readonly<{
+  label: string;
+  onChange: (checked: boolean) => void;
+  subscribe: API.SubscribeItem;
+  value: boolean;
+  valueKey: "show" | "sell";
+}>) {
+  const { t } = useTranslation("product");
+  const { fetchSubscribes } = useSubscribe();
+  const [checked, setChecked] = useState(value);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setChecked(value);
+  }, [value]);
+
+  return (
+    <Switch
+      aria-label={label}
+      checked={checked}
+      disabled={saving}
+      onCheckedChange={async (nextChecked) => {
+        const previous = checked;
+        setChecked(nextChecked);
+        setSaving(true);
+        onChange(nextChecked);
+        try {
+          await updateSubscribe({
+            ...subscribe,
+            [valueKey]: nextChecked,
+          } as API.UpdateSubscribeRequest);
+          toast.success(t("updateSuccess"));
+          fetchSubscribes();
+        } catch {
+          setChecked(previous);
+          onChange(previous);
+          toast.error(t("updateFailed", "Update failed"));
+        } finally {
+          setSaving(false);
+        }
+      }}
+      title={label}
     />
   );
 }
