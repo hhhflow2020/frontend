@@ -27,7 +27,7 @@ export default function Auth() {
               alt="logo"
               className="size-8 rounded-md"
               height={32}
-              src={site.site_logo || "/favicon.svg"}
+              src={site.site_logo || `${import.meta.env.BASE_URL}favicon.svg`}
               width={32}
             />
             <span className="font-medium text-sm">{site.site_name}</span>
@@ -59,7 +59,9 @@ export default function Auth() {
                   alt="logo"
                   className="size-12 rounded-xl"
                   height={48}
-                  src={site.site_logo || "/favicon.svg"}
+                  src={
+                    site.site_logo || `${import.meta.env.BASE_URL}favicon.svg`
+                  }
                   width={48}
                 />
               </Link>

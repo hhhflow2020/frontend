@@ -155,7 +155,9 @@ export function SidebarLeft({
                     alt="logo"
                     className="size-full"
                     height={24}
-                    src={site.site_logo || "/favicon.svg"}
+                    src={
+                      site.site_logo || `${import.meta.env.BASE_URL}favicon.svg`
+                    }
                     width={24}
                   />
                 </div>

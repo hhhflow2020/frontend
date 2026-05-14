@@ -40,8 +40,9 @@ export const Route = createRootRouteWithContext()({
     const title = site.site_name || "Loading...";
     const description = site.site_desc || "";
     const keywords = site.keywords || "";
-    const logo = site.site_logo || "";
+    const logo = site.site_logo || `${import.meta.env.BASE_URL}favicon.svg`;
     const url = isBrowser() ? window.location.href : "";
+    const manifest = `${import.meta.env.BASE_URL}site.webmanifest`;
 
     return (
       <HelmetProvider>
@@ -52,7 +53,7 @@ export const Route = createRootRouteWithContext()({
           <link href={url} rel="canonical" />
           <link href={logo} rel="icon" type="image/*" />
           <link href={logo} rel="apple-touch-icon" sizes="180x180" />
-          <link href="/site.webmanifest" rel="manifest" />
+          <link href={manifest} rel="manifest" />
         </Helmet>
         <NavigationProgress />
         <Outlet />
