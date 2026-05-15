@@ -41,7 +41,7 @@ export default function Subscribe() {
   return (
     <>
       <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
           {filteredData?.map((item) => {
             const parsed = parseSubscribeDescription(item.description);
             const discounts = getDisplayDiscounts(item.discount);
@@ -91,21 +91,19 @@ export default function Subscribe() {
                         <div className="mb-2 font-bold text-[10px] text-emerald-600/80 uppercase tracking-widest dark:text-emerald-400/80">
                           {t("volumeDiscounts", "Volume Discounts")}
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {discounts.slice(0, 4).map((discount) => (
-                            <Badge
-                              className="rounded-lg border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-medium text-emerald-700 shadow-sm transition-colors hover:bg-emerald-500/20 dark:text-emerald-300"
+                        <div className="grid grid-cols-3 gap-2">
+                          {discounts.slice(0, 3).map((discount) => (
+                            <div
+                              className="flex flex-col items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-1 py-1.5 text-emerald-700 shadow-sm transition-colors hover:bg-emerald-500/20 dark:text-emerald-300"
                               key={`${discount.quantity}-${discount.discount}`}
-                              variant="outline"
                             >
-                              <span className="opacity-80">
+                              <span className="mb-0.5 font-medium text-[10px] uppercase leading-none opacity-80">
                                 {discount.quantity} {unitTime}
                               </span>
-                              <span className="mx-1.5 opacity-30">|</span>
-                              <span className="font-bold">
+                              <span className="font-bold text-lg leading-none">
                                 -{100 - discount.discount}%
                               </span>
-                            </Badge>
+                            </div>
                           ))}
                         </div>
                       </div>
