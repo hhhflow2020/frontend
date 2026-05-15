@@ -86,7 +86,7 @@ function PctBar({ label, value }: { label?: string; value: number }) {
 
 function ResourcesCell({ status }: { status: Partial<API.ServerStatus> }) {
   return (
-    <div className="flex min-w-28 flex-col gap-2 rounded-xl border border-white/5 bg-muted/20 p-2">
+    <div className="flex w-fit min-w-[120px] flex-col gap-2 rounded-xl border border-border/40 bg-muted/10 p-2.5">
       <PctBar label="CPU" value={(status.cpu as number) ?? 0} />
       <PctBar label="MEM" value={(status.mem as number) ?? 0} />
       <PctBar label="DISK" value={(status.disk as number) ?? 0} />
@@ -123,7 +123,7 @@ function RegionIpCell({
   const region =
     [country, city].filter(Boolean).join(" / ") || notAvailableText;
   return (
-    <div className="flex min-w-32 max-w-40 flex-col gap-0.5">
+    <div className="flex w-fit min-w-[140px] flex-col gap-1 rounded-xl border border-border/40 bg-muted/10 p-2.5">
       <span className="truncate font-medium" title={ip || notAvailableText}>
         {ip || notAvailableText}
       </span>
@@ -139,7 +139,16 @@ function shortHash(value?: string) {
   return value.length > 10 ? value.slice(0, 10) : value;
 }
 
-function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
+function UnifiedStatusCell({
+  status,
+  tOnline,
+  tOffline,
+}: {
+  status: Partial<API.ServerStatus>;
+  tOnline: string;
+  tOffline: string;
+}) {
+  const offline = status.status === "offline";
   const applyStatus = status.config_apply_status || "unknown";
   const syncStatus = status.config_sync_status || "unknown";
   const ok = applyStatus === "ok" && syncStatus === "ok";
@@ -149,49 +158,97 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
     status.last_config_error ||
     status.xray_stats_error ||
     "";
+
   return (
-    <div className="flex min-w-32 max-w-36 flex-col gap-1.5 text-xs">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Badge
-          className="h-5 px-1.5 font-normal text-[10px]"
-          variant={ok ? "secondary" : pending ? "outline" : "destructive"}
-        >
-          {ok ? "Config OK" : pending ? "Config Pending" : "Config Failed"}
-        </Badge>
-        {status.xray_running ? (
-          <Badge
-            className="h-5 bg-emerald-500/10 px-1.5 font-normal text-[10px] text-emerald-600 dark:text-emerald-400"
-            variant="secondary"
+    <div className="flex w-fit min-w-[150px] flex-col gap-1.5 rounded-xl border border-border/40 bg-muted/10 p-2.5 text-[11px] leading-tight">
+      <div className="grid grid-cols-[42px_1fr] items-center gap-1.5">
+        <span className="font-medium text-muted-foreground">Node</span>
+        <span className="flex items-center gap-1.5 font-medium">
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              offline ? "bg-zinc-400" : "bg-emerald-500"
+            )}
+          />
+          <span
+            className={
+              offline
+                ? "text-muted-foreground"
+                : "text-emerald-600 dark:text-emerald-400"
+            }
           >
-            Xray Running
-          </Badge>
-        ) : (
-          <Badge
-            className="h-5 px-1.5 font-normal text-[10px]"
-            variant="outline"
-          >
-            Xray Stopped
-          </Badge>
-        )}
-      </div>
-      <div className="truncate text-muted-foreground">
-        run:{" "}
-        <span className="font-mono">
-          {shortHash(status.running_config_hash || status.config_version) ||
-            "-"}
+            {offline ? tOffline : tOnline}
+          </span>
         </span>
-        {status.pending_config_hash ? (
-          <>
-            {" "}
-            pending:{" "}
-            <span className="font-mono">
+      </div>
+
+      <div className="grid grid-cols-[42px_1fr] items-center gap-1.5">
+        <span className="font-medium text-muted-foreground">Xray</span>
+        <span className="flex items-center gap-1.5 font-medium">
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              status.xray_running ? "bg-emerald-500" : "bg-red-500"
+            )}
+          />
+          <span
+            className={
+              status.xray_running
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-red-500"
+            }
+          >
+            {status.xray_running ? "Running" : "Stopped"}
+          </span>
+        </span>
+      </div>
+
+      <div className="grid grid-cols-[42px_1fr] items-center gap-1.5">
+        <span className="font-medium text-muted-foreground">Config</span>
+        <span className="flex items-center gap-1.5 font-medium">
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              ok ? "bg-blue-500" : pending ? "bg-amber-500" : "bg-red-500"
+            )}
+          />
+          <span
+            className={
+              ok
+                ? "text-blue-600 dark:text-blue-400"
+                : pending
+                  ? "text-amber-500"
+                  : "text-red-500"
+            }
+          >
+            {ok ? "Synced" : pending ? "Pending" : "Failed"}
+          </span>
+        </span>
+      </div>
+
+      <div className="mt-1 flex flex-col gap-0.5 border-border/40 border-t pt-1.5 font-mono text-[10px] text-muted-foreground">
+        <div className="flex items-center justify-between gap-2">
+          <span>RUN:</span>
+          <span className="truncate">
+            {shortHash(status.running_config_hash || status.config_version) ||
+              "-"}
+          </span>
+        </div>
+        {status.pending_config_hash && (
+          <div className="flex items-center justify-between gap-2 text-amber-500/80">
+            <span>PND:</span>
+            <span className="truncate">
               {shortHash(status.pending_config_hash)}
             </span>
-          </>
-        ) : null}
+          </div>
+        )}
       </div>
+
       {error ? (
-        <div className="max-w-36 truncate text-destructive" title={error}>
+        <div
+          className="mt-0.5 max-w-[130px] truncate font-medium text-[10px] text-red-500"
+          title={error}
+        >
           {error}
         </div>
       ) : null}
@@ -201,7 +258,7 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
 
 function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
   return (
-    <div className="flex min-w-44 flex-col gap-1.5 rounded-xl border border-white/5 bg-muted/20 p-2.5 text-[11px] leading-tight">
+    <div className="flex w-fit min-w-[176px] flex-col gap-1.5 rounded-xl border border-border/40 bg-muted/10 p-2.5 text-[11px] leading-tight">
       <div className="grid grid-cols-[38px_1fr_1fr] items-center gap-1">
         <span className="font-medium text-muted-foreground">Sys</span>
         <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
@@ -250,7 +307,7 @@ function ConnectionsCell({ status }: { status: Partial<API.ServerStatus> }) {
   const xrayInbound = status.xray_inbound_connections ?? 0;
   const xrayOutbound = status.xray_outbound_connections ?? 0;
   return (
-    <div className="min-w-32 space-y-1.5 rounded-xl border border-white/5 bg-muted/20 p-2.5 text-[11px] leading-tight">
+    <div className="w-fit min-w-[140px] space-y-1.5 rounded-xl border border-border/40 bg-muted/10 p-2.5 text-[11px] leading-tight">
       <div className="mb-1 grid grid-cols-[34px_1fr_1fr] gap-1 border-border/40 border-b pb-1 text-muted-foreground">
         <span />
         <span>In</span>
@@ -451,24 +508,12 @@ export default function Servers() {
             header: t("status", "Status"),
             cell: ({ row }) => {
               const status = getStatus(row.original);
-              const offline = status.status === "offline";
               return (
-                <div className="flex min-w-36 max-w-40 flex-col gap-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={cn(
-                        "inline-block h-2.5 w-2.5 rounded-full",
-                        offline ? "bg-zinc-400" : "bg-emerald-500"
-                      )}
-                    />
-                    <span className="text-sm">
-                      {offline
-                        ? t("offline", "Offline")
-                        : t("online", "Online")}
-                    </span>
-                  </div>
-                  <ConfigStatusCell status={status} />
-                </div>
+                <UnifiedStatusCell
+                  status={status}
+                  tOffline={t("offline", "Offline")}
+                  tOnline={t("online", "Online")}
+                />
               );
             },
           },

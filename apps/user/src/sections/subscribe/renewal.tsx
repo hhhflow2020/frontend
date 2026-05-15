@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
 import { Separator } from "@workspace/ui/components/separator";
+import { Icon } from "@workspace/ui/composed/icon";
 import { preCreateOrder, renewal } from "@workspace/ui/services/user/order";
 import { LoaderCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
@@ -113,7 +114,10 @@ export default function Renewal({ id, subscribe }: Readonly<RenewalProps>) {
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button size="sm">{t("renew", "Renew")}</Button>
+        <Button size="sm">
+          <Icon className="mr-1.5 size-4" icon="uil:history" />
+          {t("renew", "Renew")}
+        </Button>
       </DialogTrigger>
       <DialogContent className="flex h-full flex-col overflow-y-auto md:h-auto md:max-w-screen-lg">
         <DialogHeader>

@@ -15,33 +15,36 @@ export function SubscribeDetail({ subscribe }: Readonly<SubscribeDetailProps>) {
 
   return (
     <>
-      <div className="font-semibold">
-        {t("detail.productDetail", "Product Detail")}
+      <div className="mb-4 text-center font-bold text-slate-400 text-sm uppercase tracking-widest">
+        --- {t("detail.productDetail", "Order Info")} ---
       </div>
-      <ul className="grid grid-cols-1 gap-4 *:flex *:items-center *:justify-between *:gap-4 lg:grid-cols-1">
+      <ul className="grid gap-2">
         {subscribe?.name && (
-          <li className="flex items-center justify-between">
-            <span className="line-clamp-2 flex-1 text-muted-foreground">
+          <li className="flex items-end justify-between pb-3">
+            <span className="font-bold text-slate-800 dark:text-slate-200">
               {subscribe?.name}
             </span>
-            <span className="shrink-0">
-              x <span>{subscribe?.quantity || 1}</span>
+            <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+            <span className="font-bold text-slate-800 dark:text-slate-200">
+              x{subscribe?.quantity || 1}
             </span>
           </li>
         )}
-        <li>
-          <span className="text-muted-foreground">
+        <li className="flex items-end justify-between">
+          <span className="text-slate-500 dark:text-slate-400">
             {t("detail.availableTraffic", "Available Traffic")}
           </span>
-          <span className="text-right font-medium">
+          <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
             <Display type="traffic" unlimited value={subscribe?.traffic} />
           </span>
         </li>
-        <li>
-          <span className="text-muted-foreground">
+        <li className="flex items-end justify-between">
+          <span className="text-slate-500 dark:text-slate-400">
             {t("detail.connectionSpeed", "Connection Speed")}
           </span>
-          <span className="text-right font-medium">
+          <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
             <Display
               type="trafficSpeed"
               unlimited
@@ -49,11 +52,12 @@ export function SubscribeDetail({ subscribe }: Readonly<SubscribeDetailProps>) {
             />
           </span>
         </li>
-        <li>
-          <span className="text-muted-foreground">
+        <li className="flex items-end justify-between">
+          <span className="text-slate-500 dark:text-slate-400">
             {t("detail.connectedDevices", "Connected Devices")}
           </span>
-          <span className="text-right font-medium">
+          <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
             <Display type="number" unlimited value={subscribe?.device_limit} />
           </span>
         </li>

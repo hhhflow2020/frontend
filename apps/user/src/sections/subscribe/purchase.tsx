@@ -118,20 +118,20 @@ export default function Purchase({
       }}
       open={!!subscribe?.id}
     >
-      <DialogContent className="flex h-full flex-col overflow-hidden border-none p-0 md:h-auto md:max-w-screen-lg">
+      <DialogContent className="flex h-full flex-col overflow-hidden border-none bg-background/90 p-0 shadow-2xl backdrop-blur-2xl md:h-auto md:max-w-4xl md:rounded-3xl">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>{t("buySubscription", "Buy Subscription")}</DialogTitle>
         </DialogHeader>
-        <div className="grid w-full flex-grow gap-3 overflow-auto p-6 pt-0 lg:grid-cols-2">
-          <Card className="border-transparent shadow-none md:border-inherit md:shadow">
-            <CardContent className="grid gap-3 text-sm">
+        <div className="grid w-full flex-grow gap-8 overflow-auto p-6 pt-2 lg:grid-cols-[320px_1fr]">
+          <Card className="h-fit border-border/40 bg-[#fbfbfb] shadow-sm md:rounded-none md:border-x-0 md:border-y md:border-dashed dark:bg-[#1a1a1a]">
+            <CardContent className="grid gap-2 p-5 font-mono text-slate-600 text-sm dark:text-slate-400">
               <SubscribeDetail
                 subscribe={{
                   ...subscribe,
                   quantity: params.quantity,
                 }}
               />
-              <Separator />
+              <Separator className="my-1 border-dashed opacity-70" />
               <SubscribeBilling
                 order={{
                   ...order,
@@ -142,8 +142,8 @@ export default function Purchase({
               />
             </CardContent>
           </Card>
-          <div className="flex flex-col justify-between text-sm">
-            <div className="mb-6 grid gap-3">
+          <div className="flex h-full flex-col justify-between text-sm">
+            <div className="mb-6 grid gap-4">
               <DurationSelector
                 discounts={subscribe?.discount}
                 onChange={(value) => {
@@ -165,7 +165,7 @@ export default function Purchase({
               />
             </div>
             <Button
-              className="fixed bottom-0 left-0 w-full md:relative md:mt-6"
+              className="hover:-translate-y-0.5 fixed bottom-0 left-0 h-14 w-full text-lg shadow-lg transition-all hover:shadow-xl md:relative md:mt-auto md:rounded-2xl"
               disabled={loading}
               onClick={handleSubmit}
             >

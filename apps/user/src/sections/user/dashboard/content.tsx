@@ -271,21 +271,24 @@ export default function Content() {
                     </div>
                   </div>
                 )}
-                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-                  <CardTitle className="font-medium">
-                    {item.subscribe.name}
-                    <p className="mt-1 text-foreground/50 text-sm">
+                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 space-y-0">
+                  <CardTitle className="flex flex-col gap-1">
+                    <span className="font-black text-2xl text-primary tracking-tight">
+                      {item.subscribe.name}
+                    </span>
+                    <span className="font-medium text-foreground/50 text-sm">
                       {t("expireAt", "Expires At")}:{" "}
                       {item.expire_time
                         ? formatDate(item.expire_time)
                         : t("noLimit", "No Limit")}
-                    </p>
+                    </span>
                   </CardTitle>
                   {item.status !== 4 && (
                     <div className="flex flex-wrap gap-2">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button size="sm" variant="destructive">
+                            <Icon className="mr-1.5 size-4" icon="uil:sync" />
                             {t("resetSubscription", "Reset Subscription")}
                           </Button>
                         </AlertDialogTrigger>
@@ -337,59 +340,142 @@ export default function Content() {
                   )}
                 </CardHeader>
                 <CardContent>
-                  <ul className="grid grid-cols-2 gap-3 *:flex *:flex-col *:justify-between lg:grid-cols-4">
-                    <li>
-                      <span className="text-muted-foreground">
-                        {t("used", "Used")}
-                      </span>
-                      <span className="font-bold text-2xl">
-                        <Display
-                          type="traffic"
-                          unlimited={!item.traffic}
-                          value={item.upload + item.download}
-                        />
-                      </span>
-                    </li>
-                    <li>
-                      <span className="text-muted-foreground">
-                        {t("totalTraffic", "Total Traffic")}
-                      </span>
-                      <span className="font-bold text-2xl">
-                        <Display
-                          type="traffic"
-                          unlimited={!item.traffic}
-                          value={item.traffic}
-                        />
-                      </span>
-                    </li>
-                    <li>
-                      <span className="text-muted-foreground">
-                        {t("nextResetDays", "Next Reset Days")}
-                      </span>
-                      <span className="font-semibold text-2xl">
-                        {item.reset_time
-                          ? differenceInDays(
-                              new Date(item.reset_time),
-                              new Date()
-                            )
-                          : t("noReset", "No Reset")}
-                      </span>
-                    </li>
-                    <li>
-                      <span className="text-muted-foreground">
-                        {t("expirationDays", "Expiration Days")}
-                      </span>
-                      <span className="font-semibold text-2xl">
-                        {}
-                        {item.expire_time
-                          ? differenceInDays(
-                              new Date(item.expire_time),
-                              new Date()
-                            ) || t("unknown", "Unknown")
-                          : t("noLimit", "No Limit")}
-                      </span>
-                    </li>
-                  </ul>
+                  <div className="mt-2 mb-6 flex w-full flex-col gap-6">
+                    <div className="flex flex-col justify-between gap-6 rounded-2xl border border-border/40 bg-muted/5 p-5 lg:flex-row lg:items-center">
+                      <div className="flex min-w-[200px] flex-col">
+                        <span className="mb-1 font-medium text-muted-foreground text-sm">
+                          {t("used", "Used")}
+                        </span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-black text-4xl text-foreground tracking-tighter">
+                            <Display
+                              type="traffic"
+                              unlimited={!item.traffic}
+                              value={item.upload + item.download}
+                            />
+                          </span>
+                          <span className="font-medium text-muted-foreground text-sm">
+                            /{" "}
+                            {item.traffic ? (
+                              <Display type="traffic" value={item.traffic} />
+                            ) : (
+                              "∞"
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex max-w-lg flex-1 flex-col gap-3">
+                        <div className="flex h-6 w-full overflow-hidden rounded-full bg-muted/50 shadow-inner">
+                          {item.traffic ? (
+                            <>
+                              <div
+                                className="relative h-full bg-blue-500 transition-all duration-500 ease-in-out hover:brightness-110"
+                                style={{
+                                  width: `${Math.min(
+                                    100,
+                                    ((item.download || 0) /
+                                      (item.traffic || 1)) *
+                                      100
+                                  )}%`,
+                                }}
+                                title={"Download"}
+                              >
+                                <div className="absolute inset-0 animate-pulse bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] opacity-50" />
+                              </div>
+                              <div
+                                className="relative h-full bg-emerald-500 transition-all duration-500 ease-in-out hover:brightness-110"
+                                style={{
+                                  width: `${Math.min(
+                                    100,
+                                    ((item.upload || 0) / (item.traffic || 1)) *
+                                      100
+                                  )}%`,
+                                }}
+                                title={"Upload"}
+                              >
+                                <div className="absolute inset-0 animate-pulse bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] opacity-50" />
+                              </div>
+                            </>
+                          ) : (
+                            <div className="h-full w-full animate-pulse bg-[length:200%_100%] bg-gradient-to-r from-blue-500 via-emerald-500 to-blue-500 opacity-80" />
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between font-medium text-xs">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <span className="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-sm" />
+                              <Icon
+                                className="size-3.5"
+                                icon="uil:arrow-down"
+                              />
+                              <Display type="traffic" value={item.download} />
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-sm" />
+                              <Icon className="size-3.5" icon="uil:arrow-up" />
+                              <Display type="traffic" value={item.upload} />
+                            </div>
+                          </div>
+                          {!!item.traffic && (
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                              <span>{t("remaining", "Remaining")}:</span>
+                              <span className="text-foreground">
+                                <Display
+                                  type="traffic"
+                                  value={Math.max(
+                                    0,
+                                    item.traffic - (item.upload + item.download)
+                                  )}
+                                />
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <div className="inline-flex w-fit items-center gap-2.5 rounded-full border border-border/40 bg-muted/5 py-1.5 pr-4 pl-1.5 shadow-sm transition-colors hover:bg-muted/10">
+                        <div className="flex size-7 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+                          <Icon className="size-4" icon="uil:sync" />
+                        </div>
+                        <span className="font-medium text-sm">
+                          <span className="mr-1.5 text-muted-foreground">
+                            {t("nextResetDays", "Next Reset Days")}:
+                          </span>
+                          <span className="text-foreground">
+                            {item.reset_time
+                              ? differenceInDays(
+                                  new Date(item.reset_time),
+                                  new Date()
+                                )
+                              : t("noReset", "No Reset")}
+                          </span>
+                        </span>
+                      </div>
+
+                      <div className="inline-flex w-fit items-center gap-2.5 rounded-full border border-border/40 bg-muted/5 py-1.5 pr-4 pl-1.5 shadow-sm transition-colors hover:bg-muted/10">
+                        <div className="flex size-7 items-center justify-center rounded-full bg-orange-500/10 text-orange-500">
+                          <Icon className="size-4" icon="uil:calendar-alt" />
+                        </div>
+                        <span className="font-medium text-sm">
+                          <span className="mr-1.5 text-muted-foreground">
+                            {t("expirationDays", "Expiration Days")}:
+                          </span>
+                          <span className="text-foreground">
+                            {item.expire_time
+                              ? differenceInDays(
+                                  new Date(item.expire_time),
+                                  new Date()
+                                ) || t("unknown", "Unknown")
+                              : t("noLimit", "No Limit")}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                   <Separator className="mt-4" />
                   <Accordion
                     className="w-full"

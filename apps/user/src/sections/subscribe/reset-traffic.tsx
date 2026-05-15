@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
+import { Icon } from "@workspace/ui/composed/icon";
 import { resetTraffic } from "@workspace/ui/services/user/order";
 import { LoaderCircle } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
@@ -52,6 +53,7 @@ export default function ResetTraffic({
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
         <Button size="sm" variant="secondary">
+          <Icon className="mr-1.5 size-4" icon="uil:tachometer-fast-alt" />
           {t("resetTraffic", "Reset Traffic")}
         </Button>
       </DialogTrigger>

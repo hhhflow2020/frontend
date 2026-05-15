@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
+import { Icon } from "@workspace/ui/composed/icon";
 import { preUnsubscribe, unsubscribe } from "@workspace/ui/services/user/user";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -67,6 +68,7 @@ export default function Unsubscribe({
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
         <Button size="sm" variant="destructive">
+          <Icon className="mr-1.5 size-4" icon="uil:ban" />
           {t("unsubscribe.unsubscribe", "Unsubscribe")}
         </Button>
       </DialogTrigger>

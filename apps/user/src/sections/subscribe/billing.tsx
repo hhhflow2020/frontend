@@ -1,6 +1,5 @@
 "use client";
 
-import { Separator } from "@workspace/ui/components/separator";
 import { useTranslation } from "react-i18next";
 import { Display } from "@/components/display";
 
@@ -20,16 +19,17 @@ export function SubscribeBilling({ order }: Readonly<SubscribeBillingProps>) {
 
   return (
     <>
-      <div className="font-semibold">
-        {t("billing.billingTitle", "Billing Detail")}
+      <div className="mt-6 mb-4 text-center font-bold text-slate-400 text-sm uppercase tracking-widest">
+        --- {t("billing.billingTitle", "Billing")} ---
       </div>
-      <ul className="grid grid-cols-2 gap-3 *:flex *:items-center *:justify-between lg:grid-cols-1">
+      <ul className="grid gap-2">
         {order?.type && [1, 2].includes(order?.type) && (
-          <li>
-            <span className="text-muted-foreground">
+          <li className="flex items-end justify-between">
+            <span className="text-slate-500 dark:text-slate-400">
               {t("billing.duration", "Duration")}
             </span>
-            <span>
+            <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+            <span className="font-semibold text-slate-800 dark:text-slate-200">
               {order?.quantity || 1}{" "}
               {t(order?.unit_time || "Month", order?.unit_time || "Month")}
             </span>
@@ -38,65 +38,71 @@ export function SubscribeBilling({ order }: Readonly<SubscribeBillingProps>) {
         {order?.show_original_price !== false &&
           order?.type &&
           [1, 2].includes(order?.type) && (
-            <li>
-              <span className="text-muted-foreground">
-                {t("billing.originalPrice", "Original Price (Monthly)")}
+            <li className="flex items-end justify-between">
+              <span className="text-slate-500 dark:text-slate-400">
+                {t("billing.originalPrice", "Original Price")}
               </span>
-              <span>
+              <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
                 <Display type="currency" value={order?.unit_price} />
               </span>
             </li>
           )}{" "}
-        <li>
-          <span className="text-muted-foreground">
+        <li className="flex items-end justify-between">
+          <span className="text-slate-500 dark:text-slate-400">
             {t("billing.price", "Price")}
           </span>
-          <span>
+          <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
             <Display
               type="currency"
               value={order?.price || order?.unit_price}
             />
           </span>
         </li>
-        <li>
-          <span className="text-muted-foreground">
+        <li className="flex items-end justify-between">
+          <span className="text-slate-500 dark:text-slate-400">
             {t("billing.productDiscount", "Product Discount")}
           </span>
-          <span>
+          <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
             <Display type="currency" value={order?.discount} />
           </span>
         </li>
-        <li>
-          <span className="text-muted-foreground">
+        <li className="flex items-end justify-between">
+          <span className="text-slate-500 dark:text-slate-400">
             {t("billing.couponDiscount", "Coupon Discount")}
           </span>
-          <span>
+          <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
             <Display type="currency" value={order?.coupon_discount} />
           </span>
         </li>
-        <li>
-          <span className="text-muted-foreground">
+        <li className="flex items-end justify-between">
+          <span className="text-slate-500 dark:text-slate-400">
             {t("billing.fee", "Fee")}
           </span>
-          <span>
+          <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
             <Display type="currency" value={order?.fee_amount} />
           </span>
         </li>
-        <li>
-          <span className="text-muted-foreground">
+        <li className="flex items-end justify-between">
+          <span className="text-slate-500 dark:text-slate-400">
             {t("billing.gift", "Gift")}
           </span>
-          <span>
+          <span className="mx-2 mb-1 flex-grow border-slate-300 border-b-2 border-dotted dark:border-slate-700" />
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
             <Display type="currency" value={order?.gift_amount} />
           </span>
         </li>
       </ul>
-      <Separator />
-      <div className="flex items-center justify-between font-semibold">
-        <span className="text-muted-foreground">
-          {t("billing.total", "Total")}
+      <div className="my-4 border-slate-300 border-b-2 border-dashed dark:border-slate-700" />
+      <div className="flex flex-col items-end">
+        <span className="mb-1 font-bold text-[10px] text-slate-500 uppercase tracking-widest dark:text-slate-400">
+          {t("billing.total", "Total Amount")}
         </span>
-        <span>
+        <span className="font-bold text-4xl text-slate-800 tracking-tighter dark:text-slate-100">
           <Display type="currency" value={order?.amount} />
         </span>
       </div>
