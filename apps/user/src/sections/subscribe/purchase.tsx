@@ -120,13 +120,13 @@ export default function Purchase({
       }}
       open={!!subscribe?.id}
     >
-      <DialogContent className="flex h-full flex-col overflow-hidden border-none bg-background p-0 md:h-auto md:max-w-4xl">
+      <DialogContent className="flex h-full flex-col overflow-hidden border-none bg-background p-0 md:h-auto md:max-w-screen-lg">
         <DialogHeader className="border-b px-6 py-5 text-center">
           <DialogTitle className="font-semibold text-xl tracking-normal">
             {t("buySubscription", "Buy Subscription")}
           </DialogTitle>
         </DialogHeader>
-        <div className="grid w-full flex-grow overflow-auto md:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid w-full flex-grow overflow-auto lg:grid-cols-2">
           <section className="grid content-between gap-8 p-6 md:p-8">
             <div className="space-y-8">
               <div className="mx-auto max-w-md space-y-4 text-center">
@@ -203,7 +203,7 @@ export default function Purchase({
             </div>
           </section>
 
-          <aside className="flex flex-col justify-between border-t bg-muted/30 p-5 text-sm md:border-t-0 md:border-l md:p-6">
+          <aside className="flex flex-col justify-between border-t bg-muted/30 p-5 text-sm lg:border-t-0 lg:border-l lg:p-6">
             <div className="grid gap-6">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">

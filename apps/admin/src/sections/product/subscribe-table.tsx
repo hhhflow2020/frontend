@@ -358,14 +358,14 @@ function SubscribeStatusSwitch({
       disabled={saving}
       onCheckedChange={async (nextChecked) => {
         const previous = checked;
+        setChecked(nextChecked);
+        onChange(nextChecked);
         setSaving(true);
         try {
           await updateSubscribe({
             ...subscribe,
             [valueKey]: nextChecked,
           } as API.UpdateSubscribeRequest);
-          setChecked(nextChecked);
-          onChange(nextChecked);
           toast.success(t("updateSuccess"));
           fetchSubscribes();
         } catch {

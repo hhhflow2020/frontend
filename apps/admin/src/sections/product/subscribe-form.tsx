@@ -501,7 +501,9 @@ export default function SubscribeForm<T extends Record<string, any>>({
                               onChange={(value: any) => {
                                 form.setValue(
                                   field.name,
-                                  JSON.stringify(value)
+                                  typeof value === "string"
+                                    ? value
+                                    : JSON.stringify(value)
                                 );
                               }}
                               placeholder={{
@@ -563,7 +565,7 @@ export default function SubscribeForm<T extends Record<string, any>>({
                                 additionalProperties: false,
                               }}
                               title={t("form.description")}
-                              value={field.value && JSON.parse(field.value)}
+                              value={field.value ?? ""}
                             />
                           </FormControl>
                           <FormMessage />
