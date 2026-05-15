@@ -90,6 +90,7 @@ export interface ProTableProps<TData, TValue> {
 export interface ProTableActions {
   refresh: () => void;
   reset: () => void;
+  updateRow: (row: Record<string, unknown> & { id?: string | number }) => void;
 }
 
 export function ProTable<
@@ -225,6 +226,13 @@ export function ProTable<
   useImperativeHandle(action, () => ({
     refresh: fetchData,
     reset,
+    updateRow: (row) => {
+      setData((previous) =>
+        previous.map((item) =>
+          item.id === row.id ? { ...item, ...row } : item
+        )
+      );
+    },
   }));
 
   useEffect(() => {

@@ -44,11 +44,11 @@ export default function Subscribe() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredData?.map((item) => {
             const parsed = parseSubscribeDescription(item.description);
-            const price = getDisplayPrice(item);
+            const discounts = getDisplayDiscounts(item.discount);
             const unitTime =
               unitTimeMap[item.unit_time!] ||
               t(item.unit_time || "Month", item.unit_time || "Month");
-            const hasDiscount = item.discount && item.discount.length > 0;
+            const hasDiscount = discounts.length > 0;
 
             return (
               <Card
@@ -80,26 +80,26 @@ export default function Subscribe() {
                   <div className="space-y-1">
                     <div className="flex items-end gap-1">
                       <div className="font-semibold text-4xl tracking-normal">
-                        <Display type="currency" value={price.amount} />
+                        <Display type="currency" value={item.unit_price} />
                       </div>
                       <span className="pb-1 text-muted-foreground text-sm">
-                        {price.quantity === 1
-                          ? `/${unitTime}`
-                          : `/${price.quantity} ${unitTime}`}
+                        /{unitTime}
                       </span>
                     </div>
-                    {price.originalAmount > price.amount &&
-                      item.show_original_price !== false && (
-                        <p className="text-muted-foreground text-sm">
-                          {t("originalPrice", "Original")}{" "}
-                          <span className="line-through">
-                            <Display
-                              type="currency"
-                              value={price.originalAmount}
-                            />
-                          </span>
-                        </p>
-                      )}
+                    {hasDiscount && (
+                      <div className="flex flex-wrap gap-1.5 text-muted-foreground text-xs">
+                        {discounts.slice(0, 3).map((discount) => (
+                          <Badge
+                            className="h-5 rounded-sm px-1.5 font-normal text-[11px]"
+                            key={`${discount.quantity}-${discount.discount}`}
+                            variant="outline"
+                          >
+                            {discount.quantity} {unitTime} -
+                            {100 - discount.discount}%
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid gap-2 sm:grid-cols-3">
@@ -202,48 +202,24 @@ function PlanMetric({
 }>) {
   return (
     <div className="min-w-0 rounded-md border bg-muted/30 p-3">
-      <div className="mb-2 flex items-center gap-1.5 text-muted-foreground text-xs">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {icon}
         <span className="truncate">{label}</span>
       </div>
-      <div className="break-words font-medium text-sm leading-5">{value}</div>
+      <div className="break-words font-medium text-xs leading-4">{value}</div>
     </div>
   );
 }
 
-function getDisplayPrice(item: API.Subscribe) {
-  const discount = getBestDisplayDiscount(item.discount);
-  if (!discount) {
-    return {
-      amount: item.unit_price,
-      originalAmount: item.unit_price,
-      quantity: 1,
-    };
-  }
-
-  const quantity = discount.quantity ?? 1;
-  const originalAmount = item.unit_price * quantity;
-  return {
-    amount: Math.round(originalAmount * ((discount.discount ?? 100) / 100)),
-    originalAmount,
-    quantity,
-  };
-}
-
-function getBestDisplayDiscount(discounts?: API.SubscribeDiscount[]) {
-  const validDiscounts = discounts?.filter(
-    (item) =>
-      Number(item.quantity) > 0 &&
-      Number(item.discount) > 0 &&
-      Number(item.discount) < 100
-  );
-  if (!validDiscounts?.length) {
-    return;
-  }
-
-  return validDiscounts.reduce((best, item) =>
-    item.discount < best.discount ? item : best
-  );
+function getDisplayDiscounts(discounts?: API.SubscribeDiscount[]) {
+  return (discounts || [])
+    .filter(
+      (item) =>
+        Number(item.quantity) > 1 &&
+        Number(item.discount) > 0 &&
+        Number(item.discount) < 100
+    )
+    .sort((a, b) => a.quantity - b.quantity);
 }
 
 function parseSubscribeDescription(value?: string): {
