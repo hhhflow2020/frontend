@@ -343,7 +343,7 @@ function SubscribeStatusSwitch({
   valueKey: "show" | "sell";
 }>) {
   const { t } = useTranslation("product");
-  const { fetchSubscribes } = useSubscribe();
+  const { patchSubscribe } = useSubscribe();
   const [checked, setChecked] = useState(value);
   const [saving, setSaving] = useState(false);
 
@@ -360,14 +360,15 @@ function SubscribeStatusSwitch({
         const previous = checked;
         setSaving(true);
         try {
-          await updateSubscribe({
+          const updatedSubscribe = {
             ...subscribe,
             [valueKey]: nextChecked,
-          } as API.UpdateSubscribeRequest);
+          } as API.SubscribeItem;
+          await updateSubscribe(updatedSubscribe as API.UpdateSubscribeRequest);
           setChecked(nextChecked);
           onChange(nextChecked);
+          patchSubscribe(updatedSubscribe);
           toast.success(t("updateSuccess"));
-          fetchSubscribes();
         } catch {
           setChecked(previous);
           onChange(previous);

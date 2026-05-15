@@ -11,6 +11,7 @@ interface SubscribeState {
 
   // Actions
   fetchSubscribes: () => Promise<void>;
+  patchSubscribe: (subscribe: API.SubscribeItem) => void;
 
   // Getters
   getSubscribeName: (subscribeId?: number) => string;
@@ -42,6 +43,14 @@ export const useSubscribeStore = create<SubscribeState>((set, get) => ({
     }
   },
 
+  patchSubscribe: (subscribe) => {
+    set((state) => ({
+      subscribes: state.subscribes.map((item) =>
+        item.id === subscribe.id ? { ...item, ...subscribe } : item
+      ),
+    }));
+  },
+
   // Getters
   getSubscribeName: (subscribeId?: number) => {
     if (!subscribeId) return "--";
@@ -66,6 +75,7 @@ export const useSubscribe = () => {
     loading: store.loading,
     loaded: store.loaded,
     fetchSubscribes: store.fetchSubscribes,
+    patchSubscribe: store.patchSubscribe,
     getSubscribeName: store.getSubscribeName,
     getSubscribeById: store.getSubscribeById,
   };

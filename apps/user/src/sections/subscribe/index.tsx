@@ -88,17 +88,14 @@ export default function Subscribe() {
                           : `/${price.quantity} ${unitTime}`}
                       </span>
                     </div>
-                    {item.show_original_price !== false &&
-                      hasDiscount &&
-                      item.discount?.[0] && (
+                    {price.originalAmount > price.amount &&
+                      item.show_original_price !== false && (
                         <p className="text-muted-foreground text-sm">
-                          {t("from", "From")}{" "}
+                          {t("originalPrice", "Original")}{" "}
                           <span className="line-through">
                             <Display
                               type="currency"
-                              value={
-                                item.unit_price * item.discount[0].quantity
-                              }
+                              value={price.originalAmount}
                             />
                           </span>
                         </p>
@@ -215,23 +212,38 @@ function PlanMetric({
 }
 
 function getDisplayPrice(item: API.Subscribe) {
-  const firstDiscount = item.discount?.[0];
-  const shouldShowOriginal = item.show_original_price !== false;
-  if (shouldShowOriginal || !firstDiscount) {
+  const discount = getBestDisplayDiscount(item.discount);
+  if (!discount) {
     return {
       amount: item.unit_price,
+      originalAmount: item.unit_price,
       quantity: 1,
     };
   }
 
+  const quantity = discount.quantity ?? 1;
+  const originalAmount = item.unit_price * quantity;
   return {
-    amount: Math.round(
-      item.unit_price *
-        (firstDiscount.quantity ?? 1) *
-        ((firstDiscount.discount ?? 100) / 100)
-    ),
-    quantity: firstDiscount.quantity ?? 1,
+    amount: Math.round(originalAmount * ((discount.discount ?? 100) / 100)),
+    originalAmount,
+    quantity,
   };
+}
+
+function getBestDisplayDiscount(discounts?: API.SubscribeDiscount[]) {
+  const validDiscounts = discounts?.filter(
+    (item) =>
+      Number(item.quantity) > 0 &&
+      Number(item.discount) > 0 &&
+      Number(item.discount) < 100
+  );
+  if (!validDiscounts?.length) {
+    return;
+  }
+
+  return validDiscounts.reduce((best, item) =>
+    item.discount < best.discount ? item : best
+  );
 }
 
 function parseSubscribeDescription(value?: string): {
