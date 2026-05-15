@@ -239,6 +239,7 @@ function RowMoreActions({
   const deleteRef = useRef<HTMLButtonElement>(null);
   const { t } = useTranslation("user");
   const { getUserSubscribe: getUserSubscribeUrls } = useGlobalStore();
+  const canToggleStatus = [0, 1, 5].includes(row.status ?? -1);
 
   return (
     <div className="inline-flex">
@@ -266,16 +267,18 @@ function RowMoreActions({
           >
             {t("resetToken", "Reset Subscription Address")}
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              toggleStatusRef.current?.click();
-            }}
-          >
-            {row.status === 5
-              ? t("resumeSubscribe", "Resume Subscription")
-              : t("stopSubscribe", "Stop Subscription")}
-          </DropdownMenuItem>
+          {canToggleStatus && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                toggleStatusRef.current?.click();
+              }}
+            >
+              {row.status === 5
+                ? t("resumeSubscribe", "Resume Subscription")
+                : t("stopSubscribe", "Stop Subscription")}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             className="text-destructive"
             onSelect={(e) => {

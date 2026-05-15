@@ -211,11 +211,23 @@ function mergeRoutingObjects(items: Record<string, any>[]) {
   return merged;
 }
 
+function mergeGeodataObjects(items: Record<string, any>[]) {
+  if (!items.length) return;
+  if (items.length === 1) return items[0];
+  const merged: Record<string, any> = {};
+  for (const item of items) {
+    Object.assign(merged, item);
+    merged.assets = [...(merged.assets || []), ...(item.assets || [])];
+  }
+  return merged;
+}
+
 function cleanXrayConfig(source?: {
   inbounds?: any[];
   outbounds?: any[];
   dns?: any;
   routing?: any;
+  geodata?: any;
 }) {
   const config: Record<string, any> = {
     inbounds: source?.inbounds || [],
@@ -226,6 +238,9 @@ function cleanXrayConfig(source?: {
   }
   if (source?.routing) {
     config.routing = source.routing;
+  }
+  if (source?.geodata) {
+    config.geodata = source.geodata;
   }
   return config;
 }
@@ -254,6 +269,7 @@ function groupPreview(bindings: BindingRow[], templates: API.XrayTemplate[]) {
     outbound: {},
     dns: {},
     routing: {},
+    geodata: {},
   };
   const rendered: RenderedTemplate[] = [];
 
@@ -310,6 +326,9 @@ function groupPreview(bindings: BindingRow[], templates: API.XrayTemplate[]) {
   const routingItems = rendered
     .filter((item) => item.type === "routing" && item.config)
     .map((item) => item.config as Record<string, any>);
+  const geodataItems = rendered
+    .filter((item) => item.type === "geodata" && item.config)
+    .map((item) => item.config as Record<string, any>);
   const errors = rendered.filter((item) => item.error);
 
   return {
@@ -318,6 +337,7 @@ function groupPreview(bindings: BindingRow[], templates: API.XrayTemplate[]) {
     outbounds,
     dns: mergeDnsObjects(dnsItems),
     routing: mergeRoutingObjects(routingItems),
+    geodata: mergeGeodataObjects(geodataItems),
     rendered,
     errors,
   };
@@ -668,7 +688,7 @@ export default function ServerXrayTemplateBindForm({
 
         <div className="space-y-4 overflow-y-auto px-6 pt-4">
           <Tabs defaultValue="inbound">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="inbound">
                 {t("type.inbound", "Inbound")}
               </TabsTrigger>
@@ -678,6 +698,9 @@ export default function ServerXrayTemplateBindForm({
               <TabsTrigger value="dns">{t("type.dns", "DNS")}</TabsTrigger>
               <TabsTrigger value="routing">
                 {t("type.routing", "Routing")}
+              </TabsTrigger>
+              <TabsTrigger value="geodata">
+                {t("type.geodata", "Geodata")}
               </TabsTrigger>
               <TabsTrigger value="preview">
                 {t("bind.preview", "Preview")}
@@ -697,6 +720,9 @@ export default function ServerXrayTemplateBindForm({
             </TabsContent>
             <TabsContent className="pt-4" value="routing">
               {renderTemplateList("routing")}
+            </TabsContent>
+            <TabsContent className="pt-4" value="geodata">
+              {renderTemplateList("geodata")}
             </TabsContent>
             <TabsContent className="pt-4" value="preview">
               <Textarea

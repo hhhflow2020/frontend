@@ -76,6 +76,8 @@ const defaultValues = {
   deduction_ratio: 0,
   purchase_with_discount: false,
   reset_cycle: 0,
+  allow_renewal: true,
+  allow_reset_traffic: true,
   renewal_reset: false,
   show_original_price: false,
   deduction_mode: "auto",
@@ -119,6 +121,8 @@ export default function SubscribeForm<T extends Record<string, any>>({
     nodes: z.array(z.number()).optional(),
     deduction_ratio: z.number().optional(),
     allow_deduction: z.boolean().optional(),
+    allow_renewal: z.boolean().optional(),
+    allow_reset_traffic: z.boolean().optional(),
     reset_cycle: z.number().optional(),
     renewal_reset: z.boolean().optional(),
     show_original_price: z.boolean().optional(),
@@ -825,6 +829,68 @@ export default function SubscribeForm<T extends Record<string, any>>({
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="allow_renewal"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                              <FormLabel>
+                                {t("form.allowRenewal", "允许续费")}
+                              </FormLabel>
+                              <FormDescription>
+                                {t(
+                                  "form.allowRenewalDescription",
+                                  "用户可以对该商品的订阅进行续费"
+                                )}
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value !== false}
+                                onCheckedChange={(value) =>
+                                  form.setValue(field.name, value)
+                                }
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="allow_reset_traffic"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                              <FormLabel>
+                                {t("form.allowResetTraffic", "允许重置流量")}
+                              </FormLabel>
+                              <FormDescription>
+                                {t(
+                                  "form.allowResetTrafficDescription",
+                                  "用户可以购买该商品的流量重置"
+                                )}
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value !== false}
+                                onCheckedChange={(value) =>
+                                  form.setValue(field.name, value)
+                                }
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="renewal_reset"

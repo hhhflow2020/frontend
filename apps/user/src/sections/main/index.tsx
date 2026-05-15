@@ -1,17 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
-import { getSubscription } from "@workspace/ui/services/user/portal";
 import { ArrowRight, Check, Globe2, ShieldCheck, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Display } from "@/components/display";
 import { useGlobalStore } from "@/stores/global";
 
 export default function Main() {
   const { common, user } = useGlobalStore();
   const navigate = useNavigate();
-  const { i18n, t } = useTranslation("main");
-  const [subscriptions, setSubscriptions] = useState<API.Subscribe[]>([]);
+  const { t } = useTranslation("main");
 
   const showLanding = import.meta.env.VITE_SHOW_LANDING_PAGE !== "false";
   const site = common.site;
@@ -33,24 +30,6 @@ export default function Main() {
       navigate({ to: "/auth" });
     }
   }, [user, navigate, showLanding]);
-
-  useEffect(() => {
-    if (!showLanding) return;
-
-    const fetchSubscriptions = async () => {
-      try {
-        const { data } = await getSubscription(
-          { language: i18n.language },
-          { skipErrorHandler: true }
-        );
-        setSubscriptions(data.data?.list?.slice(0, 3) || []);
-      } catch {
-        setSubscriptions([]);
-      }
-    };
-
-    fetchSubscriptions();
-  }, [i18n.language, showLanding]);
 
   if (!showLanding) return null;
 
@@ -164,65 +143,6 @@ export default function Main() {
           ))}
         </div>
       </section>
-
-      {subscriptions.length > 0 && (
-        <section className="container py-20">
-          <div className="mx-auto mb-10 max-w-2xl text-center">
-            <h2 className="font-semibold text-4xl">
-              {t("landing_plans_title", "Choose less. Connect more.")}
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              {t(
-                "landing_plans_body",
-                "Simple plans for different rhythms, all available from one account."
-              )}
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {subscriptions.map((item) => (
-              <Link
-                className="group hover:-translate-y-1 rounded-3xl border bg-background p-6 transition hover:shadow-black/5 hover:shadow-xl"
-                key={item.id}
-                search={{ id: item.id }}
-                to="/purchasing"
-              >
-                <div className="flex min-h-52 flex-col justify-between">
-                  <div>
-                    <p className="font-medium text-xl">{item.name}</p>
-                    <p className="mt-3 line-clamp-3 text-muted-foreground text-sm leading-6">
-                      {readDescription(item.description)}
-                    </p>
-                  </div>
-                  <div className="mt-8 flex items-end justify-between gap-4">
-                    <div className="font-semibold text-3xl">
-                      <Display type="currency" value={item.unit_price} />
-                      <span className="font-normal text-muted-foreground text-sm">
-                        /{item.unit_time || "Month"}
-                      </span>
-                    </div>
-                    <ArrowRight className="size-5 transition group-hover:translate-x-1" />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
     </main>
   );
-}
-
-function readDescription(value?: string) {
-  if (!value) return "A balanced plan for everyday secure connectivity.";
-
-  try {
-    const parsed = JSON.parse(value);
-    return (
-      parsed.description ||
-      parsed.features?.[0]?.label ||
-      "A balanced plan for everyday secure connectivity."
-    );
-  } catch {
-    return value;
-  }
 }

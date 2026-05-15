@@ -45,6 +45,7 @@ import {
 } from "../servers/generate";
 import {
   buildDnsConfig,
+  buildGeodataConfig,
   buildInboundConfig,
   buildOutboundConfig,
   buildRoutingConfig,
@@ -63,7 +64,7 @@ import {
 
 const formSchema = z.object({
   name: z.string().min(1),
-  type: z.enum(["inbound", "outbound", "dns", "routing"]),
+  type: z.enum(["inbound", "outbound", "dns", "routing", "geodata"]),
   description: z.string().optional(),
   enabled: z.boolean(),
   config: z.record(z.string(), z.any()).optional(),
@@ -190,6 +191,9 @@ const formSchema = z.object({
   routing_domain_strategy: z.string().optional(),
   routing_rules_json: z.string().optional(),
   routing_balancers_json: z.string().optional(),
+  geodata_cron: z.string().optional(),
+  geodata_outbound: z.string().optional(),
+  geodata_assets_json: z.string().optional(),
   advanced_json: z.string().optional(),
 });
 
@@ -301,6 +305,10 @@ function defaultValues(type: XrayTemplateType = "inbound"): FormValues {
     routing_domain_strategy: "AsIs",
     routing_rules_json: "[]",
     routing_balancers_json: "[]",
+    geodata_cron: "0 4 * * *",
+    geodata_outbound: "",
+    geodata_assets_json:
+      '[\n  {\n    "url": "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat",\n    "file": "geoip.dat"\n  },\n  {\n    "url": "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat",\n    "file": "geosite.dat"\n  }\n]',
     advanced_json: "{}",
   };
 }
@@ -1083,7 +1091,7 @@ export default function XrayTemplateForm({
   }, [form, initialValues?.id, open]);
 
   useEffect(() => {
-    if (type === "dns" || type === "routing") return;
+    if (type === "dns" || type === "routing" || type === "geodata") return;
     const options =
       type === "outbound" ? OUTBOUND_PROTOCOLS : INBOUND_PROTOCOLS;
     if (!options.includes(protocol as any)) {
@@ -1096,6 +1104,7 @@ export default function XrayTemplateForm({
     if (source.type === "routing") {
       return buildRoutingConfig(source);
     }
+    if (source.type === "geodata") return buildGeodataConfig(source);
     if (source.type === "dns") return buildDnsConfig(source);
     if (source.type === "outbound") return buildOutboundConfig(source);
     return buildInboundConfig(source);
@@ -1364,6 +1373,85 @@ export default function XrayTemplateForm({
                           )}
                         />
                       </div>
+                    </div>
+                  ) : type === "geodata" ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="geodata_cron"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                {t("form.geodataCron", "Update Cron")}
+                              </FormLabel>
+                              <FormDescription>
+                                {t(
+                                  "form.geodataCronDesc",
+                                  "Five-field cron expression in the Xray runtime local timezone, e.g. 0 4 * * *."
+                                )}
+                              </FormDescription>
+                              <FormControl>
+                                <EnhancedInput
+                                  onValueChange={field.onChange}
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="geodata_outbound"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                {t("form.geodataOutbound", "Download Outbound")}
+                              </FormLabel>
+                              <FormDescription>
+                                {t(
+                                  "form.geodataOutboundDesc",
+                                  "Optional outbound tag used when downloading geodata files."
+                                )}
+                              </FormDescription>
+                              <FormControl>
+                                <EnhancedInput
+                                  onValueChange={field.onChange}
+                                  placeholder="direct"
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="geodata_assets_json"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              {t("form.geodataAssets", "Geodata Assets")}
+                            </FormLabel>
+                            <FormDescription>
+                              {t(
+                                "form.geodataAssetsDesc",
+                                "JSON array of HTTPS url/file pairs. File names are resolved inside the Xray asset directory."
+                              )}
+                            </FormDescription>
+                            <FormControl>
+                              <JsonTextarea
+                                onChange={field.onChange}
+                                placeholder='[{"url":"https://example.com/geoip.dat","file":"geoip.dat"}]'
+                                value={field.value}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                   ) : type !== "dns" ? (
                     <>

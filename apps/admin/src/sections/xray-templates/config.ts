@@ -1,10 +1,16 @@
-export type XrayTemplateType = "inbound" | "outbound" | "dns" | "routing";
+export type XrayTemplateType =
+  | "inbound"
+  | "outbound"
+  | "dns"
+  | "routing"
+  | "geodata";
 
 export const XRAY_TEMPLATE_TYPES: XrayTemplateType[] = [
   "inbound",
   "outbound",
   "dns",
   "routing",
+  "geodata",
 ];
 
 export const INBOUND_PROTOCOLS = [
@@ -750,6 +756,18 @@ export function buildRoutingConfig(values: Record<string, any>) {
     : config;
 }
 
+export function buildGeodataConfig(values: Record<string, any>) {
+  const config = compactObject({
+    cron: values.geodata_cron || "0 4 * * *",
+    outbound: emptyToUndefined(values.geodata_outbound),
+    assets: safeJsonParse(values.geodata_assets_json || "", []),
+  });
+
+  return hasAdvancedJson(values.advanced_json)
+    ? safeJsonParse(values.advanced_json, config)
+    : config;
+}
+
 export function configToFormValues(
   type: XrayTemplateType,
   config?: Record<string, any>
@@ -791,6 +809,15 @@ export function configToFormValues(
       routing_domain_strategy: value.domainStrategy || "AsIs",
       routing_rules_json: formatJson(value.rules || []),
       routing_balancers_json: formatJson(value.balancers || []),
+      advanced_json: formatJson(value),
+    };
+  }
+
+  if (type === "geodata") {
+    return {
+      geodata_cron: value.cron || "0 4 * * *",
+      geodata_outbound: value.outbound || "",
+      geodata_assets_json: formatJson(value.assets || []),
       advanced_json: formatJson(value),
     };
   }

@@ -3,7 +3,9 @@
   "type": {
     "inbound": "Inbound",
     "outbound": "Outbound",
-    "dns": "DNS"
+    "dns": "DNS",
+    "routing": "Routing",
+    "geodata": "Geodata"
   },
   "state": {
     "enabled": "Enabled",
@@ -81,6 +83,12 @@
     "disableFallback": "Disable Fallback",
     "disableFallbackIfMatch": "Disable Fallback If Match",
     "hostsJson": "Hosts JSON",
+    "geodataCron": "Update Cron",
+    "geodataCronDesc": "Five-field cron expression in the Xray runtime local timezone, e.g. 0 4 * * *.",
+    "geodataOutbound": "Download Outbound",
+    "geodataOutboundDesc": "Optional outbound tag used when downloading geodata files.",
+    "geodataAssets": "Geodata Assets",
+    "geodataAssetsDesc": "JSON array of HTTPS url/file pairs. File names are resolved inside the Xray asset directory.",
     "syncJson": "Sync from form",
     "advancedJson": "Advanced JSON",
     "cancel": "Cancel",
@@ -89,6 +97,7 @@
   "bind": {
     "title": "Bind Xray Templates",
     "preview": "Preview",
+    "variablesPreview": "Variables",
     "empty": "No templates"
   }
 }

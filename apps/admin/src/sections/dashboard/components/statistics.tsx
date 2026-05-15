@@ -32,7 +32,6 @@ import { Bar, BarChart, LabelList, XAxis, YAxis } from "recharts";
 import { Display } from "@/components/display";
 import { UserSubscribeDetail } from "@/sections/user/user-detail";
 import { RevenueStatisticsCard } from "./revenue-statistics-card";
-import SystemVersionCard from "./system-version-card";
 import { UserStatisticsCard } from "./user-statistics-card";
 
 function buildDashboardRealtimeWsUrl() {
@@ -678,7 +677,6 @@ export default function Statistics() {
             tone="orange"
             value={formatBytes(monthlyTraffic)}
           />
-          <SystemVersionCard />
         </div>
       </div>
     </div>

@@ -323,6 +323,7 @@ declare namespace API {
     icon?: string;
     scheme?: string;
     user_agent: string;
+    enabled?: boolean;
     is_default: boolean;
     template: string;
     output_format: string;
@@ -350,9 +351,12 @@ declare namespace API {
     nodes: number[];
     node_tags: string[];
     show: boolean;
+    user_visible: boolean;
     sell: boolean;
     deduction_ratio: number;
     allow_deduction: boolean;
+    allow_renewal: boolean;
+    allow_reset_traffic: boolean;
     reset_cycle: number;
     renewal_reset: boolean;
     show_original_price: boolean;
@@ -397,7 +401,7 @@ declare namespace API {
 
   type CreateXrayTemplateRequest = {
     name: string;
-    type: "inbound" | "outbound" | "dns" | "routing";
+    type: "inbound" | "outbound" | "dns" | "routing" | "geodata";
     config: Record<string, any>;
     description?: string;
     enabled?: boolean;
@@ -539,7 +543,7 @@ declare namespace API {
   type FilterXrayTemplateListParams = {
     page: number;
     size: number;
-    type?: "inbound" | "outbound" | "dns" | "routing";
+    type?: "inbound" | "outbound" | "dns" | "routing" | "geodata";
     search?: string;
     enabled?: boolean;
   };
@@ -1359,15 +1363,6 @@ declare namespace API {
     whitelist: string[];
   };
 
-  type ModuleConfig = {
-    /** 通讯密钥 */
-    secret: string;
-    /** 服务名称 */
-    service_name: string;
-    /** 服务版本 */
-    service_version: string;
-  };
-
   type Node = {
     id: number;
     name: string;
@@ -1913,6 +1908,7 @@ declare namespace API {
     outbounds: any[];
     dns?: any;
     routing?: any;
+    geodata?: any;
     templates: XrayTemplate[];
   };
 
@@ -2176,10 +2172,13 @@ declare namespace API {
     nodes: number[];
     node_tags: string[];
     show: boolean;
+    user_visible: boolean;
     sell: boolean;
     sort: number;
     deduction_ratio: number;
     allow_deduction: boolean;
+    allow_renewal: boolean;
+    allow_reset_traffic: boolean;
     reset_cycle: number;
     renewal_reset: boolean;
     show_original_price: boolean;
@@ -2194,6 +2193,7 @@ declare namespace API {
     icon?: string;
     scheme?: string;
     user_agent: string;
+    enabled: boolean;
     is_default: boolean;
     template: string;
     output_format: string;
@@ -2241,10 +2241,13 @@ declare namespace API {
     nodes?: number[];
     node_tags?: string[];
     show?: boolean;
+    user_visible?: boolean;
     sell?: boolean;
     sort?: number;
     deduction_ratio?: number;
     allow_deduction?: boolean;
+    allow_renewal?: boolean;
+    allow_reset_traffic?: boolean;
     reset_cycle?: number;
     renewal_reset?: boolean;
     show_original_price?: boolean;
@@ -2468,6 +2471,7 @@ declare namespace API {
     icon?: string;
     scheme?: string;
     user_agent: string;
+    enabled?: boolean;
     is_default: boolean;
     template: string;
     output_format: string;
@@ -2497,10 +2501,13 @@ declare namespace API {
     nodes: number[];
     node_tags: string[];
     show: boolean;
+    user_visible: boolean;
     sell: boolean;
     sort: number;
     deduction_ratio: number;
     allow_deduction: boolean;
+    allow_renewal: boolean;
+    allow_reset_traffic: boolean;
     reset_cycle: number;
     renewal_reset: boolean;
     show_original_price: boolean;
@@ -2553,7 +2560,7 @@ declare namespace API {
   type UpdateXrayTemplateRequest = {
     id: number;
     name: string;
-    type: "inbound" | "outbound" | "dns" | "routing";
+    type: "inbound" | "outbound" | "dns" | "routing" | "geodata";
     config: Record<string, any>;
     description?: string;
     enabled?: boolean;
@@ -2749,7 +2756,7 @@ declare namespace API {
   type XrayTemplate = {
     id: number;
     name: string;
-    type: "inbound" | "outbound" | "dns" | "routing";
+    type: "inbound" | "outbound" | "dns" | "routing" | "geodata";
     config: Record<string, any>;
     config_template: string;
     variables_schema: Record<string, any>;

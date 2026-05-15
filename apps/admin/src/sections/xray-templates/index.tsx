@@ -27,6 +27,9 @@ function ConfigSummary({ config }: { config?: Record<string, any> }) {
     config.streamSettings?.network,
     config.streamSettings?.security,
     Array.isArray(config.servers) ? `${config.servers.length} dns` : undefined,
+    Array.isArray(config.assets)
+      ? `${config.assets.length} geodata`
+      : undefined,
   ].filter(Boolean);
 
   return (
@@ -54,7 +57,7 @@ export default function XrayTemplates() {
       API.XrayTemplate,
       {
         search?: string;
-        type?: "inbound" | "outbound" | "dns" | "routing";
+        type?: "inbound" | "outbound" | "dns" | "routing" | "geodata";
         enabled?: boolean;
       }
     >
@@ -192,6 +195,7 @@ export default function XrayTemplates() {
             { label: t("type.outbound", "Outbound"), value: "outbound" },
             { label: t("type.dns", "DNS"), value: "dns" },
             { label: t("type.routing", "Routing"), value: "routing" },
+            { label: t("type.geodata", "Geodata"), value: "geodata" },
           ],
         },
         {

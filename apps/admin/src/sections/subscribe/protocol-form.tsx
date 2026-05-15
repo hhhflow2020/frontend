@@ -79,6 +79,7 @@ const createClientFormSchema = (t: any) =>
         1,
         `User-Agent ${t("form.validation.userAgentRequiredSuffix", "is required")}`
       ),
+    enabled: z.boolean(),
     scheme: z.string().optional(),
     template: z.string(),
     output_format: z.string(),
@@ -111,6 +112,7 @@ export function ProtocolForm() {
       description: "",
       icon: "",
       user_agent: "",
+      enabled: true,
       scheme: "",
       template: "",
       output_format: "",
@@ -141,6 +143,22 @@ export function ProtocolForm() {
   };
 
   const columns: ColumnDef<API.SubscribeApplication, any>[] = [
+    {
+      accessorKey: "enabled",
+      header: t("table.columns.enabled", "启用"),
+      cell: ({ row }) => (
+        <Switch
+          checked={row.original.enabled !== false}
+          onCheckedChange={async (checked) => {
+            await updateSubscribeApplication({
+              ...row.original,
+              enabled: checked,
+            });
+            tableRef.current?.refresh();
+          }}
+        />
+      ),
+    },
     {
       accessorKey: "is_default",
       header: t("table.columns.default", "Default"),
@@ -248,6 +266,7 @@ export function ProtocolForm() {
       description: "",
       icon: "",
       user_agent: "",
+      enabled: true,
       scheme: "",
       template: "",
       output_format: "",
@@ -321,6 +340,7 @@ export function ProtocolForm() {
       if (editingClient) {
         await updateSubscribeApplication({
           ...data,
+          enabled: data.enabled ?? editingClient.enabled ?? true,
           is_default: editingClient.is_default,
           id: editingClient.id,
         });
@@ -328,6 +348,7 @@ export function ProtocolForm() {
       } else {
         await createSubscribeApplication({
           ...data,
+          enabled: data.enabled ?? true,
           is_default: false,
         });
         toast.success(t("actions.createSuccess", "Created successfully"));
@@ -527,6 +548,33 @@ export function ProtocolForm() {
                               "Client identifier for distinguishing different clients"
                             )}
                           </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="enabled"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                            <div className="space-y-0.5">
+                              <FormLabel>{t("form.enabled", "启用")}</FormLabel>
+                              <FormDescription>
+                                {t(
+                                  "form.enabledDescription",
+                                  "关闭后用户端不显示，也不能通过该客户端模版生成订阅"
+                                )}
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value !== false}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}

@@ -843,10 +843,13 @@ declare namespace API {
     nodes: number[];
     node_tags: string[];
     show: boolean;
+    user_visible: boolean;
     sell: boolean;
     sort: number;
     deduction_ratio: number;
     allow_deduction: boolean;
+    allow_renewal: boolean;
+    allow_reset_traffic: boolean;
     reset_cycle: number;
     renewal_reset: boolean;
     show_original_price: boolean;
@@ -860,6 +863,7 @@ declare namespace API {
     description?: string;
     icon?: string;
     scheme?: string;
+    enabled: boolean;
     is_default: boolean;
     download_link?: DownloadLink;
   };

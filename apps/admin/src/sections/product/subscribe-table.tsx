@@ -90,6 +90,7 @@ export default function SubscribeTable() {
                 await createSubscribe({
                   ...params,
                   show: false,
+                  user_visible: false,
                   sell: false,
                 } as API.CreateSubscribeRequest);
                 toast.success(t("copySuccess"));
@@ -146,6 +147,27 @@ export default function SubscribeTable() {
               subscribe={row.original}
               value={!!row.getValue("show")}
               valueKey="show"
+            />
+          ),
+        },
+        {
+          accessorKey: "user_visible",
+          header: t("userVisible", "User Visible"),
+          cell: ({ row }) => (
+            <SubscribeStatusSwitch
+              label={t(
+                "userVisibleDescription",
+                "Visible on the subscribe page after user login"
+              )}
+              onChange={(checked) => {
+                row.original.user_visible = checked;
+              }}
+              onUpdated={(subscribe) => {
+                ref.current?.updateRow(subscribe);
+              }}
+              subscribe={row.original}
+              value={!!row.getValue("user_visible")}
+              valueKey="user_visible"
             />
           ),
         },
@@ -262,7 +284,10 @@ export default function SubscribeTable() {
                 await createSubscribe({
                   ...values,
                   show: false,
+                  user_visible: false,
                   sell: false,
+                  allow_renewal: values.allow_renewal ?? true,
+                  allow_reset_traffic: values.allow_reset_traffic ?? true,
                 });
                 toast.success(t("createSuccess"));
                 ref.current?.refresh();
@@ -348,7 +373,7 @@ function SubscribeStatusSwitch({
   onUpdated: (subscribe: API.SubscribeItem) => void;
   subscribe: API.SubscribeItem;
   value: boolean;
-  valueKey: "show" | "sell";
+  valueKey: "show" | "user_visible" | "sell";
 }>) {
   const { t } = useTranslation("product");
   const { patchSubscribe } = useSubscribe();

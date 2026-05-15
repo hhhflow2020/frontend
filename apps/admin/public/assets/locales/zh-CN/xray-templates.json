@@ -3,7 +3,9 @@
   "type": {
     "inbound": "入站",
     "outbound": "出站",
-    "dns": "DNS"
+    "dns": "DNS",
+    "routing": "路由",
+    "geodata": "地理数据"
   },
   "state": {
     "enabled": "启用",
@@ -81,6 +83,12 @@
     "disableFallback": "禁用回退",
     "disableFallbackIfMatch": "命中时禁用回退",
     "hostsJson": "Hosts JSON",
+    "geodataCron": "更新计划",
+    "geodataCronDesc": "5 段 cron 表达式，按 Xray 运行环境本地时区执行，例如 0 4 * * *。",
+    "geodataOutbound": "下载出站",
+    "geodataOutboundDesc": "可选，下载地理数据文件时使用的 outbound tag。",
+    "geodataAssets": "地理数据文件",
+    "geodataAssetsDesc": "HTTPS url/file 对象数组。file 会在 Xray 资源目录中解析。",
     "syncJson": "从表单同步",
     "advancedJson": "高级 JSON",
     "cancel": "取消",
@@ -89,6 +97,7 @@
   "bind": {
     "title": "绑定 Xray 模版",
     "preview": "预览",
+    "variablesPreview": "变量",
     "empty": "暂无模版"
   }
 }

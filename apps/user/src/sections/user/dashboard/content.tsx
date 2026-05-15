@@ -271,12 +271,12 @@ export default function Content() {
                     </div>
                   </div>
                 )}
-                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 space-y-0">
-                  <CardTitle className="flex flex-col gap-1">
-                    <span className="font-black text-2xl text-primary tracking-tight">
+                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 pb-2">
+                  <CardTitle className="flex flex-col gap-0.5">
+                    <span className="font-black text-primary text-xl tracking-tight">
                       {item.subscribe.name}
                     </span>
-                    <span className="font-medium text-foreground/50 text-sm">
+                    <span className="font-medium text-foreground/50 text-xs">
                       {t("expireAt", "Expires At")}:{" "}
                       {item.expire_time
                         ? formatDate(item.expire_time)
@@ -324,13 +324,16 @@ export default function Content() {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                      <ResetTraffic
-                        id={item.id}
-                        replacement={item.subscribe.replacement}
-                      />
-                      {item.expire_time !== 0 && (
-                        <Renewal id={item.id} subscribe={item.subscribe} />
+                      {item.subscribe.allow_reset_traffic !== false && (
+                        <ResetTraffic
+                          id={item.id}
+                          replacement={item.subscribe.replacement}
+                        />
                       )}
+                      {item.subscribe.allow_renewal !== false &&
+                        item.expire_time !== 0 && (
+                          <Renewal id={item.id} subscribe={item.subscribe} />
+                        )}
                       <Unsubscribe
                         allowDeduction={item.subscribe.allow_deduction}
                         id={item.id}
@@ -339,22 +342,22 @@ export default function Content() {
                     </div>
                   )}
                 </CardHeader>
-                <CardContent>
-                  <div className="mt-2 mb-6 flex w-full flex-col gap-6">
-                    <div className="flex flex-col justify-between gap-6 rounded-2xl border border-border/40 bg-muted/5 p-5 lg:flex-row lg:items-center">
-                      <div className="flex min-w-[200px] flex-col">
-                        <span className="mb-1 font-medium text-muted-foreground text-sm">
+                <CardContent className="pt-0">
+                  <div className="mb-3 flex w-full flex-col gap-3">
+                    <div className="flex flex-col justify-between gap-3 rounded-2xl border border-border/40 bg-muted/5 p-3 lg:flex-row lg:items-center">
+                      <div className="flex min-w-[160px] flex-col">
+                        <span className="mb-0 font-medium text-muted-foreground text-xs">
                           {t("used", "Used")}
                         </span>
-                        <div className="flex items-baseline gap-2">
-                          <span className="font-black text-4xl text-foreground tracking-tighter">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-black text-2xl text-foreground tracking-tighter">
                             <Display
                               type="traffic"
                               unlimited={!item.traffic}
                               value={item.upload + item.download}
                             />
                           </span>
-                          <span className="font-medium text-muted-foreground text-sm">
+                          <span className="font-medium text-muted-foreground text-xs">
                             /{" "}
                             {item.traffic ? (
                               <Display type="traffic" value={item.traffic} />
@@ -365,8 +368,8 @@ export default function Content() {
                         </div>
                       </div>
 
-                      <div className="flex max-w-lg flex-1 flex-col gap-3">
-                        <div className="flex h-6 w-full overflow-hidden rounded-full bg-muted/50 shadow-inner">
+                      <div className="flex max-w-lg flex-1 flex-col gap-2">
+                        <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted/50 shadow-inner">
                           {item.traffic ? (
                             <>
                               <div
@@ -436,13 +439,13 @@ export default function Content() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
-                      <div className="inline-flex w-fit items-center gap-2.5 rounded-full border border-border/40 bg-muted/5 py-1.5 pr-4 pl-1.5 shadow-sm transition-colors hover:bg-muted/10">
-                        <div className="flex size-7 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
-                          <Icon className="size-4" icon="uil:sync" />
+                    <div className="flex flex-wrap gap-2.5">
+                      <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/40 bg-muted/5 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
+                        <div className="flex size-6 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+                          <Icon className="size-3.5" icon="uil:sync" />
                         </div>
-                        <span className="font-medium text-sm">
-                          <span className="mr-1.5 text-muted-foreground">
+                        <span className="font-medium text-[11px]">
+                          <span className="mr-1 text-muted-foreground">
                             {t("nextResetDays", "Next Reset Days")}:
                           </span>
                           <span className="text-foreground">
@@ -456,12 +459,12 @@ export default function Content() {
                         </span>
                       </div>
 
-                      <div className="inline-flex w-fit items-center gap-2.5 rounded-full border border-border/40 bg-muted/5 py-1.5 pr-4 pl-1.5 shadow-sm transition-colors hover:bg-muted/10">
-                        <div className="flex size-7 items-center justify-center rounded-full bg-orange-500/10 text-orange-500">
-                          <Icon className="size-4" icon="uil:calendar-alt" />
+                      <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/40 bg-muted/5 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
+                        <div className="flex size-6 items-center justify-center rounded-full bg-orange-500/10 text-orange-500">
+                          <Icon className="size-3.5" icon="uil:calendar-alt" />
                         </div>
-                        <span className="font-medium text-sm">
-                          <span className="mr-1.5 text-muted-foreground">
+                        <span className="font-medium text-[11px]">
+                          <span className="mr-1 text-muted-foreground">
                             {t("expirationDays", "Expiration Days")}:
                           </span>
                           <span className="text-foreground">
@@ -521,9 +524,10 @@ export default function Content() {
                               {applications
                                 ?.filter(
                                   (application) =>
+                                    application.enabled !== false &&
                                     !!(
-                                      application.download_link?.[platform] &&
-                                      application.scheme
+                                      application.scheme ||
+                                      application.download_link?.[platform]
                                     )
                                 )
                                 .map((application) => {

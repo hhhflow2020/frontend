@@ -1,19 +1,10 @@
 declare namespace API {
-  type basicCheckServiceVersionParams = {
-    /** 服务名称 */
-    service_name: string;
-    /** 通讯密钥 */
-    secret: string;
-  };
-
   type basicHeartbeatParams = {
     /** 服务名称 */
     service_name: string;
     /** 通讯密钥 */
     secret: string;
   };
-
-  type CheckServiceVersionRequest = true;
 
   type HeartbeatRequest = true;
 
@@ -44,34 +35,5 @@ declare namespace API {
     message: string;
     /** 注册是否成功 */
     success: boolean;
-  };
-
-  type ServiceVersionResponse = {
-    /** 当前版本 */
-    current_version: string;
-    /** 是否有更新 */
-    has_update: boolean;
-    /** 最新版本 */
-    latest_version: string;
-  };
-
-  type UpdateServiceRequest = {
-    /** 通讯密钥 */
-    secret: string;
-    /** 服务名称 */
-    service_name: string;
-  };
-
-  type UpdateServiceResponse = {
-    /** 是否更新出错 */
-    error: boolean;
-    /** 返回信息 */
-    message: string;
-    /** 是否正在更新 */
-    running: boolean;
-    /** 更新步骤 */
-    step: number;
-    /** 更新总步骤 */
-    total: number;
   };
 }

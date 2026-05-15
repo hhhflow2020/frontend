@@ -71,17 +71,6 @@ export async function updateInviteConfig(
   );
 }
 
-/** Get Module Config GET /v1/admin/system/module */
-export async function getModuleConfig(options?: { [key: string]: any }) {
-  return request<API.Response & { data?: API.ModuleConfig }>(
-    "/v1/admin/system/module",
-    {
-      method: "GET",
-      ...(options || {}),
-    }
-  );
-}
-
 /** Get node config GET /v1/admin/system/node_config */
 export async function getNodeConfig(options?: { [key: string]: any }) {
   return request<API.Response & { data?: API.NodeConfig }>(
