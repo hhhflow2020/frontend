@@ -18,13 +18,13 @@ export function SubscribeDetail({ subscribe }: Readonly<SubscribeDetailProps>) {
       <div className="font-semibold">
         {t("detail.productDetail", "Product Detail")}
       </div>
-      <ul className="grid grid-cols-1 gap-3 *:flex *:items-center *:justify-between lg:grid-cols-1">
+      <ul className="grid grid-cols-1 gap-3 *:flex *:items-start *:justify-between *:gap-4 lg:grid-cols-1">
         {subscribe?.name && (
           <li className="flex items-center justify-between">
             <span className="line-clamp-2 flex-1 text-muted-foreground">
               {subscribe?.name}
             </span>
-            <span>
+            <span className="shrink-0">
               x <span>{subscribe?.quantity || 1}</span>
             </span>
           </li>
@@ -33,7 +33,7 @@ export function SubscribeDetail({ subscribe }: Readonly<SubscribeDetailProps>) {
           <span className="text-muted-foreground">
             {t("detail.availableTraffic", "Available Traffic")}
           </span>
-          <span>
+          <span className="text-right font-medium">
             <Display type="traffic" unlimited value={subscribe?.traffic} />
           </span>
         </li>
@@ -41,7 +41,7 @@ export function SubscribeDetail({ subscribe }: Readonly<SubscribeDetailProps>) {
           <span className="text-muted-foreground">
             {t("detail.connectionSpeed", "Connection Speed")}
           </span>
-          <span>
+          <span className="text-right font-medium">
             <Display
               type="trafficSpeed"
               unlimited
@@ -53,7 +53,7 @@ export function SubscribeDetail({ subscribe }: Readonly<SubscribeDetailProps>) {
           <span className="text-muted-foreground">
             {t("detail.connectedDevices", "Connected Devices")}
           </span>
-          <span>
+          <span className="text-right font-medium">
             <Display type="number" unlimited value={subscribe?.device_limit} />
           </span>
         </li>

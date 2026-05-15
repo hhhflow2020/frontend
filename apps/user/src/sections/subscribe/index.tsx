@@ -105,7 +105,7 @@ export default function Subscribe() {
                       )}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid gap-2 sm:grid-cols-3">
                     <PlanMetric
                       icon={<HardDrive className="size-4" />}
                       label={t("detail.traffic", "Traffic")}
@@ -201,12 +201,12 @@ function PlanMetric({
   value: ReactNode;
 }>) {
   return (
-    <div className="rounded-md border bg-muted/30 p-3">
+    <div className="min-w-0 rounded-md border bg-muted/30 p-3">
       <div className="mb-2 flex items-center gap-1.5 text-muted-foreground text-xs">
         {icon}
         <span className="truncate">{label}</span>
       </div>
-      <div className="truncate font-medium text-sm">{value}</div>
+      <div className="break-words font-medium text-sm leading-5">{value}</div>
     </div>
   );
 }
