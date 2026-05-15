@@ -30,6 +30,8 @@ import ServerConfig from "./server-config";
 import ServerForm from "./server-form";
 import ServerInstall from "./server-install";
 
+const SERVER_STATUS_TTL_MS = 30_000;
+
 function usageColor(value: number) {
   if (value >= 90) {
     return "bg-red-500/80";
@@ -340,10 +342,20 @@ export default function Servers() {
     Record<number, Partial<API.ServerStatus>>
   >({});
   const ref = useRef<ProTableActions>(null);
-  const getStatus = (server: API.Server) => ({
-    ...(server.status || {}),
-    ...(realtimeStatus[server.id] || {}),
-  });
+  const getStatus = (server: API.Server) => {
+    const status = {
+      ...(server.status || {}),
+      ...(realtimeStatus[server.id] || {}),
+    };
+    if (
+      status.last_seen &&
+      status.status !== "offline" &&
+      Date.now() - status.last_seen > SERVER_STATUS_TTL_MS
+    ) {
+      return { ...status, status: "offline" };
+    }
+    return status;
+  };
 
   useEffect(() => {
     if (!getCookie("Authorization")) return;
