@@ -13,5 +13,9 @@ export function getApiBaseURL() {
 }
 
 export function getApiPrefix() {
-  return getRuntimeConfig().API_PREFIX || "";
+  const config = getRuntimeConfig();
+  if (Object.hasOwn(config, "API_PREFIX")) {
+    return config.API_PREFIX || "";
+  }
+  return import.meta.env.DEV ? "/api" : "";
 }
