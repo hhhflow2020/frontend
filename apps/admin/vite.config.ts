@@ -29,11 +29,12 @@ function versionLockPlugin(): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const devProxyTarget = env.API_PROXY_TARGET || env.API_BASE_URL;
+  const devtoolsPort = Number(env.TANSTACK_DEVTOOLS_PORT || 42_071);
 
   return {
     base: "./",
     plugins: [
-      devtools({ eventBusConfig: { port: 42_070 } }),
+      devtools({ eventBusConfig: { port: devtoolsPort } }),
       tanstackRouter({
         target: "react",
         autoCodeSplitting: true,
@@ -55,6 +56,9 @@ export default defineConfig(({ mode }) => {
           secure: false,
         },
       },
+    },
+    define: {
+      __TANSTACK_DEVTOOLS_PORT__: JSON.stringify(devtoolsPort),
     },
     build: {
       assetsDir: "static",

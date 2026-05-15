@@ -11,6 +11,8 @@ import { useEffect } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { useGlobalStore } from "@/stores/global";
 
+declare const __TANSTACK_DEVTOOLS_PORT__: number;
+
 export const Route = createRootRouteWithContext()({
   component: () => {
     const { common, setCommon, getUserInfo } = useGlobalStore();
@@ -65,6 +67,9 @@ export const Route = createRootRouteWithContext()({
         <TanStackDevtools
           config={{
             position: "bottom-right",
+          }}
+          eventBusConfig={{
+            port: __TANSTACK_DEVTOOLS_PORT__,
           }}
           plugins={[
             {
