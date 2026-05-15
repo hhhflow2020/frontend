@@ -105,7 +105,7 @@ export default function Order() {
   return (
     <main className="container lg:mt-16">
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card className="order-2 xl:order-1">
+        <Card className="order-2 overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl xl:order-1 dark:bg-background/40">
           <CardHeader className="flex flex-row items-start bg-muted/50">
             <div className="grid gap-0.5">
               <CardTitle className="flex flex-col text-lg">
@@ -183,7 +183,7 @@ export default function Order() {
             />
           </CardContent>
         </Card>
-        <Card className="order-1 flex flex-auto items-center justify-center xl:order-2">
+        <Card className="order-1 flex flex-auto items-center justify-center rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl xl:order-2 dark:bg-background/40">
           <CardContent className="py-16">
             {data?.status && [2, 5].includes(data?.status) && (
               <div className="flex flex-col items-center gap-8 text-center">

@@ -3,6 +3,7 @@
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { ConfirmButton } from "@workspace/ui/composed/confirm-button";
+import { Icon } from "@workspace/ui/composed/icon";
 import {
   ProTable,
   type ProTableActions,
@@ -31,15 +32,15 @@ import ServerInstall from "./server-install";
 
 function usageColor(value: number) {
   if (value >= 90) {
-    return "bg-red-500";
+    return "bg-red-500/80";
   }
   if (value >= 75) {
-    return "bg-orange-500";
+    return "bg-orange-500/80";
   }
   if (value >= 60) {
-    return "bg-amber-500";
+    return "bg-amber-500/80";
   }
-  return "bg-emerald-500";
+  return "bg-emerald-500/80";
 }
 
 function PctBar({ label, value }: { label?: string; value: number }) {
@@ -70,8 +71,14 @@ function PctBar({ label, value }: { label?: string; value: number }) {
         {label ? <span className="text-muted-foreground">{label}</span> : null}
         <span className="font-medium tabular-nums">{v}%</span>
       </div>
-      <div className="h-1.5 w-full rounded bg-muted">
-        <div className={cn("h-1.5 rounded", usageColor(value), widthClass)} />
+      <div className="h-1.5 w-full rounded-full bg-muted/60">
+        <div
+          className={cn(
+            "h-1.5 rounded-full transition-all duration-500",
+            usageColor(value),
+            widthClass
+          )}
+        />
       </div>
     </div>
   );
@@ -79,7 +86,7 @@ function PctBar({ label, value }: { label?: string; value: number }) {
 
 function ResourcesCell({ status }: { status: Partial<API.ServerStatus> }) {
   return (
-    <div className="flex min-w-28 flex-col gap-1.5">
+    <div className="flex min-w-28 flex-col gap-2 rounded-xl border border-white/5 bg-muted/20 p-2">
       <PctBar label="CPU" value={(status.cpu as number) ?? 0} />
       <PctBar label="MEM" value={(status.mem as number) ?? 0} />
       <PctBar label="DISK" value={(status.disk as number) ?? 0} />
@@ -143,15 +150,28 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
     status.xray_stats_error ||
     "";
   return (
-    <div className="flex min-w-32 max-w-36 flex-col gap-1 text-xs">
-      <div className="flex flex-wrap items-center gap-1">
-        <Badge variant={ok ? "secondary" : pending ? "outline" : "destructive"}>
+    <div className="flex min-w-32 max-w-36 flex-col gap-1.5 text-xs">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Badge
+          className="h-5 px-1.5 font-normal text-[10px]"
+          variant={ok ? "secondary" : pending ? "outline" : "destructive"}
+        >
           {ok ? "Config OK" : pending ? "Config Pending" : "Config Failed"}
         </Badge>
         {status.xray_running ? (
-          <Badge variant="secondary">Xray Running</Badge>
+          <Badge
+            className="h-5 bg-emerald-500/10 px-1.5 font-normal text-[10px] text-emerald-600 dark:text-emerald-400"
+            variant="secondary"
+          >
+            Xray Running
+          </Badge>
         ) : (
-          <Badge variant="outline">Xray Stopped</Badge>
+          <Badge
+            className="h-5 px-1.5 font-normal text-[10px]"
+            variant="outline"
+          >
+            Xray Stopped
+          </Badge>
         )}
       </div>
       <div className="truncate text-muted-foreground">
@@ -181,19 +201,35 @@ function ConfigStatusCell({ status }: { status: Partial<API.ServerStatus> }) {
 
 function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
   return (
-    <div className="flex min-w-40 flex-col gap-1 pr-3 text-xs">
-      <div className="grid grid-cols-[42px_1fr] gap-1">
-        <span className="text-muted-foreground">System</span>
-        <span>
-          ↑ {formatBitrate(status.net_tx_bps)} ↓{" "}
-          {formatBitrate(status.net_rx_bps)}
+    <div className="flex min-w-44 flex-col gap-1.5 rounded-xl border border-white/5 bg-muted/20 p-2.5 text-[11px] leading-tight">
+      <div className="grid grid-cols-[38px_1fr_1fr] items-center gap-1">
+        <span className="font-medium text-muted-foreground">Sys</span>
+        <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
+          <Icon className="h-3 w-3" icon="uil:arrow-up" />
+          <span className="tabular-nums">
+            {formatBitrate(status.net_tx_bps)}
+          </span>
+        </span>
+        <span className="flex items-center gap-0.5 text-blue-600 dark:text-blue-400">
+          <Icon className="h-3 w-3" icon="uil:arrow-down" />
+          <span className="tabular-nums">
+            {formatBitrate(status.net_rx_bps)}
+          </span>
         </span>
       </div>
-      <div className="grid grid-cols-[42px_1fr] gap-1">
-        <span className="text-muted-foreground">Xray</span>
-        <span>
-          ↑ {formatBitrate(status.xray_tx_bps)} ↓{" "}
-          {formatBitrate(status.xray_rx_bps)}
+      <div className="grid grid-cols-[38px_1fr_1fr] items-center gap-1">
+        <span className="font-medium text-muted-foreground">Xray</span>
+        <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
+          <Icon className="h-3 w-3" icon="uil:arrow-up" />
+          <span className="tabular-nums">
+            {formatBitrate(status.xray_tx_bps)}
+          </span>
+        </span>
+        <span className="flex items-center gap-0.5 text-blue-600 dark:text-blue-400">
+          <Icon className="h-3 w-3" icon="uil:arrow-down" />
+          <span className="tabular-nums">
+            {formatBitrate(status.xray_rx_bps)}
+          </span>
         </span>
       </div>
       {status.xray_stats_error ? (
@@ -214,21 +250,21 @@ function ConnectionsCell({ status }: { status: Partial<API.ServerStatus> }) {
   const xrayInbound = status.xray_inbound_connections ?? 0;
   const xrayOutbound = status.xray_outbound_connections ?? 0;
   return (
-    <div className="min-w-28 space-y-1 text-xs">
-      <div className="grid grid-cols-[34px_1fr_1fr] gap-1 text-muted-foreground">
+    <div className="min-w-32 space-y-1.5 rounded-xl border border-white/5 bg-muted/20 p-2.5 text-[11px] leading-tight">
+      <div className="mb-1 grid grid-cols-[34px_1fr_1fr] gap-1 border-border/40 border-b pb-1 text-muted-foreground">
         <span />
         <span>In</span>
         <span>Out</span>
       </div>
       <div className="grid grid-cols-[34px_1fr_1fr] gap-1">
-        <span className="text-muted-foreground">Sys</span>
-        <span className="font-medium">{systemInbound}</span>
-        <span className="font-medium">{systemOutbound}</span>
+        <span className="font-medium text-muted-foreground">Sys</span>
+        <span className="font-medium tabular-nums">{systemInbound}</span>
+        <span className="font-medium tabular-nums">{systemOutbound}</span>
       </div>
       <div className="grid grid-cols-[34px_1fr_1fr] gap-1">
-        <span className="text-muted-foreground">Xray</span>
-        <span className="font-medium">{xrayInbound}</span>
-        <span className="font-medium">{xrayOutbound}</span>
+        <span className="font-medium text-muted-foreground">Xray</span>
+        <span className="font-medium tabular-nums">{xrayInbound}</span>
+        <span className="font-medium tabular-nums">{xrayOutbound}</span>
       </div>
     </div>
   );

@@ -119,7 +119,7 @@ export default function Content({
   return (
     <div className="mx-auto mt-8 flex max-w-4xl flex-col gap-8 md:grid md:grid-cols-2 md:flex-row">
       <div className="flex flex-col gap-6">
-        <Card>
+        <Card className="rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
           <CardHeader>
             {t(
               "emailInputTitle",
@@ -211,7 +211,7 @@ export default function Content({
             </div> */}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
           <CardContent className="grid gap-3 text-sm">
             <h2 className="font-semibold text-xl">{subscription.name}</h2>
             <ul className="flex flex-grow flex-col gap-3">
@@ -290,7 +290,7 @@ export default function Content({
       </div>
 
       <div className="flex flex-col gap-6">
-        <Card>
+        <Card className="rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
           <CardContent className="p-6">
             <div className="grid gap-6">
               <DurationSelector
@@ -315,7 +315,7 @@ export default function Content({
         </Card>
 
         <Button
-          className="w-full"
+          className="h-14 w-full rounded-2xl text-lg shadow-md transition-shadow hover:shadow-lg"
           disabled={!isEmailValid.valid || loading}
           onClick={handleSubmit}
           size="lg"

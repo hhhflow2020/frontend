@@ -70,8 +70,8 @@ function MiniMetric(props: {
     violet: "from-violet-500/15 text-violet-600 dark:text-violet-300",
   };
   const content = (
-    <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-background to-muted/30 shadow-sm">
-      <CardContent className="p-3.5">
+    <Card className="hover:-translate-y-1 overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-300 hover:shadow-md dark:bg-background/40">
+      <CardContent className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="text-muted-foreground text-xs">{props.label}</div>
@@ -119,93 +119,143 @@ function LiveOperations({
     (realtime?.servers.xray_stopped || 0) > 0 ||
     alerts.length > 0;
   return (
-    <Card className="border-border/60 bg-gradient-to-br from-background via-background to-muted/40 shadow-sm">
+    <Card className="rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
       <CardHeader className="flex-row items-center justify-between pb-3">
         <div>
           <CardTitle className="text-lg">Live Operations</CardTitle>
           <div className="mt-1 text-muted-foreground text-xs">
-            WebSocket realtime health, network and connection summary
+            Real-time system health and network metrics
           </div>
         </div>
         <Badge variant={hasRisk ? "destructive" : "secondary"}>
           {hasRisk ? "Attention" : "Healthy"}
         </Badge>
       </CardHeader>
-      <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border bg-background/70 p-3.5">
-          <div className="text-muted-foreground text-xs">Servers</div>
-          <div className="mt-2 font-semibold text-2xl">
-            {realtime?.servers.online || 0}/{realtime?.servers.total || 0}
+      <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-white/5 bg-muted/20 p-4">
+          <div className="mb-1 font-medium text-muted-foreground text-xs">
+            Servers
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-1 text-xs">
+          <div className="font-semibold text-3xl tracking-tight">
+            {realtime?.servers.online || 0}
+            <span className="font-normal text-lg text-muted-foreground">
+              {" "}
+              / {realtime?.servers.total || 0}
+            </span>
+          </div>
+          <div className="mt-auto grid grid-cols-2 gap-1 text-[11px]">
             <span className="text-muted-foreground">Xray running</span>
-            <span className="text-right">
+            <span className="text-right font-medium text-emerald-500/90">
               {realtime?.servers.xray_running || 0}
             </span>
             <span className="text-muted-foreground">Config failed</span>
-            <span className="text-right">
+            <span className="text-right font-medium text-destructive/90">
               {realtime?.servers.config_failed || 0}
             </span>
           </div>
         </div>
-        <div className="rounded-2xl border bg-background/70 p-3.5">
-          <div className="text-muted-foreground text-xs">Network</div>
-          <div className="mt-2 space-y-2 text-sm">
-            <div className="flex justify-between gap-3">
-              <span className="text-muted-foreground">System</span>
-              <span>
-                ↑ {formatBitrate(realtime?.network.system_tx_bps)} ↓{" "}
+        <div className="flex flex-col gap-1.5 rounded-xl border border-white/5 bg-muted/20 p-4">
+          <div className="mb-2 font-medium text-muted-foreground text-xs">
+            Network
+          </div>
+          <div className="grid grid-cols-[46px_1fr_1fr] items-center gap-2 text-xs">
+            <span className="text-muted-foreground">System</span>
+            <span className="flex items-center gap-1 text-emerald-500/90">
+              <Icon className="h-3.5 w-3.5" icon="uil:arrow-up" />
+              <span className="font-medium tabular-nums">
+                {formatBitrate(realtime?.network.system_tx_bps)}
+              </span>
+            </span>
+            <span className="flex items-center gap-1 text-blue-500/90">
+              <Icon className="h-3.5 w-3.5" icon="uil:arrow-down" />
+              <span className="font-medium tabular-nums">
                 {formatBitrate(realtime?.network.system_rx_bps)}
               </span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-muted-foreground">Xray</span>
-              <span>
-                ↑ {formatBitrate(realtime?.network.xray_tx_bps)} ↓{" "}
+            </span>
+          </div>
+          <div className="grid grid-cols-[46px_1fr_1fr] items-center gap-2 text-xs">
+            <span className="text-muted-foreground">Xray</span>
+            <span className="flex items-center gap-1 text-emerald-500/90">
+              <Icon className="h-3.5 w-3.5" icon="uil:arrow-up" />
+              <span className="font-medium tabular-nums">
+                {formatBitrate(realtime?.network.xray_tx_bps)}
+              </span>
+            </span>
+            <span className="flex items-center gap-1 text-blue-500/90">
+              <Icon className="h-3.5 w-3.5" icon="uil:arrow-down" />
+              <span className="font-medium tabular-nums">
                 {formatBitrate(realtime?.network.xray_rx_bps)}
               </span>
-            </div>
+            </span>
           </div>
         </div>
-        <div className="rounded-2xl border bg-background/70 p-3.5">
-          <div className="text-muted-foreground text-xs">Connections</div>
-          <div className="mt-2 grid grid-cols-[52px_1fr_1fr] gap-1 text-sm">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-white/5 bg-muted/20 p-4">
+          <div className="mb-1 font-medium text-muted-foreground text-xs">
+            Connections
+          </div>
+          <div className="grid grid-cols-[38px_1fr_1fr] gap-1.5 text-[11px] leading-tight">
             <span />
-            <span className="text-muted-foreground">In</span>
-            <span className="text-muted-foreground">Out</span>
+            <span className="border-border/40 border-b pb-1 text-muted-foreground">
+              In
+            </span>
+            <span className="border-border/40 border-b pb-1 text-muted-foreground">
+              Out
+            </span>
             <span className="text-muted-foreground">Sys</span>
-            <span>{realtime?.connections.system_inbound || 0}</span>
-            <span>{realtime?.connections.system_outbound || 0}</span>
+            <span className="font-medium tabular-nums">
+              {realtime?.connections.system_inbound || 0}
+            </span>
+            <span className="font-medium tabular-nums">
+              {realtime?.connections.system_outbound || 0}
+            </span>
             <span className="text-muted-foreground">Xray</span>
-            <span>{realtime?.connections.xray_inbound || 0}</span>
-            <span>{realtime?.connections.xray_outbound || 0}</span>
+            <span className="font-medium tabular-nums">
+              {realtime?.connections.xray_inbound || 0}
+            </span>
+            <span className="font-medium tabular-nums">
+              {realtime?.connections.xray_outbound || 0}
+            </span>
           </div>
         </div>
-        <div className="rounded-2xl border bg-background/70 p-3.5">
-          <div className="text-muted-foreground text-xs">Resources</div>
-          <div className="mt-2 grid grid-cols-3 gap-2 text-center">
-            <div>
-              <div className="font-semibold">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-white/5 bg-muted/20 p-4">
+          <div className="mb-1 font-medium text-muted-foreground text-xs">
+            Resources
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="flex flex-col items-center justify-center rounded-lg bg-background/40 py-2">
+              <div className="font-semibold text-[13px]">
                 {formatPercent(realtime?.resources.avg_cpu)}
               </div>
-              <div className="text-muted-foreground text-xs">CPU</div>
+              <div className="mt-0.5 text-[10px] text-muted-foreground">
+                CPU
+              </div>
             </div>
-            <div>
-              <div className="font-semibold">
+            <div className="flex flex-col items-center justify-center rounded-lg bg-background/40 py-2">
+              <div className="font-semibold text-[13px]">
                 {formatPercent(realtime?.resources.avg_mem)}
               </div>
-              <div className="text-muted-foreground text-xs">MEM</div>
+              <div className="mt-0.5 text-[10px] text-muted-foreground">
+                MEM
+              </div>
             </div>
-            <div>
-              <div className="font-semibold">
+            <div className="flex flex-col items-center justify-center rounded-lg bg-background/40 py-2">
+              <div className="font-semibold text-[13px]">
                 {formatPercent(realtime?.resources.avg_disk)}
               </div>
-              <div className="text-muted-foreground text-xs">DISK</div>
+              <div className="mt-0.5 text-[10px] text-muted-foreground">
+                DISK
+              </div>
             </div>
           </div>
-          <div className="mt-2 text-muted-foreground text-xs">
-            Max: CPU {formatPercent(realtime?.resources.max_cpu)} / MEM{" "}
-            {formatPercent(realtime?.resources.max_mem)}
+          <div className="mt-auto text-center text-[10px] text-muted-foreground">
+            Max: CPU{" "}
+            <span className="font-medium text-foreground">
+              {formatPercent(realtime?.resources.max_cpu)}
+            </span>{" "}
+            / MEM{" "}
+            <span className="font-medium text-foreground">
+              {formatPercent(realtime?.resources.max_mem)}
+            </span>
           </div>
         </div>
       </CardContent>
@@ -220,9 +270,9 @@ function AlertsCard({
 }) {
   const alerts = (realtime?.alerts || []).slice(0, 5);
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
       <CardHeader className="flex-row items-center justify-between">
-        <CardTitle>Needs Attention</CardTitle>
+        <CardTitle>Alerts</CardTitle>
         <Badge variant={alerts.length ? "destructive" : "secondary"}>
           {alerts.length ? alerts.length : "Clear"}
         </Badge>
@@ -286,12 +336,12 @@ function LiveActivityCard({
 }) {
   const activities = (realtime?.activities || []).slice(0, 8);
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
       <CardHeader className="flex-row items-center justify-between">
         <div>
-          <CardTitle>Live Activity</CardTitle>
+          <CardTitle>Recent Activity</CardTitle>
           <div className="mt-1 text-muted-foreground text-xs">
-            Logins, orders, registrations and tickets
+            Recent platform events and transactions
           </div>
         </div>
         <Badge variant="outline">{activities.length}</Badge>
@@ -427,7 +477,7 @@ export default function Statistics() {
     const currentData = trafficData[type][timeFrame];
 
     return (
-      <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-background via-background to-muted/30 shadow-sm">
+      <Card className="overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>
             {type === "nodes" ? "Node Traffic" : "User Traffic"}
@@ -560,13 +610,11 @@ export default function Statistics() {
     <div className="w-full space-y-3">
       <div className="flex flex-col gap-3 px-1 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="text-muted-foreground text-xs">Dashboard</div>
-          <h1 className="font-semibold text-2xl tracking-tight">
-            Control Center
-          </h1>
+          <div className="text-muted-foreground text-xs">System metrics</div>
+          <h1 className="font-semibold text-2xl tracking-tight">Overview</h1>
         </div>
         <div className="text-muted-foreground text-xs">
-          Live updated{" "}
+          Last updated{" "}
           {realtime?.updated_at
             ? new Date(realtime.updated_at).toLocaleTimeString()
             : "--"}

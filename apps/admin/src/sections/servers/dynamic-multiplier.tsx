@@ -53,8 +53,8 @@ export default function DynamicMultiplier() {
   return (
     <Sheet onOpenChange={setOpen} open={open}>
       <SheetTrigger asChild>
-        <Card>
-          <CardContent>
+        <Card className="hover:-translate-y-0.5 rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-300 hover:shadow-md dark:bg-background/40">
+          <CardContent className="p-4">
             <div className="flex cursor-pointer items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">

@@ -18,7 +18,7 @@ export function SubscribeDetail({ subscribe }: Readonly<SubscribeDetailProps>) {
       <div className="font-semibold">
         {t("detail.productDetail", "Product Detail")}
       </div>
-      <ul className="grid grid-cols-1 gap-3 *:flex *:items-start *:justify-between *:gap-4 lg:grid-cols-1">
+      <ul className="grid grid-cols-1 gap-4 *:flex *:items-center *:justify-between *:gap-4 lg:grid-cols-1">
         {subscribe?.name && (
           <li className="flex items-center justify-between">
             <span className="line-clamp-2 flex-1 text-muted-foreground">

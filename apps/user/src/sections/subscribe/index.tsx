@@ -52,10 +52,10 @@ export default function Subscribe() {
 
             return (
               <Card
-                className="group hover:-translate-y-0.5 relative overflow-hidden border-muted/70 transition hover:border-primary/30 hover:shadow-lg"
+                className="group hover:-translate-y-1 relative overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] backdrop-blur-xl transition-all duration-300 hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)] dark:bg-background/40"
                 key={item.id}
               >
-                <CardContent className="flex min-h-full flex-col gap-6 p-6">
+                <CardContent className="flex min-h-full flex-col gap-6 p-8">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
@@ -77,68 +77,86 @@ export default function Subscribe() {
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <div className="flex items-end gap-1">
-                      <div className="font-semibold text-4xl tracking-normal">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-baseline gap-1.5">
+                      <div className="font-bold text-5xl text-foreground tracking-tighter">
                         <Display type="currency" value={item.unit_price} />
                       </div>
-                      <span className="pb-1 text-muted-foreground text-sm">
-                        /{unitTime}
+                      <span className="font-medium text-muted-foreground text-sm">
+                        / {unitTime}
                       </span>
                     </div>
                     {hasDiscount && (
-                      <div className="flex flex-wrap gap-1.5 text-muted-foreground text-xs">
-                        {discounts.slice(0, 3).map((discount) => (
-                          <Badge
-                            className="h-5 rounded-sm px-1.5 font-normal text-[11px]"
-                            key={`${discount.quantity}-${discount.discount}`}
-                            variant="outline"
-                          >
-                            {discount.quantity} {unitTime} -
-                            {100 - discount.discount}%
-                          </Badge>
-                        ))}
+                      <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-3">
+                        <div className="mb-2 font-bold text-[10px] text-emerald-600/80 uppercase tracking-widest dark:text-emerald-400/80">
+                          {t("volumeDiscounts", "Volume Discounts")}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {discounts.slice(0, 4).map((discount) => (
+                            <Badge
+                              className="rounded-lg border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-medium text-emerald-700 shadow-sm transition-colors hover:bg-emerald-500/20 dark:text-emerald-300"
+                              key={`${discount.quantity}-${discount.discount}`}
+                              variant="outline"
+                            >
+                              <span className="opacity-80">
+                                {discount.quantity} {unitTime}
+                              </span>
+                              <span className="mx-1.5 opacity-30">|</span>
+                              <span className="font-bold">
+                                -{100 - discount.discount}%
+                              </span>
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    <PlanMetric
-                      icon={<HardDrive className="size-4" />}
-                      label={t("detail.traffic", "Traffic")}
-                      value={
+                  <div className="flex flex-col gap-3">
+                    {/* Primary Metric: Traffic */}
+                    <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 p-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-primary">
+                        <HardDrive className="size-5" />
+                        <span className="font-medium">
+                          {t("detail.traffic", "Traffic")}
+                        </span>
+                      </div>
+                      <div className="font-bold text-primary text-xl tracking-tight">
                         <Display
                           fractionDigits={0}
                           type="traffic"
                           unlimited
                           value={item.traffic}
                         />
-                      }
-                    />
-                    <PlanMetric
-                      icon={<Gauge className="size-4" />}
-                      label={t("detail.speedLimit", "Speed")}
-                      value={
-                        <Display
-                          fractionDigits={0}
-                          type="trafficSpeed"
-                          unlimited
-                          value={item.speed_limit}
-                        />
-                      }
-                    />
-                    <PlanMetric
-                      icon={<Router className="size-4" />}
-                      label={t("detail.deviceLimit", "Devices")}
-                      value={
-                        <Display
-                          fractionDigits={0}
-                          type="number"
-                          unlimited
-                          value={item.device_limit}
-                        />
-                      }
-                    />
+                      </div>
+                    </div>
+                    {/* Secondary Metrics: Speed & Devices */}
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <PlanMetric
+                        icon={<Gauge className="size-4" />}
+                        label={t("detail.speedLimit", "Speed")}
+                        value={
+                          <Display
+                            fractionDigits={0}
+                            type="trafficSpeed"
+                            unlimited
+                            value={item.speed_limit}
+                          />
+                        }
+                      />
+                      <PlanMetric
+                        icon={<Router className="size-4" />}
+                        label={t("detail.deviceLimit", "Devices")}
+                        value={
+                          <Display
+                            fractionDigits={0}
+                            type="number"
+                            unlimited
+                            value={item.device_limit}
+                          />
+                        }
+                      />
+                    </div>
                   </div>
 
                   {parsed.features.length > 0 && (
@@ -170,7 +188,7 @@ export default function Subscribe() {
                   )}
 
                   <Button
-                    className="mt-auto h-11 w-full"
+                    className="mt-auto h-12 w-full rounded-2xl shadow-sm transition-shadow hover:shadow-md"
                     disabled={!item.sell}
                     onClick={() => {
                       setSubscribe(item);
@@ -201,8 +219,8 @@ function PlanMetric({
   value: ReactNode;
 }>) {
   return (
-    <div className="min-w-0 rounded-md border bg-muted/30 p-3">
-      <div className="mb-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+    <div className="min-w-0 rounded-2xl border border-white/5 bg-muted/40 p-4">
+      <div className="mb-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {icon}
         <span className="truncate">{label}</span>
       </div>
