@@ -136,16 +136,16 @@ function LiveOperations({
             Servers
           </div>
           <div className="font-semibold text-3xl tracking-tight">
-            {realtime?.servers.online || 0}
+            {realtime?.servers.online ?? 0}
             <span className="font-normal text-lg text-muted-foreground">
               {" "}
-              / {realtime?.servers.total || 0}
+              / {realtime?.servers.total ?? 0}
             </span>
           </div>
           <div className="mt-auto grid grid-cols-2 gap-1 text-[11px]">
             <span className="text-muted-foreground">Xray running</span>
             <span className="text-right font-medium text-emerald-500/90">
-              {realtime?.servers.xray_running || 0}
+              {realtime?.servers.xray_running ?? 0}
             </span>
             <span className="text-muted-foreground">Config failed</span>
             <span className="text-right font-medium text-destructive/90">
@@ -602,8 +602,8 @@ export default function Statistics() {
   const monthlyTraffic =
     (ServerTotal?.monthly_upload || 0) + (ServerTotal?.monthly_download || 0);
   const totalServers =
-    realtime?.servers.total ||
-    (ServerTotal?.online_servers || 0) + (ServerTotal?.offline_servers || 0);
+    realtime?.servers.total ??
+    (ServerTotal?.online_servers ?? 0) + (ServerTotal?.offline_servers ?? 0);
 
   return (
     <div className="w-full space-y-3">
@@ -627,7 +627,7 @@ export default function Statistics() {
           label={t("onlineUsersCount", "Online Users")}
           sub={t("currentlyOnline", "Currently Online")}
           tone="blue"
-          value={realtime?.online_users || ServerTotal?.online_users || 0}
+          value={realtime?.online_users ?? ServerTotal?.online_users ?? 0}
         />
         <MiniMetric
           icon="uil:exchange-alt"
@@ -640,7 +640,7 @@ export default function Statistics() {
           href="/dashboard/servers"
           icon="uil:server-network"
           label={t("totalServers", "Total Servers")}
-          sub={`${realtime?.servers.online || ServerTotal?.online_servers || 0} online · ${realtime?.servers.offline || ServerTotal?.offline_servers || 0} offline`}
+          sub={`${realtime?.servers.online ?? ServerTotal?.online_servers ?? 0} online · ${realtime?.servers.offline ?? ServerTotal?.offline_servers ?? 0} offline`}
           tone={realtime?.servers.config_failed || 0 ? "red" : "green"}
           value={totalServers}
         />
