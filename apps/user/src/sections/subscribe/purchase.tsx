@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog";
-import { Separator } from "@workspace/ui/components/separator";
 import { cn } from "@workspace/ui/lib/utils";
 import { preCreateOrder, purchase } from "@workspace/ui/services/user/order";
 import { Check, Gauge, HardDrive, LoaderCircle, Router } from "lucide-react";
@@ -121,37 +120,36 @@ export default function Purchase({
       }}
       open={!!subscribe?.id}
     >
-      <DialogContent className="flex h-full flex-col overflow-hidden border-none p-0 md:h-auto md:max-w-5xl">
-        <DialogHeader className="border-b px-6 py-5">
-          <DialogTitle className="text-2xl">
+      <DialogContent className="flex h-full flex-col overflow-hidden border-none bg-background p-0 md:h-auto md:max-w-4xl">
+        <DialogHeader className="border-b px-6 py-5 text-center">
+          <DialogTitle className="font-semibold text-xl tracking-normal">
             {t("buySubscription", "Buy Subscription")}
           </DialogTitle>
         </DialogHeader>
-        <div className="grid w-full flex-grow gap-4 overflow-auto p-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
-          <Card className="overflow-hidden border-muted/70 shadow-none">
-            <CardContent className="grid gap-6 p-6">
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="font-semibold text-2xl leading-tight">
-                    {subscribe?.name}
-                  </h3>
-                  <div className="rounded-full bg-primary/10 px-3 py-1 font-medium text-primary text-sm">
-                    x {params.quantity || 1}
-                  </div>
+        <div className="grid w-full flex-grow overflow-auto md:grid-cols-[minmax(0,1fr)_360px]">
+          <section className="grid content-between gap-8 p-6 md:p-8">
+            <div className="space-y-8">
+              <div className="mx-auto max-w-md space-y-4 text-center">
+                <div className="text-muted-foreground text-sm">
+                  {t("selectedPlan", "Selected plan")}
                 </div>
+                <h3 className="font-semibold text-4xl leading-tight tracking-normal">
+                  {subscribe?.name}
+                </h3>
                 {parsed.description && (
-                  <p className="text-muted-foreground text-sm leading-6">
+                  <p className="text-balance text-muted-foreground text-sm leading-6">
                     {parsed.description}
                   </p>
                 )}
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-3">
                 <PurchaseMetric
                   icon={<HardDrive className="size-4" />}
                   label={t("detail.traffic", "Traffic")}
                   value={
                     <Display
+                      fractionDigits={0}
                       type="traffic"
                       unlimited
                       value={subscribe?.traffic}
@@ -163,6 +161,7 @@ export default function Purchase({
                   label={t("detail.speedLimit", "Speed")}
                   value={
                     <Display
+                      fractionDigits={0}
                       type="trafficSpeed"
                       unlimited
                       value={subscribe?.speed_limit}
@@ -174,6 +173,7 @@ export default function Purchase({
                   label={t("detail.deviceLimit", "Devices")}
                   value={
                     <Display
+                      fractionDigits={0}
                       type="number"
                       unlimited
                       value={subscribe?.device_limit}
@@ -183,35 +183,34 @@ export default function Purchase({
               </div>
 
               {parsed.features.length > 0 && (
-                <ul className="grid gap-3 text-sm">
+                <ul className="mx-auto grid max-w-md gap-3 text-sm">
                   {parsed.features.slice(0, 6).map((feature, index) => (
                     <li
-                      className={cn("flex items-start gap-2", {
+                      className={cn("flex items-start gap-3", {
                         "text-muted-foreground line-through":
                           feature.type === "destructive",
                       })}
                       key={`${feature.label}-${index}`}
                     >
-                      <Check className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+                      <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+                        <Check className="size-3.5 text-emerald-500" />
+                      </span>
                       <span className="leading-5">{feature.label}</span>
                     </li>
                   ))}
                 </ul>
               )}
+            </div>
+          </section>
 
-              <Separator />
-              <SubscribeBilling
-                order={{
-                  ...order,
-                  quantity: params.quantity,
-                  unit_price: subscribe?.unit_price,
-                  show_original_price: subscribe?.show_original_price,
-                }}
-              />
-            </CardContent>
-          </Card>
-          <div className="flex flex-col justify-between rounded-md border bg-muted/20 p-4 text-sm md:p-5">
-            <div className="mb-6 grid gap-5">
+          <aside className="flex flex-col justify-between border-t bg-muted/30 p-5 text-sm md:border-t-0 md:border-l md:p-6">
+            <div className="grid gap-6">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">
+                  {t("quantity", "Quantity")}
+                </span>
+                <span className="font-medium">x {params.quantity || 1}</span>
+              </div>
               <DurationSelector
                 discounts={subscribe?.discount}
                 onChange={(value) => {
@@ -231,16 +230,28 @@ export default function Purchase({
                 }}
                 value={params.payment as number}
               />
+              <Card className="border-muted/70 bg-background shadow-none">
+                <CardContent className="grid gap-4 p-4">
+                  <SubscribeBilling
+                    order={{
+                      ...order,
+                      quantity: params.quantity,
+                      unit_price: subscribe?.unit_price,
+                      show_original_price: subscribe?.show_original_price,
+                    }}
+                  />
+                </CardContent>
+              </Card>
             </div>
             <Button
-              className="fixed bottom-0 left-0 h-12 w-full md:relative md:mt-6"
+              className="fixed bottom-0 left-0 h-12 w-full rounded-none text-base md:relative md:mt-6 md:rounded-md"
               disabled={loading}
               onClick={handleSubmit}
             >
               {loading && <LoaderCircle className="mr-2 animate-spin" />}
               {t("buyNow", "Buy Now")}
             </Button>
-          </div>
+          </aside>
         </div>
       </DialogContent>
     </Dialog>

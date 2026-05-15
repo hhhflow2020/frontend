@@ -140,9 +140,6 @@ export default function SubscribeTable() {
               onChange={(checked) => {
                 row.original.show = checked;
               }}
-              onUpdated={() => {
-                ref.current?.refresh();
-              }}
               subscribe={row.original}
               value={!!row.getValue("show")}
               valueKey="show"
@@ -160,9 +157,6 @@ export default function SubscribeTable() {
               )}
               onChange={(checked) => {
                 row.original.sell = checked;
-              }}
-              onUpdated={() => {
-                ref.current?.refresh();
               }}
               subscribe={row.original}
               value={!!row.getValue("sell")}
@@ -338,14 +332,12 @@ export default function SubscribeTable() {
 function SubscribeStatusSwitch({
   label,
   onChange,
-  onUpdated,
   subscribe,
   value,
   valueKey,
 }: Readonly<{
   label: string;
   onChange: (checked: boolean) => void;
-  onUpdated: () => void;
   subscribe: API.SubscribeItem;
   value: boolean;
   valueKey: "show" | "sell";
@@ -366,17 +358,16 @@ function SubscribeStatusSwitch({
       disabled={saving}
       onCheckedChange={async (nextChecked) => {
         const previous = checked;
-        setChecked(nextChecked);
         setSaving(true);
-        onChange(nextChecked);
         try {
           await updateSubscribe({
             ...subscribe,
             [valueKey]: nextChecked,
           } as API.UpdateSubscribeRequest);
+          setChecked(nextChecked);
+          onChange(nextChecked);
           toast.success(t("updateSuccess"));
           fetchSubscribes();
-          onUpdated();
         } catch {
           setChecked(previous);
           onChange(previous);

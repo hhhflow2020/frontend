@@ -111,6 +111,7 @@ export default function Subscribe() {
                       label={t("detail.traffic", "Traffic")}
                       value={
                         <Display
+                          fractionDigits={0}
                           type="traffic"
                           unlimited
                           value={item.traffic}
@@ -122,6 +123,7 @@ export default function Subscribe() {
                       label={t("detail.speedLimit", "Speed")}
                       value={
                         <Display
+                          fractionDigits={0}
                           type="trafficSpeed"
                           unlimited
                           value={item.speed_limit}
@@ -133,6 +135,7 @@ export default function Subscribe() {
                       label={t("detail.deviceLimit", "Devices")}
                       value={
                         <Display
+                          fractionDigits={0}
                           type="number"
                           unlimited
                           value={item.device_limit}

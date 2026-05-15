@@ -6,12 +6,14 @@ import { useGlobalStore } from "@/stores/global";
 type DisplayType = "currency" | "traffic" | "number" | "trafficSpeed";
 
 interface DisplayProps<T> {
+  fractionDigits?: number;
   value?: T;
   unlimited?: boolean;
   type?: DisplayType;
 }
 
 export function Display<T extends number | undefined | null>({
+  fractionDigits,
   value = 0,
   unlimited = false,
   type = "number",
@@ -34,16 +36,43 @@ export function Display<T extends number | undefined | null>({
   }
 
   if (type === "traffic") {
-    return value ? formatBytes(value) : "0";
+    return value ? formatDisplayBytes(value, fractionDigits) : "0";
   }
 
   if (type === "trafficSpeed") {
-    return value ? `${formatBytes(value).replace("B", "b")}ps` : "0";
+    return value
+      ? `${formatDisplayBytes(value, fractionDigits).replace("B", "b")}ps`
+      : "0";
   }
 
   if (type === "number") {
-    return value ? value.toString() : "0";
+    return value ? formatDisplayNumber(value, fractionDigits) : "0";
   }
 
   return "0";
+}
+
+function formatDisplayBytes(value: number, fractionDigits?: number) {
+  const formatted = formatBytes(value);
+  if (fractionDigits === undefined) {
+    return formatted;
+  }
+
+  return formatted.replace(/^-?\d+(?:\.\d+)?/, (number) =>
+    Number(number).toLocaleString(undefined, {
+      maximumFractionDigits: fractionDigits,
+      minimumFractionDigits: fractionDigits,
+    })
+  );
+}
+
+function formatDisplayNumber(value: number, fractionDigits?: number) {
+  if (fractionDigits === undefined) {
+    return value.toString();
+  }
+
+  return value.toLocaleString(undefined, {
+    maximumFractionDigits: fractionDigits,
+    minimumFractionDigits: fractionDigits,
+  });
 }

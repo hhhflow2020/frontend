@@ -23,13 +23,13 @@ export function SubscribeBilling({ order }: Readonly<SubscribeBillingProps>) {
       <div className="font-semibold">
         {t("billing.billingTitle", "Billing Detail")}
       </div>
-      <ul className="grid grid-cols-2 gap-3 *:flex *:items-center *:justify-between lg:grid-cols-1">
+      <ul className="grid gap-3 *:flex *:items-start *:justify-between *:gap-4">
         {order?.type && [1, 2].includes(order?.type) && (
           <li>
             <span className="text-muted-foreground">
               {t("billing.duration", "Duration")}
             </span>
-            <span>
+            <span className="text-right font-medium">
               {order?.quantity || 1}{" "}
               {t(order?.unit_time || "Month", order?.unit_time || "Month")}
             </span>
@@ -42,7 +42,7 @@ export function SubscribeBilling({ order }: Readonly<SubscribeBillingProps>) {
               <span className="text-muted-foreground">
                 {t("billing.originalPrice", "Original Price (Monthly)")}
               </span>
-              <span>
+              <span className="text-right font-medium">
                 <Display type="currency" value={order?.unit_price} />
               </span>
             </li>
@@ -51,7 +51,7 @@ export function SubscribeBilling({ order }: Readonly<SubscribeBillingProps>) {
           <span className="text-muted-foreground">
             {t("billing.price", "Price")}
           </span>
-          <span>
+          <span className="text-right font-medium">
             <Display
               type="currency"
               value={order?.price || order?.unit_price}
@@ -62,7 +62,7 @@ export function SubscribeBilling({ order }: Readonly<SubscribeBillingProps>) {
           <span className="text-muted-foreground">
             {t("billing.productDiscount", "Product Discount")}
           </span>
-          <span>
+          <span className="text-right font-medium">
             <Display type="currency" value={order?.discount} />
           </span>
         </li>
@@ -70,7 +70,7 @@ export function SubscribeBilling({ order }: Readonly<SubscribeBillingProps>) {
           <span className="text-muted-foreground">
             {t("billing.couponDiscount", "Coupon Discount")}
           </span>
-          <span>
+          <span className="text-right font-medium">
             <Display type="currency" value={order?.coupon_discount} />
           </span>
         </li>
@@ -78,7 +78,7 @@ export function SubscribeBilling({ order }: Readonly<SubscribeBillingProps>) {
           <span className="text-muted-foreground">
             {t("billing.fee", "Fee")}
           </span>
-          <span>
+          <span className="text-right font-medium">
             <Display type="currency" value={order?.fee_amount} />
           </span>
         </li>
@@ -86,7 +86,7 @@ export function SubscribeBilling({ order }: Readonly<SubscribeBillingProps>) {
           <span className="text-muted-foreground">
             {t("billing.gift", "Gift")}
           </span>
-          <span>
+          <span className="text-right font-medium">
             <Display type="currency" value={order?.gift_amount} />
           </span>
         </li>
@@ -96,7 +96,7 @@ export function SubscribeBilling({ order }: Readonly<SubscribeBillingProps>) {
         <span className="text-muted-foreground">
           {t("billing.total", "Total")}
         </span>
-        <span>
+        <span className="text-right">
           <Display type="currency" value={order?.amount} />
         </span>
       </div>
