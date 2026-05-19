@@ -3,6 +3,7 @@
   "cancel": "取消",
   "createdAt": "创建时间",
   "detail": "详情",
+  "freeOrder": "免费订单",
   "goToPayment": "去支付",
   "membershipCard": "会员卡",
   "membershipDuration": "会员有效期",
@@ -16,6 +17,7 @@
   "paymentAmount": "支付金额",
   "paymentMethod": "支付方式",
   "paymentSuccess": "支付成功",
+  "processingOrder": "正在处理订单",
   "productList": "商品列表",
   "rechargeAmount": "充值金额",
   "resetPrice": "重置价格",
@@ -39,6 +41,7 @@
     "4": "充值",
     "5": "会员卡"
   },
+  "viewPlans": "查看套餐",
   "viewDocument": "查看文档",
   "waitingForPayment": "等待支付"
 }

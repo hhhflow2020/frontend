@@ -1,0 +1,9 @@
+{
+  "getMembership": "Get Membership",
+  "memberActive": "Active Member",
+  "memberInactive": "No Active Membership",
+  "membershipActive": "Membership Active",
+  "membershipExpiresAt": "Membership expires at",
+  "membershipInactive": "No Membership",
+  "membershipRequiredHint": "A membership card is required before purchasing subscription products."
+}

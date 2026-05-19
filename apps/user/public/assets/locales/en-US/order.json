@@ -3,6 +3,7 @@
   "cancel": "Cancel",
   "createdAt": "Created At",
   "detail": "Detail",
+  "freeOrder": "Free Order",
   "goToPayment": "Go to Payment",
   "membershipCard": "Membership Card",
   "membershipDuration": "Membership Duration",
@@ -16,6 +17,7 @@
   "paymentAmount": "Amount",
   "paymentMethod": "Payment Method",
   "paymentSuccess": "Payment Successful",
+  "processingOrder": "Processing Order",
   "productList": "Product List",
   "rechargeAmount": "Recharge Amount",
   "resetPrice": "Reset Price",
@@ -39,6 +41,7 @@
     "4": "Recharge",
     "5": "Membership Card"
   },
+  "viewPlans": "View Plans",
   "viewDocument": "View Document",
   "waitingForPayment": "Waiting for Payment"
 }

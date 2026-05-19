@@ -1,0 +1,9 @@
+{
+  "getMembership": "开通会员卡",
+  "memberActive": "会员生效中",
+  "memberInactive": "无有效会员",
+  "membershipActive": "会员卡生效中",
+  "membershipExpiresAt": "会员卡到期时间",
+  "membershipInactive": "未开通会员卡",
+  "membershipRequiredHint": "购买订阅商品前需要先开通会员卡。"
+}

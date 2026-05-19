@@ -2,7 +2,9 @@
   "actions": {
     "add": "添加",
     "batchDelete": "批量删除",
+    "batchDeleteSuccess_one": "成功删除 {count} 个客户端",
     "batchDeleteSuccess_other": "成功删除 {count} 个客户端",
+    "batchDeleteWarning_one": "确定要删除选中的 {count} 个客户端吗？",
     "batchDeleteWarning_other": "确定要删除选中的 {count} 个客户端吗？",
     "cancel": "取消",
     "confirm": "确认",
@@ -72,6 +74,8 @@
       "userAgentPrefix": "用于区分不同客户端的客户端标识符"
     },
     "editTitle": "编辑客户端",
+    "enabled": "启用",
+    "enabledDescription": "关闭后用户端不显示，也不能通过该客户端模版生成订阅",
     "fields": {
       "description": "描述",
       "icon": "图标",
@@ -100,6 +104,7 @@
     "columns": {
       "default": "默认",
       "description": "描述",
+      "enabled": "启用",
       "name": "客户端名称",
       "outputFormat": "输出格式",
       "supportedPlatforms": "支持的平台"

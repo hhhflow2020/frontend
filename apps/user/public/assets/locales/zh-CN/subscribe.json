@@ -64,6 +64,7 @@
   "paymentMethod": "支付方式",
   "productDescription": "商品描述",
   "purchaseDuration": "购买时长",
+  "saved": "已节省",
   "recharge": "充值",
   "rechargeAmount": "充值金额",
   "rechargeDescription": "一键充值，轻松处理",
@@ -87,5 +88,6 @@
     "unsubscribe": "取消订阅",
     "unsubscribeDescription": "请注意：如果您现在取消订阅，订阅的剩余价值将退还到您的账户余额中，可用于您下次的订阅购买或续订。"
   },
+  "volumeDiscounts": "批量优惠",
   "Year": "年"
 }

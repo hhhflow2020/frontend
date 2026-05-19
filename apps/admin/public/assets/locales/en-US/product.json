@@ -18,6 +18,10 @@
   "sortSuccess": "Sort completed successfully",
   "form": {
     "annualReset": "Annual Reset",
+    "allowRenewal": "Allow Renewal",
+    "allowRenewalDescription": "Users can renew subscriptions for this product",
+    "allowResetTraffic": "Allow Reset Traffic",
+    "allowResetTrafficDescription": "Users can purchase traffic resets for this product",
     "basic": "Basic",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -77,6 +81,8 @@
   "sold": "Subscription Count",
   "traffic": "Traffic",
   "unitPrice": "Unit Price",
+  "userVisible": "User Visible",
+  "userVisibleDescription": "Visible on the subscribe page after user login",
   "updateFailed": "Update failed",
   "updateSuccess": "Update Successful"
 }

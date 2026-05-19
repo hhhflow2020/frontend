@@ -22,7 +22,8 @@
     "1": "New Purchase",
     "2": "Renewal",
     "3": "Reset Traffic",
-    "4": "Recharge"
+    "4": "Recharge",
+    "5": "Membership Card"
   },
   "updateTime": "Update Time",
   "user": "User"

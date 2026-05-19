@@ -18,6 +18,10 @@
   "sortSuccess": "排序成功",
   "form": {
     "annualReset": "年度重置",
+    "allowRenewal": "允许续费",
+    "allowRenewalDescription": "用户可以对该商品的订阅进行续费",
+    "allowResetTraffic": "允许重置流量",
+    "allowResetTrafficDescription": "用户可以购买该商品的流量重置",
     "basic": "基本",
     "cancel": "取消",
     "confirm": "确认",
@@ -77,6 +81,8 @@
   "sold": "订阅数量",
   "traffic": "流量",
   "unitPrice": "单价",
+  "userVisible": "用户可见",
+  "userVisibleDescription": "登录后用户可在订阅页面看到该商品",
   "updateFailed": "更新失败",
   "updateSuccess": "更新成功"
 }

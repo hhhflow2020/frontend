@@ -17,6 +17,7 @@
   "enabled_off": "已禁用",
   "enabled_on": "已启用",
   "name": "名称",
+  "node_form_description": "配置节点展示信息，并关联该服务器已绑定的 Xray inbound。",
   "pageTitle": "节点",
   "port": "端口",
   "protocol": "Inbound",

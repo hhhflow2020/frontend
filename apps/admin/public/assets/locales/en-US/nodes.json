@@ -17,6 +17,7 @@
   "enabled_off": "Disabled",
   "enabled_on": "Enabled",
   "name": "Name",
+  "node_form_description": "Configure node display information and link the Xray inbound bound to this server.",
   "pageTitle": "Nodes",
   "port": "Port",
   "protocol": "Inbound",

@@ -64,6 +64,7 @@
   "paymentMethod": "Payment Method",
   "productDescription": "productDescription",
   "purchaseDuration": "Purchase Duration",
+  "saved": "Saved",
   "recharge": "Recharge",
   "rechargeAmount": "Recharge Amount",
   "rechargeDescription": "One-click recharge, easy to handle",
@@ -87,5 +88,6 @@
     "unsubscribe": "Unsubscribe",
     "unsubscribeDescription": "Please note: If you unsubscribe now, the remaining value of the subscription will be refunded to your account balance, which can be used for your next subscription purchase or renewal."
   },
+  "volumeDiscounts": "Volume Discounts",
   "Year": "Year"
 }

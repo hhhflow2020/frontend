@@ -74,6 +74,8 @@
       "userAgentPrefix": "Client identifier for distinguishing different clients"
     },
     "editTitle": "Edit Client",
+    "enabled": "Enabled",
+    "enabledDescription": "When disabled, the client is hidden on the user side and cannot generate subscriptions from this template",
     "fields": {
       "description": "Description",
       "icon": "Icon",
@@ -102,6 +104,7 @@
     "columns": {
       "default": "Default",
       "description": "Description",
+      "enabled": "Enabled",
       "name": "Client Name",
       "outputFormat": "Output Format",
       "supportedPlatforms": "Supported Platforms"
