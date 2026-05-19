@@ -1326,8 +1326,16 @@ declare namespace API {
     duration_unit: string;
     duration_value: number;
     enabled: boolean;
+    policy: MembershipPolicy;
     created_at?: number;
     updated_at?: number;
+  };
+
+  type MembershipPolicy = {
+    monthly_consumption_limit_enabled: boolean;
+    monthly_consumption_limit: number;
+    monthly_order_limit_enabled: boolean;
+    monthly_order_limit: number;
   };
 
   type KickOfflineRequest = {
@@ -2442,6 +2450,7 @@ declare namespace API {
     duration_unit: string;
     duration_value: number;
     enabled: boolean;
+    policy: MembershipPolicy;
   };
 
   type UpdateNodeRequest = {
@@ -2555,13 +2564,17 @@ declare namespace API {
     referral_percentage: number;
     only_first_purchase: boolean;
     gift_amount: number;
-    member_expired_at: number;
-    is_member: boolean;
     telegram: number;
     refer_code: string;
     referer_id: number;
     enable: boolean;
     is_admin: boolean;
+  };
+
+  type UpdateUserMembershipRequest = {
+    user_id: number;
+    is_member: boolean;
+    member_expired_at: number;
   };
 
   type UpdateUserNotifySettingRequest = {

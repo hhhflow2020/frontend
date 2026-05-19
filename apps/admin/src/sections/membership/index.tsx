@@ -53,6 +53,12 @@ const defaultForm: API.UpdateMembershipPlanRequest = {
   duration_unit: "Year",
   duration_value: 1,
   enabled: true,
+  policy: {
+    monthly_consumption_limit_enabled: false,
+    monthly_consumption_limit: 0,
+    monthly_order_limit_enabled: false,
+    monthly_order_limit: 0,
+  },
 };
 
 export default function Membership() {
@@ -79,6 +85,14 @@ export default function Membership() {
       duration_unit: data.duration_unit,
       duration_value: data.duration_value || 1,
       enabled: data.enabled,
+      policy: {
+        monthly_consumption_limit_enabled:
+          data.policy?.monthly_consumption_limit_enabled ?? false,
+        monthly_consumption_limit: data.policy?.monthly_consumption_limit || 0,
+        monthly_order_limit_enabled:
+          data.policy?.monthly_order_limit_enabled ?? false,
+        monthly_order_limit: data.policy?.monthly_order_limit || 0,
+      },
     });
   }, [data]);
 
@@ -89,6 +103,19 @@ export default function Membership() {
     setForm((current) => ({
       ...current,
       [key]: value,
+    }));
+  };
+
+  const updatePolicy = <K extends keyof API.MembershipPolicy>(
+    key: K,
+    value: API.MembershipPolicy[K]
+  ) => {
+    setForm((current) => ({
+      ...current,
+      policy: {
+        ...(current.policy || defaultForm.policy),
+        [key]: value,
+      },
     }));
   };
 
@@ -105,6 +132,20 @@ export default function Membership() {
           description: form.description?.trim() || "",
           duration_value: Math.max(Number(form.duration_value) || 1, 1),
           unit_price: Math.max(Number(form.unit_price) || 0, 0),
+          policy: {
+            monthly_consumption_limit_enabled:
+              form.policy?.monthly_consumption_limit_enabled ?? false,
+            monthly_consumption_limit: Math.max(
+              Number(form.policy?.monthly_consumption_limit) || 0,
+              0
+            ),
+            monthly_order_limit_enabled:
+              form.policy?.monthly_order_limit_enabled ?? false,
+            monthly_order_limit: Math.max(
+              Number(form.policy?.monthly_order_limit) || 0,
+              0
+            ),
+          },
         });
         toast.success(t("updateSuccess", "Updated successfully"));
         refetch();
@@ -255,6 +296,100 @@ export default function Membership() {
               </div>
             </div>
 
+            <div className="rounded-lg border border-border/60">
+              <div className="space-y-1 px-4 pt-4 pb-2">
+                <h3 className="font-semibold text-base">
+                  {t("policy.title", "Abuse Prevention Policies")}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  {t(
+                    "policy.description",
+                    "Choose which monthly limits apply to active members when they purchase, renew, or reset subscription traffic."
+                  )}
+                </p>
+              </div>
+              <div className="grid gap-4 px-4 pb-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-3 rounded-lg border p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <Label>
+                          {t(
+                            "policy.monthlyConsumption",
+                            "Monthly Consumption Limit"
+                          )}
+                        </Label>
+                        <p className="text-muted-foreground text-xs">
+                          {t(
+                            "policy.monthlyConsumptionHint",
+                            "Counts pending, paid, and completed subscription orders."
+                          )}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={form.policy?.monthly_consumption_limit_enabled}
+                        onCheckedChange={(checked) =>
+                          updatePolicy(
+                            "monthly_consumption_limit_enabled",
+                            checked
+                          )
+                        }
+                      />
+                    </div>
+                    <EnhancedInput<number>
+                      disabled={!form.policy?.monthly_consumption_limit_enabled}
+                      formatInput={(value) =>
+                        unitConversion("centsToDollars", value)
+                      }
+                      formatOutput={(value) =>
+                        unitConversion("dollarsToCents", value)
+                      }
+                      min={0}
+                      onValueChange={(value) =>
+                        updatePolicy("monthly_consumption_limit", value)
+                      }
+                      type="number"
+                      value={form.policy?.monthly_consumption_limit || 0}
+                    />
+                  </div>
+
+                  <div className="space-y-3 rounded-lg border p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <Label>
+                          {t("policy.monthlyOrders", "Monthly Order Limit")}
+                        </Label>
+                        <p className="text-muted-foreground text-xs">
+                          {t(
+                            "policy.monthlyOrdersHint",
+                            "Limits the number of subscription orders a member can create each month."
+                          )}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={form.policy?.monthly_order_limit_enabled}
+                        onCheckedChange={(checked) =>
+                          updatePolicy("monthly_order_limit_enabled", checked)
+                        }
+                      />
+                    </div>
+                    <Input
+                      disabled={!form.policy?.monthly_order_limit_enabled}
+                      min={0}
+                      onChange={(event) =>
+                        updatePolicy(
+                          "monthly_order_limit",
+                          Number(event.target.value) || 0
+                        )
+                      }
+                      type="number"
+                      value={form.policy?.monthly_order_limit || 0}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="membership-description">
                 {t("cardDescription", "Description")}
@@ -317,6 +452,32 @@ export default function Membership() {
                 </span>
                 <span className="font-semibold text-xl">
                   <Display type="currency" value={form.unit_price} />
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-muted-foreground">
+                  {t("previewPolicies", "Policies")}
+                </span>
+                <span className="text-right text-xs leading-5">
+                  {form.policy?.monthly_consumption_limit_enabled ? (
+                    <span className="block">
+                      {t("policy.monthlyConsumption", "Monthly Consumption")}:{" "}
+                      <Display
+                        type="currency"
+                        value={form.policy.monthly_consumption_limit}
+                      />
+                    </span>
+                  ) : null}
+                  {form.policy?.monthly_order_limit_enabled ? (
+                    <span className="block">
+                      {t("policy.monthlyOrders", "Monthly Orders")}:{" "}
+                      {form.policy.monthly_order_limit}
+                    </span>
+                  ) : null}
+                  {form.policy?.monthly_consumption_limit_enabled ||
+                  form.policy?.monthly_order_limit_enabled
+                    ? null
+                    : t("noPolicies", "No policy enabled")}
                 </span>
               </div>
               {data?.id ? (

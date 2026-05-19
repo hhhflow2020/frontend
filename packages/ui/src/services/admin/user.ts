@@ -103,6 +103,21 @@ export async function updateUserBasicInfo(
   });
 }
 
+/** Update user membership PUT /v1/admin/user/membership */
+export async function updateUserMembership(
+  body: API.UpdateUserMembershipRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.Response & { data?: any }>("/v1/admin/user/membership", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** Batch delete user DELETE /v1/admin/user/batch */
 export async function batchDeleteUser(
   body: API.BatchDeleteUserRequest,

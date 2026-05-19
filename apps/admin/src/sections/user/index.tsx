@@ -45,6 +45,7 @@ import { UserDetail } from "./user-detail";
 import UserForm from "./user-form";
 import { AuthMethodsForm } from "./user-profile/auth-methods-form";
 import { BasicInfoForm } from "./user-profile/basic-info-form";
+import { MembershipInfoForm } from "./user-profile/membership-info-form";
 import { NotifySettingsForm } from "./user-profile/notify-settings-form";
 import UserSubscription from "./user-subscription";
 
@@ -391,6 +392,9 @@ function ProfileSheet({
                 <TabsTrigger value="basic">
                   {t("basicInfoTitle", "Basic Info")}
                 </TabsTrigger>
+                <TabsTrigger value="membership">
+                  {t("membership", "Membership")}
+                </TabsTrigger>
                 <TabsTrigger value="notify">
                   {t("notifySettingsTitle", "Notify Settings")}
                 </TabsTrigger>
@@ -400,6 +404,9 @@ function ProfileSheet({
               </TabsList>
               <TabsContent className="mt-0" value="basic">
                 <BasicInfoForm refetch={refetchAll} user={user} />
+              </TabsContent>
+              <TabsContent className="mt-0" value="membership">
+                <MembershipInfoForm refetch={refetchAll} user={user} />
               </TabsContent>
               <TabsContent className="mt-0" value="notify">
                 <NotifySettingsForm refetch={refetchAll} user={user} />

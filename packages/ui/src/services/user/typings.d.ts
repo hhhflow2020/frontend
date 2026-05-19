@@ -461,8 +461,16 @@ declare namespace API {
     duration_unit: string;
     duration_value: number;
     enabled: boolean;
+    policy: MembershipPolicy;
     created_at?: number;
     updated_at?: number;
+  };
+
+  type MembershipPolicy = {
+    monthly_consumption_limit_enabled: boolean;
+    monthly_consumption_limit: number;
+    monthly_order_limit_enabled: boolean;
+    monthly_order_limit: number;
   };
 
   type MembershipCardResponse = {
