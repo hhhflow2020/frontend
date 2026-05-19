@@ -13,7 +13,7 @@ import { memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 interface PaymentMethodsProps {
-  value: number;
+  value?: number;
   onChange: (value: number) => void;
   balance?: boolean;
 }

@@ -124,7 +124,7 @@ export function MembershipPurchaseDialog({
   const { t } = useTranslation("subscribe");
   const router = useRouter();
   const { getUserInfo } = useGlobalStore();
-  const [payment, setPayment] = useState(-1);
+  const [payment, setPayment] = useState<number>();
   const [loading, startTransition] = useTransition();
   const plan = card?.plan;
   const planAmount = useMemo(() => {
@@ -133,11 +133,15 @@ export function MembershipPurchaseDialog({
   }, [plan]);
   const requiresPayment = planAmount > 0;
   const planReady = !!plan;
+  const paymentReady = !requiresPayment || payment !== undefined;
 
   const handleSubmit = useCallback(() => {
+    if (!paymentReady) return;
+    const selectedPayment = requiresPayment ? payment : 0;
+    if (selectedPayment === undefined) return;
     startTransition(async () => {
       const response = await purchaseMembership({
-        payment: requiresPayment ? payment : 0,
+        payment: selectedPayment,
       });
       const orderNo = response.data.data?.order_no;
       if (!orderNo) return;
@@ -145,7 +149,14 @@ export function MembershipPurchaseDialog({
       onOpenChange(false);
       router.navigate({ to: "/payment", search: { order_no: orderNo } });
     });
-  }, [getUserInfo, onOpenChange, payment, requiresPayment, router]);
+  }, [
+    getUserInfo,
+    onOpenChange,
+    payment,
+    paymentReady,
+    requiresPayment,
+    router,
+  ]);
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -204,7 +215,7 @@ export function MembershipPurchaseDialog({
           )}
           <Button
             className="h-12 rounded-full"
-            disabled={loading || !planReady || (requiresPayment && payment < 0)}
+            disabled={loading || !planReady || !paymentReady}
             onClick={handleSubmit}
           >
             {loading && <LoaderCircle className="animate-spin" />}
