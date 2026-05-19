@@ -62,6 +62,11 @@ export function useNavs() {
             icon: "flat-color-icons:todo-list",
           },
           {
+            title: t("Membership Management", "Membership Management"),
+            url: "/dashboard/membership",
+            icon: "flat-color-icons:vip",
+          },
+          {
             title: t("Coupon Management", "Coupon Management"),
             url: "/dashboard/coupon",
             icon: "flat-color-icons:bookmark",

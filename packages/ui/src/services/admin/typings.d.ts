@@ -1318,6 +1318,18 @@ declare namespace API {
     only_first_purchase: boolean;
   };
 
+  type MembershipPlan = {
+    id: number;
+    name: string;
+    description: string;
+    unit_price: number;
+    duration_unit: string;
+    duration_value: number;
+    enabled: boolean;
+    created_at?: number;
+    updated_at?: number;
+  };
+
   type KickOfflineRequest = {
     id: number;
   };
@@ -2422,6 +2434,16 @@ declare namespace API {
     show: boolean;
   };
 
+  type UpdateMembershipPlanRequest = {
+    id: number;
+    name: string;
+    description?: string;
+    unit_price: number;
+    duration_unit: string;
+    duration_value: number;
+    enabled: boolean;
+  };
+
   type UpdateNodeRequest = {
     id: number;
     name: string;
@@ -2533,6 +2555,8 @@ declare namespace API {
     referral_percentage: number;
     only_first_purchase: boolean;
     gift_amount: number;
+    member_expired_at: number;
+    is_member: boolean;
     telegram: number;
     refer_code: string;
     referer_id: number;

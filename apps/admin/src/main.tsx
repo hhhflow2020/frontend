@@ -37,6 +37,7 @@ initializeI18n({
     "document",
     "log",
     "marketing",
+    "membership",
     "menu",
     "nodes",
     "order",

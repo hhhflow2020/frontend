@@ -130,7 +130,7 @@ export function MembershipPurchaseDialog({
   const quantity = 1;
   const planAmount = useMemo(() => {
     if (!plan) return 0;
-    return plan.unit_price * Math.max(plan.duration_value || 1, 1) * quantity;
+    return plan.unit_price * quantity;
   }, [plan]);
   const requiresPayment = planAmount > 0;
   const planReady = !!plan;

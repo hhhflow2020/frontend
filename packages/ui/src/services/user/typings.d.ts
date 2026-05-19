@@ -448,6 +448,7 @@ declare namespace API {
     status: number;
     subscribe_id: number;
     subscribe: Subscribe;
+    membership_plan?: MembershipPlan;
     created_at: number;
     updated_at: number;
   };
@@ -460,6 +461,8 @@ declare namespace API {
     duration_unit: string;
     duration_value: number;
     enabled: boolean;
+    created_at?: number;
+    updated_at?: number;
   };
 
   type MembershipCardResponse = {

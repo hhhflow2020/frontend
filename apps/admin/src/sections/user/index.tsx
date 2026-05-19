@@ -48,6 +48,11 @@ import { BasicInfoForm } from "./user-profile/basic-info-form";
 import { NotifySettingsForm } from "./user-profile/notify-settings-form";
 import UserSubscription from "./user-subscription";
 
+type UserWithMembership = API.User & {
+  is_member?: boolean;
+  member_expired_at?: number;
+};
+
 export default function User() {
   const { t } = useTranslation("user");
   const [loading, setLoading] = useState(false);
@@ -76,7 +81,9 @@ export default function User() {
           <SubscriptionSheet key="subscription" userId={row.id} />,
           <DropdownMenu key="more" modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline">{t("more", "More")}</Button>
+              <Button size="sm" variant="outline">
+                {t("more", "More")}
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
@@ -134,7 +141,10 @@ export default function User() {
                   }}
                   title={t("confirmDelete", "Confirm Delete")}
                   trigger={
-                    <button className="w-full cursor-default text-left text-red-500 hover:text-red-600 focus:text-red-600">
+                    <button
+                      className="w-full cursor-default text-left text-red-500 hover:text-red-600 focus:text-red-600"
+                      type="button"
+                    >
                       {t("delete", "Delete")}
                     </button>
                   }
@@ -159,11 +169,13 @@ export default function User() {
                   enable_login_notify: _enable_login_notify,
                   enable_subscribe_notify: _enable_subscribe_notify,
                   enable_trade_notify: _enable_trade_notify,
+                  is_member: _is_member,
+                  member_expired_at: _member_expired_at,
                   updated_at: _updated_at,
                   created_at: _created_at,
                   id,
                   ...rest
-                } = row.original;
+                } = row.original as UserWithMembership;
                 await updateUserBasicInfo({
                   user_id: id,
                   ...rest,
@@ -205,6 +217,29 @@ export default function User() {
                   {method?.auth_type}
                 </Badge>
                 {method?.auth_identifier}
+              </div>
+            );
+          },
+        },
+        {
+          accessorKey: "is_member",
+          header: t("membership", "Membership"),
+          cell: ({ row }) => {
+            const user = row.original as UserWithMembership;
+            const isMember = Boolean(user.is_member);
+            const expiredAt = user.member_expired_at || 0;
+            return (
+              <div className="flex flex-col gap-1">
+                <Badge variant={isMember ? "default" : "outline"}>
+                  {isMember
+                    ? t("memberActive", "Active Member")
+                    : t("memberInactive", "No Active Membership")}
+                </Badge>
+                <span className="text-muted-foreground text-xs">
+                  {expiredAt > 0
+                    ? formatDate(expiredAt, false)
+                    : t("notActivated", "Not activated")}
+                </span>
               </div>
             );
           },
@@ -336,7 +371,9 @@ function ProfileSheet({
   return (
     <Sheet onOpenChange={setOpen} open={open}>
       <SheetTrigger asChild>
-        <Button size="sm" variant="default">{t("edit", "Edit")}</Button>
+        <Button size="sm" variant="default">
+          {t("edit", "Edit")}
+        </Button>
       </SheetTrigger>
       <SheetContent
         className="w-[700px] max-w-full md:max-w-screen-lg"
@@ -384,7 +421,9 @@ function SubscriptionSheet({ userId }: { userId: number }) {
   return (
     <Sheet onOpenChange={setOpen} open={open}>
       <SheetTrigger asChild>
-        <Button size="sm" variant="secondary">{t("subscription", "Subscription")}</Button>
+        <Button size="sm" variant="secondary">
+          {t("subscription", "Subscription")}
+        </Button>
       </SheetTrigger>
       <SheetContent className="w-[1000px] max-w-full md:max-w-7xl" side="right">
         <SheetHeader>

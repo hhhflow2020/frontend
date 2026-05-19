@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
   HoverCard,
@@ -16,6 +17,11 @@ import { formatBytes } from "@workspace/ui/utils/formatting";
 import { useTranslation } from "react-i18next";
 import { Display } from "@/components/display";
 import { formatDate } from "@/utils/common";
+
+type UserWithMembership = API.User & {
+  is_member?: boolean;
+  member_expired_at?: number;
+};
 
 export function UserSubscribeDetail({
   id,
@@ -163,9 +169,10 @@ export function UserDetail({ id }: { id: number }) {
 
   if (!id) return "--";
 
+  const user = data as UserWithMembership | undefined;
   const identifier =
-    data?.auth_methods.find((m) => m.auth_type === "email")?.auth_identifier ||
-    data?.auth_methods[0]?.auth_identifier;
+    user?.auth_methods.find((m) => m.auth_type === "email")?.auth_identifier ||
+    user?.auth_methods[0]?.auth_identifier;
 
   return (
     <HoverCard>
@@ -205,6 +212,21 @@ export function UserDetail({ id }: { id: number }) {
               </span>
               <span>
                 <Display type="currency" value={data?.commission} />
+              </span>
+            </li>
+            <li className="flex items-center justify-between">
+              <span className="text-muted-foreground">
+                {t("membership", "Membership")}
+              </span>
+              <span className="flex items-center gap-2">
+                <Badge variant={user?.is_member ? "default" : "outline"}>
+                  {user?.is_member
+                    ? t("memberActive", "Active Member")
+                    : t("memberInactive", "No Active Membership")}
+                </Badge>
+                {user?.member_expired_at
+                  ? formatDate(user.member_expired_at, false)
+                  : null}
               </span>
             </li>
             <li className="flex items-center justify-between">

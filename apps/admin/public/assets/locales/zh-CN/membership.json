@@ -1,0 +1,39 @@
+{
+  "cardDescription": "描述",
+  "cardSettings": "会员卡设置",
+  "cardSettingsDescription": "当前用户端只售卖一个默认会员卡。",
+  "description": "配置用户购买订阅商品前必须拥有的会员卡。",
+  "descriptionPlaceholder": "购买订阅商品前需要开通会员卡。",
+  "duration": {
+    "Day": "天",
+    "Hour": "小时",
+    "Minute": "分钟",
+    "Month": "月",
+    "Year": "年"
+  },
+  "durationUnit": "时长单位",
+  "durationValue": "时长",
+  "emptyDescription": "暂未填写描述。",
+  "emptyName": "会员卡",
+  "enabled": "启用",
+  "enabledDescription": "关闭后，用户无法购买或续费该会员卡。",
+  "name": "名称",
+  "namePlaceholder": "年度会员卡",
+  "nameRequired": "请输入会员卡名称",
+  "preview": "预览",
+  "previewDescription": "用户将购买到的内容。",
+  "previewDuration": "有效期",
+  "previewPrice": "价格",
+  "price": "价格",
+  "priceDescription": "这是一个完整会员卡周期的价格，不是按月单价。",
+  "refresh": "刷新",
+  "save": "保存",
+  "status": {
+    "disabled": "已停用",
+    "enabled": "已启用"
+  },
+  "title": "会员卡管理",
+  "updatedAt": "更新时间",
+  "updateFailed": "更新失败",
+  "updateSuccess": "更新成功"
+}

@@ -46,6 +46,7 @@
     "60005": "Single subscription mode has exceeded user limit",
     "60006": "User quota limit has been reached, unable to continue.",
     "60007": "Insufficient inventory, please try again later or contact the administrator.",
+    "60008": "Membership card is required before purchasing subscription products.",
     "70001": "Incorrect verification code, please re-enter.",
     "80001": "Task was not successfully queued, please try again later.",
     "90001": "Please disable DEBUG mode and try again.",
@@ -59,6 +60,11 @@
   },
   "language": "Language",
   "loginRegister": "Login / Register",
+  "membership": {
+    "join": "Join Membership",
+    "member": "Member",
+    "notMember": "Not a Member"
+  },
   "menu": {
     "affiliate": "Commission",
     "announcement": "Announcement Management",

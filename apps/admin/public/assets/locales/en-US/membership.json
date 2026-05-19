@@ -1,0 +1,39 @@
+{
+  "cardDescription": "Description",
+  "cardSettings": "Card Settings",
+  "cardSettingsDescription": "Only one default membership card is currently sold to users.",
+  "description": "Configure the membership card users must hold before purchasing subscription products.",
+  "descriptionPlaceholder": "Required before purchasing subscription products.",
+  "duration": {
+    "Day": "Day",
+    "Hour": "Hour",
+    "Minute": "Minute",
+    "Month": "Month",
+    "Year": "Year"
+  },
+  "durationUnit": "Duration Unit",
+  "durationValue": "Duration",
+  "emptyDescription": "No description yet.",
+  "emptyName": "Membership Card",
+  "enabled": "Enabled",
+  "enabledDescription": "When disabled, users cannot purchase or renew this membership card.",
+  "name": "Name",
+  "namePlaceholder": "Annual Membership",
+  "nameRequired": "Please enter a membership card name",
+  "preview": "Preview",
+  "previewDescription": "What users will purchase.",
+  "previewDuration": "Duration",
+  "previewPrice": "Price",
+  "price": "Price",
+  "priceDescription": "This is the price for one full membership card period, not a monthly unit price.",
+  "refresh": "Refresh",
+  "save": "Save",
+  "status": {
+    "disabled": "Disabled",
+    "enabled": "Enabled"
+  },
+  "title": "Membership Management",
+  "updatedAt": "Updated At",
+  "updateFailed": "Update failed",
+  "updateSuccess": "Updated successfully"
+}

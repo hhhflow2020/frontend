@@ -166,7 +166,8 @@ export default function Page() {
           {data?.type === 5 && (
             <>
               <div className="font-semibold">
-                {t("membershipCard", "Membership Card")}
+                {data.membership_plan?.name ||
+                  t("membershipCard", "Membership Card")}
               </div>
               <ul className="grid grid-cols-2 gap-3 *:flex *:items-center *:justify-between lg:grid-cols-1">
                 <li className="flex items-center justify-between">
@@ -174,7 +175,12 @@ export default function Page() {
                     {t("membershipDuration", "Membership Duration")}
                   </span>
                   <span>
-                    {data.quantity || 1} {t("Year", "Year")}
+                    {(data.membership_plan?.duration_value || 1) *
+                      (data.quantity || 1)}{" "}
+                    {t(
+                      data.membership_plan?.duration_unit || "Year",
+                      data.membership_plan?.duration_unit || "Year"
+                    )}
                   </span>
                 </li>
                 <li className="flex items-center justify-between">

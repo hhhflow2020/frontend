@@ -999,6 +999,8 @@ declare namespace API {
     referral_percentage: number;
     only_first_purchase: boolean;
     gift_amount: number;
+    member_expired_at: number;
+    is_member: boolean;
     telegram: number;
     refer_code: string;
     referer_id: number;

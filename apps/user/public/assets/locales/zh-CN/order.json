@@ -4,6 +4,9 @@
   "createdAt": "创建时间",
   "detail": "详情",
   "goToPayment": "去支付",
+  "membershipCard": "会员卡",
+  "membershipDuration": "会员有效期",
+  "membershipPrice": "会员卡价格",
   "name": "商品名称",
   "orderClosed": "订单已关闭",
   "orderList": "订单列表",
@@ -33,7 +36,8 @@
     "1": "新购",
     "2": "续费",
     "3": "重置流量",
-    "4": "充值"
+    "4": "充值",
+    "5": "会员卡"
   },
   "viewDocument": "查看文档",
   "waitingForPayment": "等待支付"

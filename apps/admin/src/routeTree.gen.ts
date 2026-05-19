@@ -36,6 +36,9 @@ const DashboardPaymentIndexLazyRouteImport = createFileRoute(
 )()
 const DashboardOrderIndexLazyRouteImport =
   createFileRoute('/dashboard/order/')()
+const DashboardMembershipIndexLazyRouteImport = createFileRoute(
+  '/dashboard/membership/',
+)()
 const DashboardMarketingIndexLazyRouteImport = createFileRoute(
   '/dashboard/marketing/',
 )()
@@ -181,6 +184,14 @@ const DashboardOrderIndexLazyRoute = DashboardOrderIndexLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/dashboard/order/index.lazy').then((d) => d.Route),
 )
+const DashboardMembershipIndexLazyRoute =
+  DashboardMembershipIndexLazyRouteImport.update({
+    id: '/membership/',
+    path: '/membership/',
+    getParentRoute: () => DashboardRouteLazyRoute,
+  } as any).lazy(() =>
+    import('./routes/dashboard/membership/index.lazy').then((d) => d.Route),
+  )
 const DashboardMarketingIndexLazyRoute =
   DashboardMarketingIndexLazyRouteImport.update({
     id: '/marketing/',
@@ -347,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/coupon': typeof DashboardCouponIndexLazyRoute
   '/dashboard/document': typeof DashboardDocumentIndexLazyRoute
   '/dashboard/marketing': typeof DashboardMarketingIndexLazyRoute
+  '/dashboard/membership': typeof DashboardMembershipIndexLazyRoute
   '/dashboard/order': typeof DashboardOrderIndexLazyRoute
   '/dashboard/payment': typeof DashboardPaymentIndexLazyRoute
   '/dashboard/product': typeof DashboardProductIndexLazyRoute
@@ -379,6 +391,7 @@ export interface FileRoutesByTo {
   '/dashboard/coupon': typeof DashboardCouponIndexLazyRoute
   '/dashboard/document': typeof DashboardDocumentIndexLazyRoute
   '/dashboard/marketing': typeof DashboardMarketingIndexLazyRoute
+  '/dashboard/membership': typeof DashboardMembershipIndexLazyRoute
   '/dashboard/order': typeof DashboardOrderIndexLazyRoute
   '/dashboard/payment': typeof DashboardPaymentIndexLazyRoute
   '/dashboard/product': typeof DashboardProductIndexLazyRoute
@@ -413,6 +426,7 @@ export interface FileRoutesById {
   '/dashboard/coupon/': typeof DashboardCouponIndexLazyRoute
   '/dashboard/document/': typeof DashboardDocumentIndexLazyRoute
   '/dashboard/marketing/': typeof DashboardMarketingIndexLazyRoute
+  '/dashboard/membership/': typeof DashboardMembershipIndexLazyRoute
   '/dashboard/order/': typeof DashboardOrderIndexLazyRoute
   '/dashboard/payment/': typeof DashboardPaymentIndexLazyRoute
   '/dashboard/product/': typeof DashboardProductIndexLazyRoute
@@ -448,6 +462,7 @@ export interface FileRouteTypes {
     | '/dashboard/coupon'
     | '/dashboard/document'
     | '/dashboard/marketing'
+    | '/dashboard/membership'
     | '/dashboard/order'
     | '/dashboard/payment'
     | '/dashboard/product'
@@ -480,6 +495,7 @@ export interface FileRouteTypes {
     | '/dashboard/coupon'
     | '/dashboard/document'
     | '/dashboard/marketing'
+    | '/dashboard/membership'
     | '/dashboard/order'
     | '/dashboard/payment'
     | '/dashboard/product'
@@ -513,6 +529,7 @@ export interface FileRouteTypes {
     | '/dashboard/coupon/'
     | '/dashboard/document/'
     | '/dashboard/marketing/'
+    | '/dashboard/membership/'
     | '/dashboard/order/'
     | '/dashboard/payment/'
     | '/dashboard/product/'
@@ -618,6 +635,13 @@ declare module '@tanstack/react-router' {
       path: '/order'
       fullPath: '/dashboard/order'
       preLoaderRoute: typeof DashboardOrderIndexLazyRouteImport
+      parentRoute: typeof DashboardRouteLazyRoute
+    }
+    '/dashboard/membership/': {
+      id: '/dashboard/membership/'
+      path: '/membership'
+      fullPath: '/dashboard/membership'
+      preLoaderRoute: typeof DashboardMembershipIndexLazyRouteImport
       parentRoute: typeof DashboardRouteLazyRoute
     }
     '/dashboard/marketing/': {
@@ -772,6 +796,7 @@ interface DashboardRouteLazyRouteChildren {
   DashboardCouponIndexLazyRoute: typeof DashboardCouponIndexLazyRoute
   DashboardDocumentIndexLazyRoute: typeof DashboardDocumentIndexLazyRoute
   DashboardMarketingIndexLazyRoute: typeof DashboardMarketingIndexLazyRoute
+  DashboardMembershipIndexLazyRoute: typeof DashboardMembershipIndexLazyRoute
   DashboardOrderIndexLazyRoute: typeof DashboardOrderIndexLazyRoute
   DashboardPaymentIndexLazyRoute: typeof DashboardPaymentIndexLazyRoute
   DashboardProductIndexLazyRoute: typeof DashboardProductIndexLazyRoute
@@ -804,6 +829,7 @@ const DashboardRouteLazyRouteChildren: DashboardRouteLazyRouteChildren = {
   DashboardCouponIndexLazyRoute: DashboardCouponIndexLazyRoute,
   DashboardDocumentIndexLazyRoute: DashboardDocumentIndexLazyRoute,
   DashboardMarketingIndexLazyRoute: DashboardMarketingIndexLazyRoute,
+  DashboardMembershipIndexLazyRoute: DashboardMembershipIndexLazyRoute,
   DashboardOrderIndexLazyRoute: DashboardOrderIndexLazyRoute,
   DashboardPaymentIndexLazyRoute: DashboardPaymentIndexLazyRoute,
   DashboardProductIndexLazyRoute: DashboardProductIndexLazyRoute,

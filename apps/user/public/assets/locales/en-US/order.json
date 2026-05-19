@@ -4,6 +4,9 @@
   "createdAt": "Created At",
   "detail": "Detail",
   "goToPayment": "Go to Payment",
+  "membershipCard": "Membership Card",
+  "membershipDuration": "Membership Duration",
+  "membershipPrice": "Membership Price",
   "name": "Product Name",
   "orderClosed": "Order Closed",
   "orderList": "Order List",
@@ -33,7 +36,8 @@
     "1": "New Purchase",
     "2": "Renewal",
     "3": "Reset Traffic",
-    "4": "Recharge"
+    "4": "Recharge",
+    "5": "Membership Card"
   },
   "viewDocument": "View Document",
   "waitingForPayment": "Waiting for Payment"
