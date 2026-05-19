@@ -1,6 +1,5 @@
 import { removeCookie, setCookie } from "@workspace/ui/lib/cookies";
 import { isBrowser } from "@workspace/ui/utils/index";
-import { intlFormat } from "date-fns";
 
 export function getPlatform(): string {
   if (typeof window === "undefined") return "unknown";
@@ -16,28 +15,7 @@ export function getPlatform(): string {
   return "unknown";
 }
 
-export function differenceInDays(date1: Date, date2: Date): number {
-  const diffTime = Math.abs(date1.getTime() - date2.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
-}
-
-export function formatDate(date?: Date | number, showTime = true) {
-  if (!date) return;
-  const timeZone = localStorage.getItem("timezone") || "UTC";
-  return intlFormat(date, {
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    ...(showTime && {
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-    }),
-    hour12: false,
-    timeZone,
-  });
-}
+export { differenceInDays, formatDate } from "@workspace/ui/utils/formatting";
 
 export function setAuthorization(token: string): void {
   setCookie("Authorization", token);

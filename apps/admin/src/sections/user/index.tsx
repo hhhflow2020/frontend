@@ -74,27 +74,9 @@ export default function User() {
             userId={row.id}
           />,
           <SubscriptionSheet key="subscription" userId={row.id} />,
-          <ConfirmButton
-            cancelText={t("cancel", "Cancel")}
-            confirmText={t("confirm", "Confirm")}
-            description={t(
-              "deleteDescription",
-              "This action cannot be undone."
-            )}
-            key="edit"
-            onConfirm={async () => {
-              await deleteUser({ id: row.id });
-              toast.success(t("deleteSuccess", "Deleted successfully"));
-              ref.current?.refresh();
-            }}
-            title={t("confirmDelete", "Confirm Delete")}
-            trigger={
-              <Button variant="destructive">{t("delete", "Delete")}</Button>
-            }
-          />,
           <DropdownMenu key="more" modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">{t("more", "More")}</Button>
+              <Button size="sm" variant="outline">{t("more", "More")}</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
@@ -136,6 +118,27 @@ export default function User() {
                 >
                   {t("giftLogs", "Gift Logs")}
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <ConfirmButton
+                  cancelText={t("cancel", "Cancel")}
+                  confirmText={t("confirm", "Confirm")}
+                  description={t(
+                    "deleteDescription",
+                    "This action cannot be undone."
+                  )}
+                  onConfirm={async () => {
+                    await deleteUser({ id: row.id });
+                    toast.success(t("deleteSuccess", "Deleted successfully"));
+                    ref.current?.refresh();
+                  }}
+                  title={t("confirmDelete", "Confirm Delete")}
+                  trigger={
+                    <button className="w-full cursor-default text-left text-red-500 hover:text-red-600 focus:text-red-600">
+                      {t("delete", "Delete")}
+                    </button>
+                  }
+                />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>,
@@ -333,7 +336,7 @@ function ProfileSheet({
   return (
     <Sheet onOpenChange={setOpen} open={open}>
       <SheetTrigger asChild>
-        <Button variant="default">{t("edit", "Edit")}</Button>
+        <Button size="sm" variant="default">{t("edit", "Edit")}</Button>
       </SheetTrigger>
       <SheetContent
         className="w-[700px] max-w-full md:max-w-screen-lg"
@@ -381,7 +384,7 @@ function SubscriptionSheet({ userId }: { userId: number }) {
   return (
     <Sheet onOpenChange={setOpen} open={open}>
       <SheetTrigger asChild>
-        <Button variant="secondary">{t("subscription", "Subscription")}</Button>
+        <Button size="sm" variant="secondary">{t("subscription", "Subscription")}</Button>
       </SheetTrigger>
       <SheetContent className="w-[1000px] max-w-full md:max-w-7xl" side="right">
         <SheetHeader>

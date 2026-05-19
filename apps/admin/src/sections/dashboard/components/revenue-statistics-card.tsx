@@ -76,7 +76,7 @@ export function RevenueStatisticsCard() {
     allData.length > 1 && allData.some((item) => item.total > 0);
 
   return (
-    <Card className="self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
+    <Card className="self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:bg-background/40">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>

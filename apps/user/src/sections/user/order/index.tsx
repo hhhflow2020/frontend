@@ -43,7 +43,7 @@ export default function Order() {
     <ProList<API.OrderDetail, Record<string, unknown>>
       action={ref}
       renderItem={(item) => (
-        <Card className="overflow-hidden">
+        <Card className="hover:-translate-y-1 overflow-hidden transition-all duration-300 hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
             <CardTitle>
               {t("orderNo", "Order No")}

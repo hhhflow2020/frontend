@@ -123,8 +123,8 @@ export default function Purchase({
           <DialogTitle>{t("buySubscription", "Buy Subscription")}</DialogTitle>
         </DialogHeader>
         <div className="grid w-full flex-grow gap-8 overflow-auto p-6 pt-2 lg:grid-cols-[320px_1fr]">
-          <Card className="h-fit border-border/40 bg-[#fbfbfb] shadow-sm md:rounded-none md:border-x-0 md:border-y md:border-dashed dark:bg-[#1a1a1a]">
-            <CardContent className="grid gap-2 p-5 font-mono text-slate-600 text-sm dark:text-slate-400">
+          <Card className="h-fit border-border/40 bg-muted/30 shadow-sm md:rounded-none md:border-x-0 md:border-y md:border-dashed">
+            <CardContent className="grid gap-2 p-5 font-mono text-muted-foreground text-sm">
               <SubscribeDetail
                 subscribe={{
                   ...subscribe,

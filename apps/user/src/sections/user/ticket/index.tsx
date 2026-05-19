@@ -169,7 +169,7 @@ export default function Ticket() {
           },
         ]}
         renderItem={(item) => (
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 bg-muted/50 p-3">
               <CardTitle>
                 <span

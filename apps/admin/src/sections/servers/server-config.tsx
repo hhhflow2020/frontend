@@ -173,16 +173,17 @@ export default function ServerConfig() {
                           "Please enter"
                         )}
                         suffix={
-                          <div className="flex h-9 items-center bg-muted px-3">
-                            <DicesIcon
-                              className="cursor-pointer"
-                              onClick={() => {
-                                const id = uid(32).toLowerCase();
-                                const formatted = `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`;
-                                form.setValue("node_secret", formatted);
-                              }}
-                            />
-                          </div>
+                          <button
+                            className="flex h-9 items-center justify-center px-3 text-muted-foreground transition-colors hover:text-primary focus:outline-none"
+                            onClick={() => {
+                              const id = uid(32).toLowerCase();
+                              const formatted = `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`;
+                              form.setValue("node_secret", formatted);
+                            }}
+                            type="button"
+                          >
+                            <DicesIcon className="size-5" />
+                          </button>
                         }
                         value={field.value || ""}
                       />

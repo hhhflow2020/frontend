@@ -53,7 +53,7 @@ const DurationSelector: React.FC<DurationSelectorProps> = ({
       >
         <span className="font-semibold text-[15px]">{label}</span>
         {pct && pct > 0 ? (
-          <div className="absolute top-0 right-0 rounded-bl-xl bg-destructive px-2 py-0.5 font-bold text-[10px] text-destructive-foreground">
+          <div className="absolute top-0 right-0 rounded-bl-xl bg-emerald-500 px-2 py-0.5 font-bold text-[10px] text-white shadow-sm dark:bg-emerald-600">
             -{pct.toFixed(0)}%
           </div>
         ) : null}
