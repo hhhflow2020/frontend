@@ -6,6 +6,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@workspace/ui/components/avatar";
+import { Badge } from "@workspace/ui/components/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Icon } from "@workspace/ui/composed/icon";
+import { formatDate } from "@workspace/ui/utils/formatting";
 import { useTranslation } from "react-i18next";
 import { useNavs } from "@/layout/navs";
 import { useGlobalStore } from "@/stores/global";
@@ -71,13 +73,31 @@ export function UserNav() {
                   .charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col space-y-0.5">
+            <div className="flex min-w-0 flex-col space-y-1">
               <p className="font-medium text-sm leading-none">
                 {user?.auth_methods?.[0]?.auth_identifier.split("@")[0]}
               </p>
               <p className="text-muted-foreground text-xs">
                 {user?.auth_methods?.[0]?.auth_identifier}
               </p>
+              <div className="flex flex-wrap items-center gap-1">
+                <Badge
+                  className={
+                    user.is_member
+                      ? "border-emerald-500/20 bg-emerald-500 text-white"
+                      : "border-foreground/10 bg-foreground text-background"
+                  }
+                >
+                  {user.is_member
+                    ? t("membership.member", "Member")
+                    : t("membership.notMember", "Not a Member")}
+                </Badge>
+                {user.is_member && user.member_expired_at > 0 && (
+                  <span className="text-[11px] text-muted-foreground">
+                    {formatDate(user.member_expired_at, false)}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <DropdownMenuSeparator />

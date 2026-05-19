@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Badge } from "@workspace/ui/components/badge";
 import { buttonVariants } from "@workspace/ui/components/button";
 import { LanguageSwitch } from "@workspace/ui/composed/language-switch";
 import { ThemeSwitch } from "@workspace/ui/composed/theme-switch";
@@ -28,6 +29,21 @@ export default function Header() {
         <div className="flex flex-1 items-center justify-end gap-2">
           <LanguageSwitch />
           <ThemeSwitch />
+          {user && (
+            <Link className="hidden sm:block" to="/subscribe">
+              <Badge
+                className={
+                  user.is_member
+                    ? "h-8 border-emerald-500/20 bg-emerald-500 px-3 text-white"
+                    : "h-8 border-foreground/10 bg-foreground px-3 text-background"
+                }
+              >
+                {user.is_member
+                  ? t("membership.member", "Member")
+                  : t("membership.join", "Join Membership")}
+              </Badge>
+            </Link>
+          )}
           <UserNav />
           {!user && (
             <Link

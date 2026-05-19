@@ -452,6 +452,22 @@ declare namespace API {
     updated_at: number;
   };
 
+  type MembershipPlan = {
+    id: number;
+    name: string;
+    description: string;
+    unit_price: number;
+    duration_unit: string;
+    duration_value: number;
+    enabled: boolean;
+  };
+
+  type MembershipCardResponse = {
+    is_member: boolean;
+    expired_at: number;
+    plan: MembershipPlan;
+  };
+
   type PaymentConfig = {
     id: number;
     name: string;
@@ -650,6 +666,15 @@ declare namespace API {
   };
 
   type PurchaseOrderResponse = {
+    order_no: string;
+  };
+
+  type PurchaseMembershipOrderRequest = {
+    quantity?: number;
+    payment?: number;
+  };
+
+  type PurchaseMembershipOrderResponse = {
     order_no: string;
   };
 
@@ -1117,6 +1142,8 @@ declare namespace API {
     referral_percentage: number;
     only_first_purchase: boolean;
     gift_amount: number;
+    member_expired_at: number;
+    is_member: boolean;
     telegram: number;
     refer_code: string;
     referer_id: number;

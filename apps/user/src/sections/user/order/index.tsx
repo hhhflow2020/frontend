@@ -35,6 +35,7 @@ export default function Order() {
     2: t("type.2", "Renewal"),
     3: t("type.3", "Reset Traffic"),
     4: t("type.4", "Recharge"),
+    5: t("type.5", "Membership Card"),
   };
 
   const ref = useRef<ProListActions>(null);
@@ -90,7 +91,7 @@ export default function Order() {
                   {t("name", "Product Name")}
                 </span>
                 <span>
-                  {item.subscribe.name ||
+                  {item.subscribe?.name ||
                     typeMap[item.type] ||
                     t(`type.${item.type}`, "Unknown Type")}
                 </span>

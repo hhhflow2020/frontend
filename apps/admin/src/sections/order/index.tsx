@@ -51,6 +51,7 @@ export default function Order() {
     { value: 2, label: t("type.2", "Renewal") },
     { value: 3, label: t("type.3", "Reset Traffic") },
     { value: 4, label: t("type.4", "Recharge") },
+    { value: 5, label: t("type.5", "Membership Card") },
   ];
 
   const ref = useRef<ProTableActions>(null);
@@ -81,7 +82,7 @@ export default function Order() {
           header: t("subscribe", "Subscribe"),
           cell: ({ row }) => {
             const order = row.original as API.Order;
-            if (order.type === 4) {
+            if ([4, 5].includes(order.type)) {
               const type = row.getValue("type") as number;
               return (
                 typeOptions.find((opt) => opt.value === type)?.label ||

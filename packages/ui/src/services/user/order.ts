@@ -89,6 +89,46 @@ export async function purchase(
   );
 }
 
+/** Get membership plan GET /v1/public/order/membership/plan */
+export async function queryMembershipPlan(options?: { [key: string]: any }) {
+  return request<API.Response & { data?: API.MembershipPlan }>(
+    "/v1/public/order/membership/plan",
+    {
+      method: "GET",
+      ...(options || {}),
+    }
+  );
+}
+
+/** Get membership card GET /v1/public/order/membership/card */
+export async function queryMembershipCard(options?: { [key: string]: any }) {
+  return request<API.Response & { data?: API.MembershipCardResponse }>(
+    "/v1/public/order/membership/card",
+    {
+      method: "GET",
+      ...(options || {}),
+    }
+  );
+}
+
+/** Purchase membership card POST /v1/public/order/membership */
+export async function purchaseMembership(
+  body: API.PurchaseMembershipOrderRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.Response & { data?: API.PurchaseMembershipOrderResponse }>(
+    "/v1/public/order/membership",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
 /** 此处后端没有提供注释 POST /v1/public/order/recharge */
 export async function recharge(
   body: API.RechargeOrderRequest,

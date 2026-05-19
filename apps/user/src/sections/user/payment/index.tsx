@@ -96,7 +96,7 @@ export default function Page() {
           <div className="grid gap-0.5">
             <CardTitle className="flex flex-col text-lg">
               {t("orderNumber", "Order Number")}
-              <span>{data?.orderNo}</span>
+              <span>{data?.order_no}</span>
             </CardTitle>
             <CardDescription>
               {t("createdAt", "Created At")}: {formatDate(data?.created_at)}
@@ -110,7 +110,11 @@ export default function Page() {
           <dl className="grid gap-3">
             <div className="flex items-center justify-between">
               <dt className="text-muted-foreground">
-                <Badge>{data?.payment.name || data?.payment.platform}</Badge>
+                <Badge>
+                  {data?.amount === 0
+                    ? t("freeOrder", "Free Order")
+                    : data?.payment?.name || data?.payment?.platform}
+                </Badge>
               </dt>
             </div>
           </dl>
@@ -159,6 +163,31 @@ export default function Page() {
               </ul>
             </>
           )}
+          {data?.type === 5 && (
+            <>
+              <div className="font-semibold">
+                {t("membershipCard", "Membership Card")}
+              </div>
+              <ul className="grid grid-cols-2 gap-3 *:flex *:items-center *:justify-between lg:grid-cols-1">
+                <li className="flex items-center justify-between">
+                  <span className="line-clamp-2 flex-1 text-muted-foreground">
+                    {t("membershipDuration", "Membership Duration")}
+                  </span>
+                  <span>
+                    {data.quantity || 1} {t("Year", "Year")}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span className="line-clamp-2 flex-1 text-muted-foreground">
+                    {t("membershipPrice", "Membership Price")}
+                  </span>
+                  <span>
+                    <Display type="currency" value={data.price} />
+                  </span>
+                </li>
+              </ul>
+            </>
+          )}
           <Separator />
           <SubscribeBilling
             order={{
@@ -181,11 +210,17 @@ export default function Page() {
                 icon="mdi:success-circle-outline"
               />
               <div className="flex gap-4">
-                <Button asChild>
-                  <Link to="/dashboard">
-                    {t("subscribeNow", "Subscribe Now")}
-                  </Link>
-                </Button>
+                {data?.type === 5 ? (
+                  <Button asChild>
+                    <Link to="/subscribe">{t("viewPlans", "View Plans")}</Link>
+                  </Button>
+                ) : (
+                  <Button asChild>
+                    <Link to="/dashboard">
+                      {t("subscribeNow", "Subscribe Now")}
+                    </Link>
+                  </Button>
+                )}
                 <Button variant="outline">
                   <Link to="/document">
                     {t("viewDocument", "View Document")}
@@ -222,6 +257,17 @@ export default function Page() {
                   </Link>
                 </Button>
               </div>
+            </div>
+          )}
+          {data?.status === 1 && payment?.type === "free" && (
+            <div className="flex flex-col items-center gap-8 text-center">
+              <h3 className="font-bold text-2xl tracking-tight">
+                {t("processingOrder", "Processing Order")}
+              </h3>
+              <Icon
+                className="text-7xl text-muted-foreground"
+                icon="mdi:progress-clock"
+              />
             </div>
           )}
 
