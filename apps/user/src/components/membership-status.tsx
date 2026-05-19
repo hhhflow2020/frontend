@@ -8,13 +8,7 @@ import { ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useGlobalStore } from "@/stores/global";
 
-interface MembershipStatusBannerProps {
-  showAction?: boolean;
-}
-
-export function MembershipStatusBanner({
-  showAction = true,
-}: Readonly<MembershipStatusBannerProps>) {
+export function MembershipStatusBanner() {
   const { t } = useTranslation("user");
   const { user } = useGlobalStore();
 
@@ -55,7 +49,7 @@ export function MembershipStatusBanner({
           </p>
         </div>
       </div>
-      {showAction && !isMember && (
+      {!isMember && (
         <Button asChild className="rounded-full" size="sm">
           <Link to="/subscribe">{t("getMembership", "Get Membership")}</Link>
         </Button>
