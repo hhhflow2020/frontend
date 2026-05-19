@@ -28,6 +28,7 @@ import {
   ProTable,
   type ProTableActions,
 } from "@workspace/ui/composed/pro-table/pro-table";
+import { cn } from "@workspace/ui/lib/utils";
 import {
   createUser,
   deleteUser,
@@ -35,6 +36,15 @@ import {
   getUserList,
   updateUserBasicInfo,
 } from "@workspace/ui/services/admin/user";
+import {
+  CheckCircle2,
+  Copy,
+  PauseCircle,
+  ShieldCheck,
+  ShieldX,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -53,6 +63,151 @@ type UserWithMembership = API.User & {
   is_member?: boolean;
   member_expired_at?: number;
 };
+
+function buildBasicInfoPayload(
+  user: UserWithMembership,
+  enable: boolean
+): API.UpdateUserBasiceInfoRequest {
+  const {
+    auth_methods: _auth_methods,
+    user_devices: _user_devices,
+    enable_balance_notify: _enable_balance_notify,
+    enable_login_notify: _enable_login_notify,
+    enable_subscribe_notify: _enable_subscribe_notify,
+    enable_trade_notify: _enable_trade_notify,
+    is_member: _is_member,
+    member_expired_at: _member_expired_at,
+    updated_at: _updated_at,
+    created_at: _created_at,
+    id,
+    ...rest
+  } = user;
+  return {
+    user_id: id,
+    ...rest,
+    enable,
+  } as unknown as API.UpdateUserBasiceInfoRequest;
+}
+
+function UserStatusCell({
+  onToggle,
+  t,
+  user,
+}: {
+  onToggle: (checked: boolean) => Promise<void>;
+  t: ReturnType<typeof useTranslation>["t"];
+  user: UserWithMembership;
+}) {
+  const deleted = Boolean(user.deleted_at);
+  const enabled = Boolean(user.enable);
+  const Icon = deleted ? Trash2 : enabled ? CheckCircle2 : PauseCircle;
+  const label = deleted
+    ? t("deleted", "Deleted")
+    : enabled
+      ? t("enabled", "Enabled")
+      : t("disabled", "Disabled");
+
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className={cn(
+          "inline-flex min-w-24 items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium text-xs",
+          deleted
+            ? "border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400"
+            : enabled
+              ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              : "border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400"
+        )}
+      >
+        <Icon className="size-3.5" />
+        <span>{label}</span>
+      </div>
+      <Switch checked={enabled} disabled={deleted} onCheckedChange={onToggle} />
+    </div>
+  );
+}
+
+function UserNameCell({
+  t,
+  user,
+}: {
+  t: ReturnType<typeof useTranslation>["t"];
+  user: API.User;
+}) {
+  const method = user.auth_methods?.[0];
+  const identifier = method?.auth_identifier || `#${user.id}`;
+  const authType = method?.auth_type || "user";
+  const initial = identifier.slice(0, 1).toUpperCase();
+
+  return (
+    <button
+      className="group flex min-w-0 items-center gap-3 text-left"
+      onClick={async () => {
+        await navigator.clipboard.writeText(identifier);
+        toast.success(t("copySuccess", "Copied successfully"));
+      }}
+      title={t("clickToCopy", "Click to copy")}
+      type="button"
+    >
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-muted-foreground text-xs">
+        {initial || <UserRound className="size-4" />}
+      </span>
+      <span className="min-w-0">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate font-medium text-sm">{identifier}</span>
+          <Copy className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+        </span>
+        <span className="mt-1 flex items-center gap-1.5">
+          <Badge className="h-5 px-1.5 text-[10px] uppercase" variant="outline">
+            {authType}
+          </Badge>
+          {method?.verified ? (
+            <span className="text-emerald-600 text-xs">
+              {t("verified", "Verified")}
+            </span>
+          ) : null}
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function MembershipCell({
+  t,
+  user,
+}: {
+  t: ReturnType<typeof useTranslation>["t"];
+  user: UserWithMembership;
+}) {
+  const isMember = Boolean(user.is_member);
+  const expiredAt = user.member_expired_at || 0;
+  const Icon = isMember ? ShieldCheck : ShieldX;
+
+  return (
+    <div
+      className={cn(
+        "inline-flex min-w-44 items-center gap-2 rounded-2xl border px-3 py-2",
+        isMember
+          ? "border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-300"
+          : "border-border bg-muted/30 text-muted-foreground"
+      )}
+    >
+      <Icon className="size-4 shrink-0" />
+      <div className="min-w-0">
+        <div className="truncate font-medium text-xs">
+          {isMember
+            ? t("memberActive", "Active Member")
+            : t("memberInactive", "No Active Membership")}
+        </div>
+        <div className="truncate text-[11px] opacity-80">
+          {expiredAt > 0
+            ? formatDate(expiredAt, false)
+            : t("notActivated", "Not activated")}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function User() {
   const { t } = useTranslation("user");
@@ -158,33 +313,21 @@ export default function User() {
       columns={[
         {
           accessorKey: "enable",
-          header: t("enable", "Enable"),
+          header: t("status", "Status"),
           cell: ({ row }) => (
-            <Switch
-              defaultChecked={row.getValue("enable")}
-              onCheckedChange={async (checked) => {
-                const {
-                  auth_methods: _auth_methods,
-                  user_devices: _user_devices,
-                  enable_balance_notify: _enable_balance_notify,
-                  enable_login_notify: _enable_login_notify,
-                  enable_subscribe_notify: _enable_subscribe_notify,
-                  enable_trade_notify: _enable_trade_notify,
-                  is_member: _is_member,
-                  member_expired_at: _member_expired_at,
-                  updated_at: _updated_at,
-                  created_at: _created_at,
-                  id,
-                  ...rest
-                } = row.original as UserWithMembership;
-                await updateUserBasicInfo({
-                  user_id: id,
-                  ...rest,
-                  enable: checked,
-                } as unknown as API.UpdateUserBasiceInfoRequest);
+            <UserStatusCell
+              onToggle={async (checked) => {
+                await updateUserBasicInfo(
+                  buildBasicInfoPayload(
+                    row.original as UserWithMembership,
+                    checked
+                  )
+                );
                 toast.success(t("updateSuccess", "Updated successfully"));
                 ref.current?.refresh();
               }}
+              t={t}
+              user={row.original as UserWithMembership}
             />
           ),
         },
@@ -193,57 +336,16 @@ export default function User() {
           header: "ID",
         },
         {
-          accessorKey: "deleted_at",
-          header: t("isDeleted", "Deleted"),
-          cell: ({ row }) => {
-            const deletedAt = row.getValue("deleted_at") as number | undefined;
-            return deletedAt ? (
-              <Badge variant="destructive">{t("deleted", "Deleted")}</Badge>
-            ) : (
-              <Badge variant="outline">{t("normal", "Normal")}</Badge>
-            );
-          },
-        },
-        {
           accessorKey: "auth_methods",
           header: t("userName", "Username"),
-          cell: ({ row }) => {
-            const method = row.original.auth_methods?.[0];
-            return (
-              <div>
-                <Badge
-                  className="mr-1 uppercase"
-                  title={method?.verified ? t("verified", "Verified") : ""}
-                >
-                  {method?.auth_type}
-                </Badge>
-                {method?.auth_identifier}
-              </div>
-            );
-          },
+          cell: ({ row }) => <UserNameCell t={t} user={row.original} />,
         },
         {
           accessorKey: "is_member",
           header: t("membership", "Membership"),
-          cell: ({ row }) => {
-            const user = row.original as UserWithMembership;
-            const isMember = Boolean(user.is_member);
-            const expiredAt = user.member_expired_at || 0;
-            return (
-              <div className="flex flex-col gap-1">
-                <Badge variant={isMember ? "default" : "outline"}>
-                  {isMember
-                    ? t("memberActive", "Active Member")
-                    : t("memberInactive", "No Active Membership")}
-                </Badge>
-                <span className="text-muted-foreground text-xs">
-                  {expiredAt > 0
-                    ? formatDate(expiredAt, false)
-                    : t("notActivated", "Not activated")}
-                </span>
-              </div>
-            );
-          },
+          cell: ({ row }) => (
+            <MembershipCell t={t} user={row.original as UserWithMembership} />
+          ),
         },
         {
           accessorKey: "balance",

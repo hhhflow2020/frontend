@@ -26,16 +26,19 @@ interface StripePaymentProps {
   method: string;
   client_secret: string;
   publishable_key: string;
+  onSuccess?: () => void;
 }
 
 interface CardPaymentFormProps {
   clientSecret: string;
   onError: (message: string) => void;
+  onSuccess?: () => void;
 }
 
 const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
   clientSecret,
   onError,
+  onSuccess,
 }) => {
   const stripe = useStripe();
   const { resolvedTheme } = useTheme();
@@ -124,6 +127,7 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
       setProcessing(false);
     } else if (paymentIntent && paymentIntent.status === "succeeded") {
       setSucceeded(true);
+      onSuccess?.();
       setProcessing(false);
     } else {
       onError(t("stripe.processing", "Processing payment..."));
@@ -255,6 +259,7 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
 const StripePayment: React.FC<StripePaymentProps> = ({
   method,
   client_secret,
+  onSuccess,
   publishable_key,
 }) => {
   const stripePromise = useMemo(
@@ -264,7 +269,11 @@ const StripePayment: React.FC<StripePaymentProps> = ({
 
   return (
     <Elements stripe={stripePromise}>
-      <CheckoutForm client_secret={client_secret} method={method} />
+      <CheckoutForm
+        client_secret={client_secret}
+        method={method}
+        onSuccess={onSuccess}
+      />
     </Elements>
   );
 };
@@ -272,6 +281,7 @@ const StripePayment: React.FC<StripePaymentProps> = ({
 const CheckoutForm: React.FC<Omit<StripePaymentProps, "publishable_key">> = ({
   client_secret,
   method,
+  onSuccess,
 }) => {
   const stripe = useStripe();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -358,7 +368,11 @@ const CheckoutForm: React.FC<Omit<StripePaymentProps, "publishable_key">> = ({
 
   return method === "card" ? (
     <div className="min-w-80 text-left">
-      <CardPaymentForm clientSecret={client_secret} onError={handleError} />
+      <CardPaymentForm
+        clientSecret={client_secret}
+        onError={handleError}
+        onSuccess={onSuccess}
+      />
     </div>
   ) : qrCodeUrl || qrCodeImageDataUrl ? (
     <>

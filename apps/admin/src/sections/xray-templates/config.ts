@@ -348,6 +348,7 @@ export function buildStreamSettings(values: Record<string, any>) {
       path: emptyToUndefined(values.path),
       host: emptyToUndefined(values.host),
       mode: emptyToUndefined(values.xhttp_mode),
+      extra: safeJsonParse(values.xhttp_extra_json || "", {}),
     });
   }
 
@@ -844,6 +845,7 @@ export function configToFormValues(
     grpc_idle_timeout: grpc.idle_timeout || undefined,
     grpc_health_check_timeout: grpc.health_check_timeout || undefined,
     xhttp_mode: xhttp.mode || "auto",
+    xhttp_extra_json: formatJson(xhttp.extra || {}),
     kcp_mtu: stream.kcpSettings?.mtu || undefined,
     kcp_tti: stream.kcpSettings?.tti || undefined,
     kcp_uplink_capacity: stream.kcpSettings?.uplinkCapacity || undefined,

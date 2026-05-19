@@ -348,30 +348,41 @@ function AlertsCard({
   );
 }
 
-function ActivityIcon({ type }: { type: string }) {
+function ActivityIcon({ status, type }: { status?: string; type: string }) {
   const iconMap: Record<string, string> = {
     login: "uil:signin",
     register: "uil:user-plus",
     order: "uil:shopping-bag",
     ticket: "uil:comment-alt-notes",
   };
+  const toneMap: Record<string, string> = {
+    failed: "bg-red-500/10 text-red-500",
+    success: "bg-emerald-500/10 text-emerald-500",
+    completed: "bg-emerald-500/10 text-emerald-500",
+    paid: "bg-blue-500/10 text-blue-500",
+    pending: "bg-orange-500/10 text-orange-500",
+  };
   return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-      <Icon
-        className="h-4 w-4 text-muted-foreground"
-        icon={iconMap[type] || "uil:bell"}
-      />
+    <div
+      className={cn(
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground",
+        status ? toneMap[status] : ""
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" icon={iconMap[type] || "uil:bell"} />
     </div>
   );
 }
 
 function LiveActivityCard({
+  connected,
   realtime,
 }: {
+  connected: boolean;
   realtime?: API.DashboardRealtimeResponse;
 }) {
   const { t, i18n } = useTranslation("dashboard");
-  const activities = (realtime?.activities || []).slice(0, 8);
+  const activities = (realtime?.activities || []).slice(0, 20);
   const formatSubject = (subject?: string) => {
     if (!subject || subject === "Unknown user") {
       return t("activity.unknownUser", "Unknown user");
@@ -395,59 +406,66 @@ function LiveActivityCard({
           <div className="mt-1 text-muted-foreground text-xs">
             {t(
               "recentActivityDescription",
-              "Recent platform events and transactions"
+              "Live platform events and transactions"
             )}
           </div>
         </div>
-        <Badge variant="outline">{activities.length}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={connected ? "secondary" : "outline"}>
+            <span
+              className={cn(
+                "mr-1.5 inline-block size-1.5 rounded-full",
+                connected ? "bg-emerald-500" : "bg-muted-foreground"
+              )}
+            />
+            {connected ? t("live", "Live") : t("reconnecting", "Reconnecting")}
+          </Badge>
+          <Badge variant="outline">{activities.length}</Badge>
+        </div>
       </CardHeader>
       <CardContent>
         {activities.length ? (
-          <div className="space-y-3">
+          <div className="max-h-80 overflow-y-auto pr-1">
             {activities.map((item) => {
               const titleKey = ACTIVITY_TITLE_KEYS[item.title];
               return (
-                <div className="flex gap-3" key={item.id}>
-                  <ActivityIcon type={item.type} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="truncate font-medium text-sm">
-                          {titleKey ? t(titleKey, item.title) : item.title}
-                        </div>
-                        <div className="truncate text-muted-foreground text-xs">
-                          {formatSubject(item.subject)}
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-muted-foreground text-xs">
-                        {item.created_at
-                          ? new Date(item.created_at).toLocaleTimeString(
-                              i18n.language
-                            )
-                          : "--"}
-                      </div>
-                    </div>
-                    {item.detail ? (
-                      <div className="mt-1 truncate text-xs">
-                        {formatDetail(item.detail)}
-                      </div>
-                    ) : null}
-                    <div className="mt-1 flex items-center gap-2">
-                      {item.status ? (
-                        <Badge
-                          variant={
-                            item.status === "failed" ? "destructive" : "outline"
-                          }
-                        >
-                          {t(`activity.status.${item.status}`, item.status)}
-                        </Badge>
-                      ) : null}
-                      {item.amount ? (
-                        <span className="text-muted-foreground text-xs">
-                          <Display type="currency" value={item.amount} />
-                        </span>
-                      ) : null}
-                    </div>
+                <div
+                  className="flex min-w-0 items-center gap-2 border-border/50 border-b py-2 last:border-b-0"
+                  key={item.id}
+                >
+                  <ActivityIcon status={item.status} type={item.type} />
+                  <div className="min-w-0 flex-1 truncate text-sm">
+                    <span className="font-medium">
+                      {titleKey ? t(titleKey, item.title) : item.title}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      · {formatSubject(item.subject)}
+                      {item.detail ? ` · ${formatDetail(item.detail)}` : ""}
+                    </span>
+                  </div>
+                  {item.amount ? (
+                    <span className="shrink-0 text-muted-foreground text-xs">
+                      <Display type="currency" value={item.amount} />
+                    </span>
+                  ) : null}
+                  {item.status ? (
+                    <Badge
+                      className="h-6 shrink-0"
+                      variant={
+                        item.status === "failed" ? "destructive" : "outline"
+                      }
+                    >
+                      {t(`activity.status.${item.status}`, item.status)}
+                    </Badge>
+                  ) : null}
+                  <div className="w-16 shrink-0 text-right text-muted-foreground text-xs">
+                    {item.created_at
+                      ? new Date(item.created_at).toLocaleTimeString(
+                          i18n.language,
+                          { hour: "2-digit", minute: "2-digit" }
+                        )
+                      : "--"}
                   </div>
                 </div>
               );
@@ -466,6 +484,7 @@ function LiveActivityCard({
 export default function Statistics() {
   const { t, i18n } = useTranslation("dashboard");
   const [realtime, setRealtime] = useState<API.DashboardRealtimeResponse>();
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [trafficTimeFrames, setTrafficTimeFrames] = useState<
     Record<"nodes" | "users", "today" | "yesterday">
   >({
@@ -490,18 +509,42 @@ export default function Statistics() {
 
   useEffect(() => {
     if (!getAuthorizationToken()) return;
-    const ws = new WebSocket(buildDashboardRealtimeWsUrl());
-    ws.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        if (message.type === "dashboard_realtime") {
-          setRealtime(message);
+    let closed = false;
+    let ws: WebSocket | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const connect = () => {
+      ws = new WebSocket(buildDashboardRealtimeWsUrl());
+      ws.onopen = () => setRealtimeConnected(true);
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === "dashboard_realtime") {
+            setRealtime(message);
+          }
+        } catch {
+          // Ignore malformed realtime dashboard messages.
         }
-      } catch {
-        // Ignore malformed realtime dashboard messages.
-      }
+      };
+      ws.onclose = () => {
+        setRealtimeConnected(false);
+        if (!closed) {
+          reconnectTimer = setTimeout(connect, 3000);
+        }
+      };
+      ws.onerror = () => {
+        ws?.close();
+      };
     };
-    return () => ws.close();
+
+    connect();
+
+    return () => {
+      closed = true;
+      setRealtimeConnected(false);
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      ws?.close();
+    };
   }, []);
 
   const trafficData = useMemo(
@@ -739,7 +782,7 @@ export default function Statistics() {
           </div>
         </div>
         <div className="space-y-3 2xl:sticky 2xl:top-3">
-          <LiveActivityCard realtime={realtime} />
+          <LiveActivityCard connected={realtimeConnected} realtime={realtime} />
           <AlertsCard realtime={realtime} />
           <MiniMetric
             icon="uil:cloud-data-connection"

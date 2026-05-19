@@ -34,6 +34,7 @@ export default function Page() {
   const { getUserInfo } = useGlobalStore();
   const { order_no } = routeApi.useSearch() as { order_no?: string };
   const [enabled, setEnabled] = useState<boolean>(!!order_no);
+  const [fastPolling, setFastPolling] = useState(false);
 
   useEffect(() => {
     if (order_no) {
@@ -41,18 +42,19 @@ export default function Page() {
     }
   }, [order_no]);
 
-  const { data } = useQuery({
+  const { data, refetch: refetchOrderDetail } = useQuery({
     enabled: enabled && !!order_no,
     queryKey: ["queryOrderDetail", order_no],
     queryFn: async () => {
       const { data } = await queryOrderDetail({ order_no: order_no! });
       if (data?.data?.status !== 1) {
         getUserInfo();
+        setFastPolling(false);
         setEnabled(false);
       }
       return data?.data;
     },
-    refetchInterval: 3000,
+    refetchInterval: fastPolling ? 600 : 1000,
   });
 
   const { data: payment } = useQuery({
@@ -69,6 +71,14 @@ export default function Page() {
       return data?.data;
     },
   });
+
+  useEffect(() => {
+    if (!["balance", "free", "processing"].includes(payment?.type || "")) {
+      return;
+    }
+    setFastPolling(true);
+    refetchOrderDetail();
+  }, [payment?.type, refetchOrderDetail]);
 
   const [countDown, formattedRes] = useCountDown({
     targetDate:
@@ -205,7 +215,8 @@ export default function Page() {
       </Card>
       <Card className="order-1 flex flex-auto items-center justify-center xl:order-2">
         <CardContent className="py-16">
-          {data?.status && [2, 5].includes(data?.status) && (
+          {((data?.status && [2, 5].includes(data?.status)) ||
+            payment?.type === "balance") && (
             <div className="flex flex-col items-center gap-8 text-center">
               <h3 className="font-bold text-2xl tracking-tight">
                 {t("paymentSuccess", "Payment Success")}
@@ -264,17 +275,18 @@ export default function Page() {
               </div>
             </div>
           )}
-          {data?.status === 1 && payment?.type === "free" && (
-            <div className="flex flex-col items-center gap-8 text-center">
-              <h3 className="font-bold text-2xl tracking-tight">
-                {t("processingOrder", "Processing Order")}
-              </h3>
-              <Icon
-                className="text-7xl text-muted-foreground"
-                icon="mdi:progress-clock"
-              />
-            </div>
-          )}
+          {data?.status === 1 &&
+            ["free", "processing"].includes(payment?.type || "") && (
+              <div className="flex flex-col items-center gap-8 text-center">
+                <h3 className="font-bold text-2xl tracking-tight">
+                  {t("processingOrder", "Processing Order")}
+                </h3>
+                <Icon
+                  className="text-7xl text-muted-foreground"
+                  icon="mdi:progress-clock"
+                />
+              </div>
+            )}
 
           {data?.status === 1 && payment?.type === "qr" && (
             <div className="flex flex-col items-center gap-8 text-center">
@@ -315,7 +327,15 @@ export default function Page() {
               <p className="flex items-center font-bold text-3xl">
                 {countdownDisplay}
               </p>
-              {payment.stripe && <StripePayment {...payment.stripe} />}
+              {payment.stripe && (
+                <StripePayment
+                  {...payment.stripe}
+                  onSuccess={() => {
+                    setFastPolling(true);
+                    refetchOrderDetail();
+                  }}
+                />
+              )}
               {/* <div className='flex gap-4'>
                 <Button asChild>
                   <Link to='/subscribe'>{t('productList', 'Product List')}</Link>

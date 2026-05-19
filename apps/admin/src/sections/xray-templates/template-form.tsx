@@ -87,6 +87,7 @@ const formSchema = z.object({
   grpc_idle_timeout: z.coerce.number().optional(),
   grpc_health_check_timeout: z.coerce.number().optional(),
   xhttp_mode: z.string().optional(),
+  xhttp_extra_json: z.string().optional(),
   sni: z.string().optional(),
   allow_insecure: z.boolean().optional(),
   fingerprint: z.string().optional(),
@@ -211,6 +212,8 @@ type TemplatePayload = {
   subscription_meta?: Record<string, any>;
 };
 
+const REALITY_NETWORKS = ["raw", "tcp", "xhttp", "grpc"];
+
 function defaultValues(type: XrayTemplateType = "inbound"): FormValues {
   return {
     name: "",
@@ -231,6 +234,8 @@ function defaultValues(type: XrayTemplateType = "inbound"): FormValues {
     security: "none",
     fingerprint: "chrome",
     grpc_multi_mode: false,
+    xhttp_mode: "auto",
+    xhttp_extra_json: "{}",
     kcp_congestion: false,
     kcp_header_type: "",
     reality_show: false,
@@ -1090,6 +1095,20 @@ export default function XrayTemplateForm({
     () => (type === "outbound" ? OUTBOUND_PROTOCOLS : INBOUND_PROTOCOLS),
     [type]
   );
+  const networkOptions = useMemo(
+    () =>
+      protocol === "hysteria"
+        ? NETWORKS.filter((item) => item === "hysteria")
+        : NETWORKS,
+    [protocol]
+  );
+  const securityOptions = useMemo(
+    () =>
+      REALITY_NETWORKS.includes(network || "")
+        ? SECURITIES
+        : SECURITIES.filter((item) => item !== "reality"),
+    [network]
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -1122,6 +1141,22 @@ export default function XrayTemplateForm({
       form.setValue("protocol", options[0]);
     }
   }, [form, protocol, type]);
+
+  useEffect(() => {
+    if (!supportsStreamSettings) return;
+    if (protocol === "hysteria") {
+      if (network !== "hysteria") {
+        form.setValue("network", "hysteria");
+      }
+      if (security === "reality") {
+        form.setValue("security", "none");
+      }
+      return;
+    }
+    if (security === "reality" && !REALITY_NETWORKS.includes(network || "")) {
+      form.setValue("security", "none");
+    }
+  }, [form, network, protocol, security, supportsStreamSettings]);
 
   function buildConfig(values: FormValues) {
     const source = advancedTouched ? values : { ...values, advanced_json: "" };
@@ -1589,7 +1624,7 @@ export default function XrayTemplateForm({
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      {NETWORKS.map((item) => (
+                                      {networkOptions.map((item) => (
                                         <SelectItem key={item} value={item}>
                                           {item}
                                         </SelectItem>
@@ -1618,7 +1653,7 @@ export default function XrayTemplateForm({
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      {SECURITIES.map((item) => (
+                                      {securityOptions.map((item) => (
                                         <SelectItem key={item} value={item}>
                                           {item}
                                         </SelectItem>
@@ -1669,6 +1704,23 @@ export default function XrayTemplateForm({
                                 <FormMessage />
                               </FormItem>
                             )}
+                          />
+                        </div>
+                      ) : null}
+
+                      {supportsStreamSettings && network === "xhttp" ? (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <InputField
+                            control={form.control}
+                            label={t("form.xhttpMode", "XHTTP Mode")}
+                            name="xhttp_mode"
+                            placeholder="auto / packet-up / stream-up / stream-one"
+                          />
+                          <JsonField
+                            control={form.control}
+                            description='XHTTP extra object, e.g. {"xmux":{"maxConnections":1}}'
+                            label={t("form.xhttpExtra", "XHTTP Extra")}
+                            name="xhttp_extra_json"
                           />
                         </div>
                       ) : null}
