@@ -175,8 +175,7 @@ export default function Page() {
                     {t("membershipDuration", "Membership Duration")}
                   </span>
                   <span>
-                    {(data.membership_plan?.duration_value || 1) *
-                      (data.quantity || 1)}{" "}
+                    {data.membership_plan?.duration_value || 1}{" "}
                     {t(
                       data.membership_plan?.duration_unit || "Year",
                       data.membership_plan?.duration_unit || "Year"

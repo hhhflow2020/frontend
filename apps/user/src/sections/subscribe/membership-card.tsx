@@ -127,10 +127,9 @@ export function MembershipPurchaseDialog({
   const [payment, setPayment] = useState(-1);
   const [loading, startTransition] = useTransition();
   const plan = card?.plan;
-  const quantity = 1;
   const planAmount = useMemo(() => {
     if (!plan) return 0;
-    return plan.unit_price * quantity;
+    return plan.unit_price;
   }, [plan]);
   const requiresPayment = planAmount > 0;
   const planReady = !!plan;
@@ -138,7 +137,6 @@ export function MembershipPurchaseDialog({
   const handleSubmit = useCallback(() => {
     startTransition(async () => {
       const response = await purchaseMembership({
-        quantity,
         payment: requiresPayment ? payment : 0,
       });
       const orderNo = response.data.data?.order_no;

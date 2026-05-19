@@ -673,7 +673,6 @@ declare namespace API {
   };
 
   type PurchaseMembershipOrderRequest = {
-    quantity?: number;
     payment?: number;
   };
 
