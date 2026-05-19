@@ -1,5 +1,5 @@
 /// <reference path="../typings.d.ts" />
-import { getCookie } from "@workspace/ui/lib/cookies";
+import { getAuthorizationToken } from "@workspace/ui/lib/auth-token";
 import { getApiBaseURL, getApiPrefix } from "@workspace/ui/lib/runtime-config";
 import { isBrowser } from "@workspace/ui/utils/index";
 import axios, { type InternalAxiosRequestConfig } from "axios";
@@ -195,7 +195,7 @@ request.interceptors.request.use(
       skipErrorHandler?: boolean;
     }
   ) => {
-    const Authorization = getCookie("Authorization");
+    const Authorization = getAuthorizationToken();
     if (Authorization) config.headers.Authorization = Authorization;
     config.baseURL = getApiBaseURL();
     config.url = withApiPrefix(config.url);

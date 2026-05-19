@@ -16,12 +16,15 @@ import "@workspace/ui/globals.css";
 import { DirectionProvider } from "@workspace/ui/integrations/direction";
 import { LanguageProvider } from "@workspace/ui/integrations/language";
 import { ThemeProvider } from "@workspace/ui/integrations/theme";
+import { configureAuthCookieName } from "@workspace/ui/lib/auth-token";
 import { initializeI18n } from "@workspace/ui/lib/i18n";
 import { fallbackLng, supportedLngs } from "./config/index.ts";
 // Report web vitals
 import reportWebVitals from "./reportWebVitals.ts";
 // Common utilities
 import { Logout } from "./utils/common.ts";
+
+configureAuthCookieName("ppanel_admin_authorization");
 
 initializeI18n({
   supportedLngs,

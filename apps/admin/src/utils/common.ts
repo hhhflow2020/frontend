@@ -1,4 +1,8 @@
-import { removeCookie, setCookie } from "@workspace/ui/lib/cookies";
+import {
+  clearLegacyAuthorizationToken,
+  removeAuthorizationToken,
+  setAuthorizationToken,
+} from "@workspace/ui/lib/auth-token";
 import { isBrowser } from "@workspace/ui/utils/index";
 
 export function getPlatform(): string {
@@ -18,7 +22,8 @@ export function getPlatform(): string {
 export { differenceInDays, formatDate } from "@workspace/ui/utils/formatting";
 
 export function setAuthorization(token: string): void {
-  setCookie("Authorization", token);
+  setAuthorizationToken(token);
+  clearLegacyAuthorizationToken();
 }
 
 export function getRedirectUrl(): string {
@@ -36,7 +41,8 @@ export function setRedirectUrl(value?: string) {
 
 export function Logout() {
   if (!isBrowser()) return;
-  removeCookie("Authorization");
+  removeAuthorizationToken();
+  clearLegacyAuthorizationToken();
 
   const pathname = location.pathname;
   const hash = location.hash.slice(1);

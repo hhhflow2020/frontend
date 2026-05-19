@@ -7,6 +7,7 @@ declare global {
     __APP_CONFIG__?: {
       API_BASE_URL?: string;
       API_PREFIX?: string;
+      AUTH_COOKIE_NAME?: string;
     };
     logout: () => void;
     i18n: typeof i18n;

@@ -1,6 +1,7 @@
 export type RuntimeConfig = {
   API_BASE_URL?: string;
   API_PREFIX?: string;
+  AUTH_COOKIE_NAME?: string;
 };
 
 export function getRuntimeConfig(): RuntimeConfig {

@@ -4,7 +4,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Toaster } from "@workspace/ui/components/sonner";
 import { NavigationProgress } from "@workspace/ui/composed/navigation-progress";
 import { TanStackQueryDevtools } from "@workspace/ui/integrations/tanstack-query-devtools";
-import { getCookie } from "@workspace/ui/lib/cookies";
+import { getAuthorizationToken } from "@workspace/ui/lib/auth-token";
 import { getGlobalConfig } from "@workspace/ui/services/common/common";
 import { isBrowser } from "@workspace/ui/utils/index";
 import { useEffect } from "react";
@@ -24,7 +24,7 @@ export const Route = createRootRouteWithContext()({
             setCommon(configResponse.data.data);
           }
           try {
-            if (getCookie("Authorization")) {
+            if (getAuthorizationToken()) {
               await getUserInfo();
             }
           } catch {

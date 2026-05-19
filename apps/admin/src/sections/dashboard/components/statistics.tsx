@@ -18,7 +18,7 @@ import { Separator } from "@workspace/ui/components/separator";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import Empty from "@workspace/ui/composed/empty";
 import { Icon } from "@workspace/ui/composed/icon";
-import { getCookie } from "@workspace/ui/lib/cookies";
+import { getAuthorizationToken } from "@workspace/ui/lib/auth-token";
 import { getApiBaseURL, getApiPrefix } from "@workspace/ui/lib/runtime-config";
 import { cn } from "@workspace/ui/lib/utils";
 import {
@@ -39,7 +39,7 @@ function buildDashboardRealtimeWsUrl() {
   const prefix = getApiPrefix();
   const url = new URL(`${prefix}/v1/admin/console/realtime/ws`, base);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-  const token = getCookie("Authorization");
+  const token = getAuthorizationToken();
   if (token) url.searchParams.set("token", token);
   return url.toString();
 }
@@ -489,7 +489,7 @@ export default function Statistics() {
   });
 
   useEffect(() => {
-    if (!getCookie("Authorization")) return;
+    if (!getAuthorizationToken()) return;
     const ws = new WebSocket(buildDashboardRealtimeWsUrl());
     ws.onmessage = (event) => {
       try {
