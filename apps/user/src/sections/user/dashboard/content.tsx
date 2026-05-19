@@ -41,7 +41,6 @@ import {
   resetUserSubscribeToken,
 } from "@workspace/ui/services/user/user";
 import { differenceInDays, formatDate } from "@workspace/ui/utils/formatting";
-import { isBrowser } from "@workspace/ui/utils/index";
 import { QRCodeCanvas } from "qrcode.react";
 import React, { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
@@ -66,7 +65,7 @@ const platforms: (keyof API.DownloadLink)[] = [
 
 export default function Content() {
   const { t } = useTranslation("dashboard");
-  const { getUserSubscribe, getAppSubLink } = useGlobalStore();
+  const { getUserSubscribe } = useGlobalStore();
 
   const [protocol, setProtocol] = useState("");
 
@@ -625,47 +624,9 @@ export default function Content() {
                                       result: boolean
                                     ) => {
                                       if (result) {
-                                        const href = getAppSubLink(
-                                          url,
-                                          application.scheme
+                                        toast.success(
+                                          t("copySuccess", "Copy Success")
                                         );
-                                        const showSuccessMessage = () => {
-                                          toast.success(
-                                            <>
-                                              <p>
-                                                {t(
-                                                  "copySuccess",
-                                                  "Copy Success"
-                                                )}
-                                              </p>
-                                              <br />
-                                              <p>
-                                                {t(
-                                                  "manualImportMessage",
-                                                  "Please import manually"
-                                                )}
-                                              </p>
-                                            </>
-                                          );
-                                        };
-
-                                        if (isBrowser() && href) {
-                                          window.location.href = href;
-                                          const checkRedirect = setTimeout(
-                                            () => {
-                                              if (
-                                                window.location.href !== href
-                                              ) {
-                                                showSuccessMessage();
-                                              }
-                                              clearTimeout(checkRedirect);
-                                            },
-                                            1000
-                                          );
-                                          return;
-                                        }
-
-                                        showSuccessMessage();
                                       }
                                     };
 
@@ -689,11 +650,10 @@ export default function Content() {
                                             />
                                           </div>
                                         ) : (
-                                          <div className="flex size-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground shadow-sm">
-                                            <Icon
-                                              className="size-8"
-                                              icon="uil:apps"
-                                            />
+                                          <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10 p-2 text-center text-primary shadow-sm">
+                                            <span className="line-clamp-2 font-bold text-xs leading-tight">
+                                              {application.name}
+                                            </span>
                                           </div>
                                         )}
 
@@ -701,11 +661,7 @@ export default function Content() {
                                           {downloadUrl && (
                                             <Button
                                               asChild
-                                              className={
-                                                application.scheme
-                                                  ? "h-8 flex-1 rounded-none border-border/50 border-r bg-transparent text-xs hover:bg-accent"
-                                                  : "h-8 flex-1 rounded-none bg-transparent text-xs hover:bg-accent"
-                                              }
+                                              className="h-8 flex-1 rounded-none border-border/50 border-r bg-transparent text-xs hover:bg-accent"
                                               variant="ghost"
                                             >
                                               <a
@@ -718,22 +674,17 @@ export default function Content() {
                                             </Button>
                                           )}
 
-                                          {application.scheme && (
-                                            <CopyToClipboard
-                                              onCopy={handleCopy}
-                                              text={getAppSubLink(
-                                                url,
-                                                application.scheme
-                                              )}
+                                          <CopyToClipboard
+                                            onCopy={handleCopy}
+                                            text={url}
+                                          >
+                                            <Button
+                                              className="h-8 flex-1 rounded-none bg-transparent text-xs hover:bg-accent"
+                                              variant="ghost"
                                             >
-                                              <Button
-                                                className="h-8 flex-1 rounded-none bg-transparent text-xs hover:bg-accent"
-                                                variant="ghost"
-                                              >
-                                                {t("import", "Import")}
-                                              </Button>
-                                            </CopyToClipboard>
-                                          )}
+                                              {t("copy", "Copy")}
+                                            </Button>
+                                          </CopyToClipboard>
                                         </div>
                                       </div>
                                     );
