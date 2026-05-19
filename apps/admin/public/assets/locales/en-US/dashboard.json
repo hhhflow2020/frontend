@@ -1,19 +1,88 @@
 {
+  "activity": {
+    "detail": {
+      "balanceRecharge": "Balance recharge"
+    },
+    "status": {
+      "closed": "Closed",
+      "failed": "Failed",
+      "finished": "Finished",
+      "paid": "Paid",
+      "pending": "Pending",
+      "processed": "Processed",
+      "success": "Success",
+      "unknown": "Unknown",
+      "waiting": "Waiting"
+    },
+    "title": {
+      "newRegistration": "New registration",
+      "orderCreated": "Order created",
+      "ticketOpened": "Ticket opened",
+      "userLogin": "User login"
+    },
+    "unknownUser": "Unknown user"
+  },
+  "alerts": {
+    "heading": "Alerts",
+    "level": {
+      "critical": "Critical",
+      "warning": "Warning"
+    },
+    "titles": {
+      "configApplyFailed": "Config apply failed",
+      "highResourceUsage": "High resource usage",
+      "serverOffline": "Server offline",
+      "xrayStatsError": "Xray stats error",
+      "xrayStopped": "Xray stopped"
+    }
+  },
+  "attention": "Attention",
+  "audience": "Audience",
+  "business": "Business",
+  "clear": "Clear",
+  "configFailed": "Config failed",
+  "connections": "Connections",
   "currentlyOnline": "Currently Online",
+  "empty": {
+    "moreAudienceHistory": "More audience history is needed to draw a trend.",
+    "moreRevenueHistory": "More revenue history is needed to draw a trend.",
+    "noAudienceData": "No audience data yet.",
+    "noRevenueData": "No revenue data yet.",
+    "noTrafficData": "No traffic data yet."
+  },
+  "healthy": "Healthy",
+  "inboundShort": "In",
+  "lastUpdated": "Last updated",
+  "liveOperations": "Live Operations",
+  "liveOperationsDescription": "Real-time system health and network metrics",
+  "maxResource": "Max",
   "month": "Month",
   "monthTraffic": "Month Traffic",
+  "network": "Network",
   "newPurchase": "New Purchase",
+  "node": "Node",
   "nodes": "Nodes",
   "nodeTraffic": "Node Traffic",
   "offline": "Offline",
   "online": "Online",
   "onlineUsersCount": "Online Users",
+  "outboundShort": "Out",
+  "overview": "Overview",
   "pending": "Pending",
   "pendingTickets": "Pending Tickets",
   "register": "Register",
   "repurchase": "Repurchase",
+  "resources": "Resources",
+  "recentActivity": "Recent Activity",
+  "recentActivityDescription": "Recent platform events and transactions",
+  "revenue": "Revenue",
   "revenueTitle": "Revenue Statistics",
   "selectTypePlaceholder": "Select Type",
+  "server": "Server",
+  "servers": "Servers",
+  "system": "System",
+  "systemMetrics": "System metrics",
+  "systemShort": "Sys",
   "today": "Today",
   "todayTraffic": "Today Traffic",
   "total": "Total",
@@ -22,8 +91,10 @@
   "traffic": "Traffic",
   "trafficRank": "Traffic Rank",
   "type": "Type",
+  "user": "User",
   "users": "Users",
   "userTitle": "User Statistics",
   "userTraffic": "User Traffic",
+  "xrayRunning": "Xray running",
   "yesterday": "Yesterday"
 }

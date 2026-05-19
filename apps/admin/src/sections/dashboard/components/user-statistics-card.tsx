@@ -14,6 +14,7 @@ import {
 } from "@workspace/ui/components/chart";
 import { queryUserStatistics } from "@workspace/ui/services/admin/console";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Area, AreaChart, Bar, BarChart, XAxis } from "recharts";
 
 function miniValue(label: string, value?: number) {
@@ -36,6 +37,7 @@ function EmptyChartState({ message }: { message: string }) {
 }
 
 export function UserStatisticsCard() {
+  const { t, i18n } = useTranslation("dashboard");
   const { data: users } = useQuery({
     queryKey: ["queryUserStatistics"],
     queryFn: async () => {
@@ -76,15 +78,21 @@ export function UserStatisticsCard() {
     allData.length > 1 && allData.some((item) => item.register > 0);
 
   return (
-    <Card className="self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:bg-background/40">
+    <Card className="hover:-translate-y-1 self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-300 hover:shadow-md dark:bg-background/40">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-muted-foreground text-xs">Audience</div>
-            <CardTitle className="mt-1 text-xl">Users</CardTitle>
+            <div className="text-muted-foreground text-xs">
+              {t("audience", "Audience")}
+            </div>
+            <CardTitle className="mt-1 text-xl">
+              {t("users", "Users")}
+            </CardTitle>
           </div>
           <div className="text-right">
-            <div className="text-muted-foreground text-xs">Today</div>
+            <div className="text-muted-foreground text-xs">
+              {t("today", "Today")}
+            </div>
             <div className="font-semibold text-2xl tabular-nums">
               {todayTotal}
             </div>
@@ -93,9 +101,15 @@ export function UserStatisticsCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-2">
-          {miniValue("Register", users?.today?.register)}
-          {miniValue("New Purchase", users?.today?.new_order_users)}
-          {miniValue("Repurchase", users?.today?.renewal_order_users)}
+          {miniValue(t("register", "Register"), users?.today?.register)}
+          {miniValue(
+            t("newPurchase", "New Purchase"),
+            users?.today?.new_order_users
+          )}
+          {miniValue(
+            t("repurchase", "Repurchase"),
+            users?.today?.renewal_order_users
+          )}
         </div>
 
         <div className="h-52">
@@ -104,15 +118,15 @@ export function UserStatisticsCard() {
               className="h-full w-full"
               config={{
                 register: {
-                  label: "Register",
+                  label: t("register", "Register"),
                   color: "#0A84FF",
                 },
                 new_purchase: {
-                  label: "New Purchase",
+                  label: t("newPurchase", "New Purchase"),
                   color: "#AF52DE",
                 },
                 repurchase: {
-                  label: "Repurchase",
+                  label: t("repurchase", "Repurchase"),
                   color: "#FF9F0A",
                 },
               }}
@@ -149,7 +163,7 @@ export function UserStatisticsCard() {
                       Number(year),
                       Number(month) - 1,
                       Number(day)
-                    ).toLocaleDateString("en-US", {
+                    ).toLocaleDateString(i18n.language, {
                       month: "short",
                       day: "numeric",
                     });
@@ -185,8 +199,11 @@ export function UserStatisticsCard() {
             <EmptyChartState
               message={
                 hasMonthlyData
-                  ? "More audience history is needed to draw a trend."
-                  : "No audience data yet."
+                  ? t(
+                      "empty.moreAudienceHistory",
+                      "More audience history is needed to draw a trend."
+                    )
+                  : t("empty.noAudienceData", "No audience data yet.")
               }
             />
           )}
@@ -198,7 +215,7 @@ export function UserStatisticsCard() {
               className="h-full w-full"
               config={{
                 register: {
-                  label: "Register",
+                  label: t("register", "Register"),
                   color: "#0A84FF",
                 },
               }}
@@ -218,7 +235,7 @@ export function UserStatisticsCard() {
                     return new Date(
                       Number(year),
                       Number(month) - 1
-                    ).toLocaleDateString("en-US", { month: "short" });
+                    ).toLocaleDateString(i18n.language, { month: "short" });
                   }}
                   tickLine={false}
                 />

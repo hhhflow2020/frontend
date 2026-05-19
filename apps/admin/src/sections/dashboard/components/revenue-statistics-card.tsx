@@ -15,6 +15,7 @@ import {
 import { queryRevenueStatistics } from "@workspace/ui/services/admin/console";
 import { unitConversion } from "@workspace/ui/utils/unit-conversions";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Area, AreaChart, Bar, BarChart, XAxis } from "recharts";
 import { Display } from "@/components/display";
 
@@ -42,6 +43,7 @@ function EmptyChartState({ message }: { message: string }) {
 }
 
 export function RevenueStatisticsCard() {
+  const { t, i18n } = useTranslation("dashboard");
   const { data: revenue } = useQuery({
     queryKey: ["queryRevenueStatistics"],
     queryFn: async () => {
@@ -76,15 +78,21 @@ export function RevenueStatisticsCard() {
     allData.length > 1 && allData.some((item) => item.total > 0);
 
   return (
-    <Card className="self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:bg-background/40">
+    <Card className="hover:-translate-y-1 self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-300 hover:shadow-md dark:bg-background/40">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-muted-foreground text-xs">Business</div>
-            <CardTitle className="mt-1 text-xl">Revenue</CardTitle>
+            <div className="text-muted-foreground text-xs">
+              {t("business", "Business")}
+            </div>
+            <CardTitle className="mt-1 text-xl">
+              {t("revenue", "Revenue")}
+            </CardTitle>
           </div>
           <div className="text-right">
-            <div className="text-muted-foreground text-xs">Today</div>
+            <div className="text-muted-foreground text-xs">
+              {t("today", "Today")}
+            </div>
             <div className="font-semibold text-2xl tabular-nums">
               <Display
                 type="currency"
@@ -96,9 +104,15 @@ export function RevenueStatisticsCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-2">
-          {miniValue("New Purchase", revenue?.today?.new_order_amount)}
-          {miniValue("Repurchase", revenue?.today?.renewal_order_amount)}
-          {miniValue("Month", revenue?.monthly?.amount_total)}
+          {miniValue(
+            t("newPurchase", "New Purchase"),
+            revenue?.today?.new_order_amount
+          )}
+          {miniValue(
+            t("repurchase", "Repurchase"),
+            revenue?.today?.renewal_order_amount
+          )}
+          {miniValue(t("month", "Month"), revenue?.monthly?.amount_total)}
         </div>
 
         <div className="h-52">
@@ -107,11 +121,11 @@ export function RevenueStatisticsCard() {
               className="h-full w-full"
               config={{
                 new_purchase: {
-                  label: "New Purchase",
+                  label: t("newPurchase", "New Purchase"),
                   color: "#0A84FF",
                 },
                 repurchase: {
-                  label: "Repurchase",
+                  label: t("repurchase", "Repurchase"),
                   color: "#34C759",
                 },
               }}
@@ -140,7 +154,7 @@ export function RevenueStatisticsCard() {
                       Number(year),
                       Number(month) - 1,
                       Number(day)
-                    ).toLocaleDateString("en-US", {
+                    ).toLocaleDateString(i18n.language, {
                       month: "short",
                       day: "numeric",
                     });
@@ -170,8 +184,11 @@ export function RevenueStatisticsCard() {
             <EmptyChartState
               message={
                 hasMonthlyData
-                  ? "More revenue history is needed to draw a trend."
-                  : "No revenue data yet."
+                  ? t(
+                      "empty.moreRevenueHistory",
+                      "More revenue history is needed to draw a trend."
+                    )
+                  : t("empty.noRevenueData", "No revenue data yet.")
               }
             />
           )}
@@ -183,7 +200,7 @@ export function RevenueStatisticsCard() {
               className="h-full w-full"
               config={{
                 total: {
-                  label: "Total Income",
+                  label: t("totalIncome", "Total Income"),
                   color: "#5856D6",
                 },
               }}
@@ -207,7 +224,7 @@ export function RevenueStatisticsCard() {
                     return new Date(
                       Number(year),
                       Number(month) - 1
-                    ).toLocaleDateString("en-US", { month: "short" });
+                    ).toLocaleDateString(i18n.language, { month: "short" });
                   }}
                   tickLine={false}
                 />
