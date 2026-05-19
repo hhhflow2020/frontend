@@ -74,6 +74,14 @@
   },
   "site": {
     "customData": "自定义数据",
+    "customDataFields": {
+      "address": "地址",
+      "community": "社区",
+      "contacts": "联系方式",
+      "email": "邮箱",
+      "telephone": "电话",
+      "website": "网站"
+    },
     "customDataDescription": "用于网站定制的自定义数据",
     "customHtml": "自定义 HTML",
     "customHtmlDescription": "注入到站点 body 标签底部的自定义 HTML 代码",

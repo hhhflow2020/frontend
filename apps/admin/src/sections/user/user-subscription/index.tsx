@@ -114,7 +114,7 @@ export default function UserSubscription({ userId }: { userId: number }) {
               },
             };
             const statusInfo = statusMap[displayStatus] || {
-              label: "Unknown",
+              label: t("unknown", "Unknown"),
               variant: "outline",
             };
             return (

@@ -48,6 +48,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface ProTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -108,6 +109,7 @@ export function ProTable<
   onSort,
   initialFilters,
 }: ProTableProps<TData, TValue>) {
+  const { t } = useTranslation("components");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(() => {
     if (initialFilters) {
@@ -143,7 +145,14 @@ export function ProTable<
             },
           ]
         : []),
-      ...(actions?.batchRender ? [createSelectColumn<TData, TValue>()] : []),
+      ...(actions?.batchRender
+        ? [
+            createSelectColumn<TData, TValue>({
+              selectAll: t("table.selectAll", "Select all"),
+              selectRow: t("table.selectRow", "Select row"),
+            }),
+          ]
+        : []),
       ...columns.map(
         (column) =>
           ({
@@ -283,7 +292,9 @@ export function ProTable<
         <Alert className="flex items-center justify-between">
           <AlertTitle className="m-0">
             {texts?.selectedRowsText?.(selectedCount) ||
-              `Selected ${selectedCount} rows`}
+              t("table.selectedRows", "Selected {{count}} rows", {
+                count: selectedCount,
+              })}
           </AlertTitle>
           <AlertDescription className="flex gap-2">
             {actions.batchRender(selectedRows)}
@@ -399,12 +410,18 @@ export function ProTable<
   );
 }
 
-function createSelectColumn<TData, TValue>(): ColumnDef<TData, TValue> {
+function createSelectColumn<TData, TValue>({
+  selectAll,
+  selectRow,
+}: {
+  selectAll: string;
+  selectRow: string;
+}): ColumnDef<TData, TValue> {
   return {
     id: "selected",
     header: ({ table }) => (
       <Checkbox
-        aria-label="Select all"
+        aria-label={selectAll}
         checked={
           table.getIsAllPageRowsSelected() ||
           (table.getIsSomePageRowsSelected() && "indeterminate")
@@ -414,7 +431,7 @@ function createSelectColumn<TData, TValue>(): ColumnDef<TData, TValue> {
     ),
     cell: ({ row }) => (
       <Checkbox
-        aria-label="Select row"
+        aria-label={selectRow}
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
       />

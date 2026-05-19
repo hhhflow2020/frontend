@@ -24,6 +24,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { ListRestart, Loader, RefreshCcw } from "lucide-react";
 import type React from "react";
 import { useEffect, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface ProListProps<TData, TValue> {
   request: (
@@ -63,6 +64,7 @@ export function ProList<TData, TValue extends Record<string, unknown>>({
   texts,
   empty,
 }: ProListProps<TData, TValue>) {
+  const { t } = useTranslation("components");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState<{ [key: number]: boolean }>(
     {}
@@ -182,7 +184,9 @@ export function ProList<TData, TValue extends Record<string, unknown>>({
         <Alert className="flex items-center justify-between">
           <AlertTitle className="m-0">
             {texts?.selectedRowsText?.(selectedCount) ||
-              `Selected ${selectedCount} rows`}
+              t("table.selectedRows", "Selected {{count}} rows", {
+                count: selectedCount,
+              })}
           </AlertTitle>
           <AlertDescription className="flex gap-2">
             {batchRender(selectedRows)}
@@ -202,7 +206,7 @@ export function ProList<TData, TValue extends Record<string, unknown>>({
 
               const checkbox = (
                 <Checkbox
-                  aria-label="Select row"
+                  aria-label={t("table.selectRow", "Select row")}
                   checked={isSelected}
                   onCheckedChange={(value) =>
                     handleSelectionChange(index, !!value)

@@ -1,5 +1,6 @@
 {
   "empty": {
+    "title": "空状态",
     "tips": {
       "0": "想象一下这里充满了精彩的内容！现在，你只能发挥你的想象力了...",
       "1": "这个区域神秘消失了，但我们正在召唤它回来！",
@@ -11,6 +12,43 @@
       "7": "这个地方本该有个大惊喜，但惊喜溜走了！",
       "8": "暂时这里什么都没有，就像一个空的零食柜。",
       "9": "这个空荡荡的空间正在等待它的主角登场！"
+    }
+  },
+  "areaCode": {
+    "search": "搜索区号...",
+    "select": "选择区号"
+  },
+  "carousel": {
+    "nextSlide": "下一张",
+    "previousSlide": "上一张"
+  },
+  "combobox": {
+    "search": "搜索...",
+    "select": "请选择..."
+  },
+  "common": {
+    "close": "关闭",
+    "loading": "加载中",
+    "more": "更多"
+  },
+  "editor": {
+    "goTemplate": {
+      "description": "Go text/template 语法",
+      "descriptionWithSprig": "Go text/template 语法，支持 Sprig 函数",
+      "placeholder": "在这里输入 Go 模板...",
+      "title": "Go 模板编辑器"
+    },
+    "html": {
+      "description": "支持 HTML",
+      "preview": "HTML 预览",
+      "title": "HTML 编辑器"
+    },
+    "json": {
+      "title": "编辑 JSON"
+    },
+    "markdown": {
+      "description": "支持 Markdown 和 HTML 语法",
+      "title": "Markdown 编辑器"
     }
   },
   "error": {
@@ -52,16 +90,50 @@
     "90015": "该账户今日已达到发送次数限制，请明天再试。",
     "unknown": "系统发生错误，请稍后再试。"
   },
+  "filter": {
+    "choose": "请选择...",
+    "search": "搜索..."
+  },
   "language": "语言",
   "pagination": {
+    "firstPage": "跳到第一页",
+    "lastPage": "跳到最后一页",
+    "morePages": "更多页",
+    "next": "下一页",
+    "nextPage": "跳到下一页",
     "pageInfo": "第 {{page}} 页，共 {{total}} 页",
+    "previous": "上一页",
+    "previousPage": "跳到上一页",
+    "selectPageNumber": "选择页码",
     "rowsPerPage": "每页行数"
+  },
+  "sidebar": {
+    "description": "显示移动端侧边栏。",
+    "title": "侧边栏",
+    "toggle": "切换侧边栏"
+  },
+  "table": {
+    "asc": "升序",
+    "desc": "降序",
+    "hide": "隐藏",
+    "selectAll": "全选",
+    "selectRow": "选择行",
+    "selectedRows": "已选择 {{count}} 行",
+    "selectedRows_one": "已选择 {{count}} 行",
+    "selectedRows_other": "已选择 {{count}} 行"
   },
   "theme": {
     "dark": "深色",
     "light": "浅色",
     "system": "系统",
     "toggle": "切换主题"
+  },
+  "timezone": {
+    "all": "全部",
+    "current": "当前",
+    "recommended": "推荐",
+    "search": "搜索时区...",
+    "server": "服务器"
   },
   "unlimited": "无限制"
 }

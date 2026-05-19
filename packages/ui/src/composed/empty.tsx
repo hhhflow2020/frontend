@@ -81,7 +81,7 @@ export default function Empty({
           width="64"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <title>Empty</title>
+          <title>{t("empty.title", "Empty")}</title>
           <g fill="none" fillRule="evenodd" transform="translate(0 1)">
             <ellipse
               cx="32"

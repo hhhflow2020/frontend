@@ -28,6 +28,7 @@
   "discount": "Discount",
   "discountInfo": "Discount Info",
   "emailDomainNotAllowed": "Email domain is not in the whitelist",
+  "emailPlaceholder": "Email",
   "emailInputTitle": "Enter the email address for your {{siteName}} account",
   "emailRequired": "Please enter your email address.",
   "enterAmount": "Enter recharge amount",
@@ -60,6 +61,7 @@
     "total": "Total"
   },
   "NoLimit": "No Limit",
+  "passwordPlaceholder": "Password",
   "passwordHint": "If you do not enter a password, we will automatically generate one and send it to your email.",
   "paymentMethod": "Payment Method",
   "productDescription": "productDescription",

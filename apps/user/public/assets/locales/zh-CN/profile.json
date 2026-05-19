@@ -17,12 +17,18 @@
     "updateSuccess": "通知设置更新成功"
   },
   "thirdParty": {
+    "areaCodePlaceholder": "区号...",
+    "areaCodeRequired": "请选择区号",
     "bind": "绑定",
     "bindFailed": "绑定失败",
     "bindMobile": "绑定手机",
     "bindSuccess": "绑定成功",
+    "codePlaceholder": "输入验证码...",
+    "codeRequired": "请输入验证码",
     "confirm": "确认",
+    "phoneRequired": "请输入手机号",
     "save": "保存",
+    "telephonePlaceholder": "输入您的手机号...",
     "title": "第三方账户",
     "unbind": "解绑",
     "update": "更新",

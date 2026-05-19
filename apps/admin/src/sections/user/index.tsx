@@ -321,7 +321,7 @@ export default function User() {
         },
         {
           key: "search",
-          placeholder: "Search",
+          placeholder: t("search", "Search"),
         },
         {
           key: "user_id",

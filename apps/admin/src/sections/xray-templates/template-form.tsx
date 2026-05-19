@@ -332,6 +332,20 @@ function JsonTextarea({
   );
 }
 
+function fieldLabelKey(label: string) {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function useXrayFieldLabel(label: string) {
+  const { t } = useTranslation("xray-templates");
+  const key = fieldLabelKey(label);
+  if (!key) return label;
+  return t(`fieldLabels.${key}`, label);
+}
+
 function SwitchField({
   control,
   name,
@@ -341,13 +355,15 @@ function SwitchField({
   name: keyof FormValues;
   label: string;
 }) {
+  const translatedLabel = useXrayFieldLabel(label);
+
   return (
     <FormField
       control={control}
       name={name as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel>{translatedLabel}</FormLabel>
           <FormControl>
             <div className="pt-2">
               <Switch
@@ -378,13 +394,15 @@ function InputField({
   type?: string;
   description?: string;
 }) {
+  const translatedLabel = useXrayFieldLabel(label);
+
   return (
     <FormField
       control={control}
       name={name as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel>{translatedLabel}</FormLabel>
           {description ? (
             <FormDescription>{description}</FormDescription>
           ) : null}
@@ -414,13 +432,15 @@ function SelectField({
   label: string;
   options: string[];
 }) {
+  const translatedLabel = useXrayFieldLabel(label);
+
   return (
     <FormField
       control={control}
       name={name as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel>{translatedLabel}</FormLabel>
           <Select onValueChange={field.onChange} value={field.value}>
             <FormControl>
               <SelectTrigger>
@@ -455,13 +475,15 @@ function JsonField({
   description?: string;
   placeholder?: string;
 }) {
+  const translatedLabel = useXrayFieldLabel(label);
+
   return (
     <FormField
       control={control}
       name={name as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel>{translatedLabel}</FormLabel>
           {description ? (
             <FormDescription>{description}</FormDescription>
           ) : null}
@@ -488,6 +510,8 @@ function ProtocolSettingsFields({
   type: XrayTemplateType;
   protocol?: string;
 }) {
+  const { t } = useTranslation("xray-templates");
+
   if (type === "inbound") {
     if (protocol === "vless") {
       return (
@@ -845,7 +869,7 @@ function ProtocolSettingsFields({
             name="wg_address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Address</FormLabel>
+                <FormLabel>{t("fieldLabels.address", "Address")}</FormLabel>
                 <FormDescription>一行一个 WireGuard 本地地址。</FormDescription>
                 <FormControl>
                   <Textarea
@@ -1927,7 +1951,10 @@ export default function XrayTemplateForm({
                             <>
                               <InputField
                                 control={form.control}
-                                description="Reality client uses password for the server public key."
+                                description={t(
+                                  "form.realityPublicKeyDescription",
+                                  "Reality client uses password for the server public key."
+                                )}
                                 label="Public Key / Password"
                                 name="reality_public_key"
                               />

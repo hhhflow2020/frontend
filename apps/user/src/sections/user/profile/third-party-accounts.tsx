@@ -52,9 +52,15 @@ function MobileBindDialog({
   const [open, setOpen] = useState(false);
 
   const formSchema = z.object({
-    area_code: z.string().min(1, "Area code is required"),
-    mobile: z.string().min(5, "Phone number is required"),
-    code: z.string().min(4, "Verification code is required"),
+    area_code: z
+      .string()
+      .min(1, t("thirdParty.areaCodeRequired", "Area code is required")),
+    mobile: z
+      .string()
+      .min(5, t("thirdParty.phoneRequired", "Phone number is required")),
+    code: z
+      .string()
+      .min(4, t("thirdParty.codeRequired", "Verification code is required")),
   });
 
   type MobileBindFormValues = z.infer<typeof formSchema>;
@@ -110,7 +116,10 @@ function MobileBindDialog({
                                     form.setValue(field.name, value.phone);
                                   }
                                 }}
-                                placeholder="Area code..."
+                                placeholder={t(
+                                  "thirdParty.areaCodePlaceholder",
+                                  "Area code..."
+                                )}
                                 simple
                                 value={field.value}
                                 whitelist={enable_whitelist ? whitelist : []}
@@ -122,7 +131,10 @@ function MobileBindDialog({
                       />
                       <Input
                         className="rounded-l-none"
-                        placeholder="Enter your telephone..."
+                        placeholder={t(
+                          "thirdParty.telephonePlaceholder",
+                          "Enter your telephone..."
+                        )}
                         type="tel"
                         {...field}
                       />
@@ -141,7 +153,10 @@ function MobileBindDialog({
                   <FormControl>
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Enter code..."
+                        placeholder={t(
+                          "thirdParty.codePlaceholder",
+                          "Enter code..."
+                        )}
                         type="text"
                         {...field}
                       />

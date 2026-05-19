@@ -74,6 +74,14 @@
   },
   "site": {
     "customData": "Custom Data",
+    "customDataFields": {
+      "address": "Address",
+      "community": "Community",
+      "contacts": "Contacts",
+      "email": "Email",
+      "telephone": "Telephone",
+      "website": "Website"
+    },
     "customDataDescription": "Custom data for website customization",
     "customHtml": "Custom HTML",
     "customHtmlDescription": "Custom HTML code to be injected into the bottom of the site's body tag",

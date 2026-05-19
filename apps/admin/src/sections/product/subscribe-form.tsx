@@ -547,8 +547,10 @@ export default function SubscribeForm<T extends Record<string, any>>({
                                         },
                                         label: {
                                           type: "string",
-                                          description:
-                                            "The label describing the feature.",
+                                          description: t(
+                                            "form.featureLabelDescription",
+                                            "The label describing the feature."
+                                          ),
                                         },
                                         type: {
                                           type: "string",
@@ -557,12 +559,17 @@ export default function SubscribeForm<T extends Record<string, any>>({
                                             "success",
                                             "destructive",
                                           ],
-                                          description:
-                                            "The type of feature, limited to specific values.",
+                                          description: t(
+                                            "form.featureTypeDescription",
+                                            "The type of feature, limited to specific values."
+                                          ),
                                         },
                                       },
                                     },
-                                    description: "A list of feature objects.",
+                                    description: t(
+                                      "form.featureListDescription",
+                                      "A list of feature objects."
+                                    ),
                                   },
                                 },
                                 required: ["description", "features"],
@@ -818,7 +825,7 @@ export default function SubscribeForm<T extends Record<string, any>>({
                               onValueChange={(value) => {
                                 form.setValue(field.name, value);
                               }}
-                              placeholder="Auto"
+                              placeholder={t("form.auto", "Auto")}
                               suffix="%"
                             />
                           </FormControl>

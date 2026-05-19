@@ -82,8 +82,10 @@
       "name": "Name",
       "outputFormat": "Output Format",
       "scheme": "URL Scheme",
-      "template": "Subscription File Template"
+      "template": "Subscription File Template",
+      "userAgent": "User-Agent"
     },
+    "selectPlaceholder": "Select ...",
     "tabs": {
       "basic": "Basic Info",
       "download": "Downloads",
@@ -98,6 +100,7 @@
     "yaml": "YAML"
   },
   "protocol": {
+    "templateRepo": "Template Repo",
     "title": "Client Management"
   },
   "table": {
@@ -107,7 +110,8 @@
       "enabled": "Enabled",
       "name": "Client Name",
       "outputFormat": "Output Format",
-      "supportedPlatforms": "Supported Platforms"
+      "supportedPlatforms": "Supported Platforms",
+      "userAgent": "User-Agent"
     }
   },
   "templatePreview": {

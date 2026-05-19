@@ -150,6 +150,7 @@ function UnifiedStatusCell({
   tOnline: string;
   tOffline: string;
 }) {
+  const { t } = useTranslation("servers");
   const offline = status.status === "offline";
   const applyStatus = status.config_apply_status || "unknown";
   const syncStatus = status.config_sync_status || "unknown";
@@ -164,7 +165,9 @@ function UnifiedStatusCell({
   return (
     <div className="flex w-fit min-w-[150px] flex-col gap-1.5 rounded-xl border border-border/40 bg-muted/10 p-2.5 text-[11px] leading-tight">
       <div className="grid grid-cols-[42px_1fr] items-center gap-1.5">
-        <span className="font-medium text-muted-foreground">Node</span>
+        <span className="font-medium text-muted-foreground">
+          {t("node", "Node")}
+        </span>
         <span className="flex items-center gap-1.5 font-medium">
           <span
             className={cn(
@@ -200,13 +203,17 @@ function UnifiedStatusCell({
                 : "text-red-500"
             }
           >
-            {status.xray_running ? "Running" : "Stopped"}
+            {status.xray_running
+              ? t("running", "Running")
+              : t("stopped", "Stopped")}
           </span>
         </span>
       </div>
 
       <div className="grid grid-cols-[42px_1fr] items-center gap-1.5">
-        <span className="font-medium text-muted-foreground">Config</span>
+        <span className="font-medium text-muted-foreground">
+          {t("config", "Config")}
+        </span>
         <span className="flex items-center gap-1.5 font-medium">
           <span
             className={cn(
@@ -223,14 +230,18 @@ function UnifiedStatusCell({
                   : "text-red-500"
             }
           >
-            {ok ? "Synced" : pending ? "Pending" : "Failed"}
+            {ok
+              ? t("synced", "Synced")
+              : pending
+                ? t("pending", "Pending")
+                : t("failed", "Failed")}
           </span>
         </span>
       </div>
 
       <div className="mt-1 flex flex-col gap-0.5 border-border/40 border-t pt-1.5 font-mono text-[10px] text-muted-foreground">
         <div className="flex items-center justify-between gap-2">
-          <span>RUN:</span>
+          <span>{t("runningConfigShort", "RUN")}:</span>
           <span className="truncate">
             {shortHash(status.running_config_hash || status.config_version) ||
               "-"}
@@ -238,7 +249,7 @@ function UnifiedStatusCell({
         </div>
         {status.pending_config_hash && (
           <div className="flex items-center justify-between gap-2 text-amber-500/80">
-            <span>PND:</span>
+            <span>{t("pendingConfigShort", "PND")}:</span>
             <span className="truncate">
               {shortHash(status.pending_config_hash)}
             </span>
@@ -259,10 +270,14 @@ function UnifiedStatusCell({
 }
 
 function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
+  const { t } = useTranslation("servers");
+
   return (
     <div className="flex w-fit min-w-[176px] flex-col gap-1.5 rounded-xl border border-border/40 bg-muted/10 p-2.5 text-[11px] leading-tight">
       <div className="grid grid-cols-[38px_1fr_1fr] items-center gap-1">
-        <span className="font-medium text-muted-foreground">Sys</span>
+        <span className="font-medium text-muted-foreground">
+          {t("systemShort", "Sys")}
+        </span>
         <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
           <Icon className="h-3 w-3" icon="uil:arrow-up" />
           <span className="tabular-nums">
@@ -296,7 +311,7 @@ function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
           className="max-w-36 truncate text-muted-foreground"
           title={status.xray_stats_error}
         >
-          stats: {status.xray_stats_error}
+          {t("stats", "Stats")}: {status.xray_stats_error}
         </div>
       ) : null}
     </div>
@@ -304,6 +319,7 @@ function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
 }
 
 function ConnectionsCell({ status }: { status: Partial<API.ServerStatus> }) {
+  const { t } = useTranslation("servers");
   const systemInbound = status.system_inbound_connections ?? 0;
   const systemOutbound = status.system_outbound_connections ?? 0;
   const xrayInbound = status.xray_inbound_connections ?? 0;
@@ -312,11 +328,13 @@ function ConnectionsCell({ status }: { status: Partial<API.ServerStatus> }) {
     <div className="w-fit min-w-[140px] space-y-1.5 rounded-xl border border-border/40 bg-muted/10 p-2.5 text-[11px] leading-tight">
       <div className="mb-1 grid grid-cols-[34px_1fr_1fr] gap-1 border-border/40 border-b pb-1 text-muted-foreground">
         <span />
-        <span>In</span>
-        <span>Out</span>
+        <span>{t("inboundShort", "In")}</span>
+        <span>{t("outboundShort", "Out")}</span>
       </div>
       <div className="grid grid-cols-[34px_1fr_1fr] gap-1">
-        <span className="font-medium text-muted-foreground">Sys</span>
+        <span className="font-medium text-muted-foreground">
+          {t("systemShort", "Sys")}
+        </span>
         <span className="font-medium tabular-nums">{systemInbound}</span>
         <span className="font-medium tabular-nums">{systemOutbound}</span>
       </div>

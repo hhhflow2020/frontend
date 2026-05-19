@@ -200,7 +200,7 @@ export function ProtocolForm() {
     },
     {
       accessorKey: "user_agent",
-      header: "User-Agent",
+      header: t("table.columns.userAgent", "User-Agent"),
       cell: ({ row }) => (
         <div className="max-w-[150px] truncate font-mono text-muted-foreground text-sm">
           {row.original.user_agent}
@@ -440,7 +440,7 @@ export function ProtocolForm() {
                 target="_blank"
               >
                 <Icon className="h-4 w-4" icon="mdi:github" />
-                <span>Template Repo</span>
+                <span>{t("protocol.templateRepo", "Template Repo")}</span>
                 <Icon
                   className="h-4 w-4 text-muted-foreground"
                   icon="mdi:open-in-new"
@@ -538,7 +538,9 @@ export function ProtocolForm() {
                       name="user_agent"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>User-Agent</FormLabel>
+                          <FormLabel>
+                            {t("form.fields.userAgent", "User-Agent")}
+                          </FormLabel>
                           <FormControl>
                             <Input placeholder="Clash" {...field} />
                           </FormControl>
@@ -624,7 +626,12 @@ export function ProtocolForm() {
                               value={field.value}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select ..." />
+                                <SelectValue
+                                  placeholder={t(
+                                    "form.selectPlaceholder",
+                                    "Select ..."
+                                  )}
+                                />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="base64">

@@ -28,6 +28,7 @@
   "discount": "折扣",
   "discountInfo": "折扣信息",
   "emailDomainNotAllowed": "邮箱域名不在白名单中",
+  "emailPlaceholder": "邮箱",
   "emailInputTitle": "输入您的 {{siteName}} 账户邮箱",
   "emailRequired": "请输入您的邮箱地址。",
   "enterAmount": "输入充值金额",
@@ -60,6 +61,7 @@
     "total": "总计"
   },
   "NoLimit": "无限制",
+  "passwordPlaceholder": "密码",
   "passwordHint": "如果您不输入密码，我们将自动生成一个并发送到您的邮箱。",
   "paymentMethod": "支付方式",
   "productDescription": "商品描述",

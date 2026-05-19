@@ -146,23 +146,25 @@ export default function Content() {
 
   const [subFilter, setSubFilter] = useState<"all" | "valid" | "usable">("all");
 
-  const filteredSubscribe = React.useMemo(() => {
-    return userSubscribe.filter((item) => {
-      const isActuallyExpired = item.status === 3 && item.expire_time !== 0;
-      const isInvalid = isActuallyExpired || item.status === 4;
-      const remaining = item.traffic
-        ? Math.max(0, item.traffic - (item.upload + item.download))
-        : Infinity;
+  const filteredSubscribe = React.useMemo(
+    () =>
+      userSubscribe.filter((item) => {
+        const isActuallyExpired = item.status === 3 && item.expire_time !== 0;
+        const isInvalid = isActuallyExpired || item.status === 4;
+        const remaining = item.traffic
+          ? Math.max(0, item.traffic - (item.upload + item.download))
+          : Number.POSITIVE_INFINITY;
 
-      if (subFilter === "valid") {
-        return !isInvalid;
-      }
-      if (subFilter === "usable") {
-        return !isInvalid && item.status !== 2 && remaining > 0;
-      }
-      return true;
-    });
-  }, [userSubscribe, subFilter]);
+        if (subFilter === "valid") {
+          return !isInvalid;
+        }
+        if (subFilter === "usable") {
+          return !isInvalid && item.status !== 2 && remaining > 0;
+        }
+        return true;
+      }),
+    [userSubscribe, subFilter]
+  );
 
   return (
     <>
@@ -267,469 +269,509 @@ export default function Content() {
           {filteredSubscribe.length > 0 ? (
             filteredSubscribe.map((item, index) => {
               // 如果过期时间为0，说明是永久订阅，不应该显示过期状态
-            const isActuallyExpired =
-              item.status === 3 && item.expire_time !== 0;
-            const shouldShowWatermark =
-              item.status === 2 || item.status === 4 || isActuallyExpired;
+              const isActuallyExpired =
+                item.status === 3 && item.expire_time !== 0;
+              const shouldShowWatermark =
+                item.status === 2 || item.status === 4 || isActuallyExpired;
 
-            return (
-              <Card
-                className={cn("relative", {
-                  "relative opacity-80 grayscale": isActuallyExpired,
-                  "relative hidden opacity-60 blur-[0.3px] grayscale":
-                    item.status === 4,
-                })}
-                key={item.id}
-              >
-                {shouldShowWatermark && (
-                  <div
-                    className={cn(
-                      "pointer-events-none absolute top-0 left-0 z-10 h-full w-full overflow-hidden mix-blend-difference brightness-150 contrast-200 invert-[0.2]",
-                      {
-                        "text-destructive": item.status === 2,
-                        "text-white": isActuallyExpired || item.status === 4,
-                      }
-                    )}
-                  >
-                    <div className="absolute inset-0">
-                      {Array.from({ length: 16 }).map((_, i) => {
-                        const row = Math.floor(i / 4);
-                        const col = i % 4;
-                        const top = 10 + row * 25 + (col % 2 === 0 ? 5 : -5);
-                        const left = 5 + col * 30 + (row % 2 === 0 ? 0 : 10);
+              return (
+                <Card
+                  className={cn("relative", {
+                    "relative opacity-80 grayscale": isActuallyExpired,
+                    "relative hidden opacity-60 blur-[0.3px] grayscale":
+                      item.status === 4,
+                  })}
+                  key={item.id}
+                >
+                  {shouldShowWatermark && (
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute top-0 left-0 z-10 h-full w-full overflow-hidden mix-blend-difference brightness-150 contrast-200 invert-[0.2]",
+                        {
+                          "text-destructive": item.status === 2,
+                          "text-white": isActuallyExpired || item.status === 4,
+                        }
+                      )}
+                    >
+                      <div className="absolute inset-0">
+                        {Array.from({ length: 16 }).map((_, i) => {
+                          const row = Math.floor(i / 4);
+                          const col = i % 4;
+                          const top = 10 + row * 25 + (col % 2 === 0 ? 5 : -5);
+                          const left = 5 + col * 30 + (row % 2 === 0 ? 0 : 10);
 
-                        return (
-                          <span
-                            className="absolute rotate-[-30deg] whitespace-nowrap font-black text-lg opacity-40 shadow-[0px_0px_1px_rgba(255,255,255,0.5)]"
-                            key={i}
-                            style={{
-                              top: `${top}%`,
-                              left: `${left}%`,
-                            }}
-                          >
-                            {
-                              statusWatermarks[
-                                item.status as keyof typeof statusWatermarks
-                              ]
-                            }
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 pb-2">
-                  <CardTitle className="flex flex-row items-center gap-3">
-                    <span className="flex size-7 items-center justify-center rounded-md bg-primary/10 font-bold text-primary text-sm">
-                      #{index + 1}
-                    </span>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-black text-xl text-primary tracking-tight">
-                        {item.subscribe.name}
-                      </span>
-                      <span className="font-medium text-foreground/50 text-xs">
-                        {t("expireAt", "Expires At")}:{" "}
-                        {item.expire_time
-                          ? formatDate(item.expire_time)
-                          : t("noLimit", "No Limit")}
-                      </span>
-                    </div>
-                  </CardTitle>
-                  {item.status !== 4 && (
-                    <div className="flex flex-wrap gap-2">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="destructive">
-                            <Icon className="mr-1.5 size-4" icon="uil:sync" />
-                            {t("resetSubscription", "Reset Subscription")}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              {t("prompt", "Prompt")}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {t(
-                                "confirmResetSubscription",
-                                "Are you sure you want to reset your subscription?"
-                              )}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>
-                              {t("cancel", "Cancel")}
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={async () => {
-                                await resetUserSubscribeToken({
-                                  user_subscribe_id: item.id,
-                                });
-                                await refetch();
-                                toast.success(
-                                  t("resetSuccess", "Reset Success")
-                                );
+                          return (
+                            <span
+                              className="absolute rotate-[-30deg] whitespace-nowrap font-black text-lg opacity-40 shadow-[0px_0px_1px_rgba(255,255,255,0.5)]"
+                              key={i}
+                              style={{
+                                top: `${top}%`,
+                                left: `${left}%`,
                               }}
                             >
-                              {t("confirm", "Confirm")}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      {item.subscribe.allow_reset_traffic !== false && (
-                        <ResetTraffic
-                          id={item.id}
-                          replacement={item.subscribe.replacement}
-                        />
-                      )}
-                      {item.subscribe.allow_renewal !== false &&
-                        item.expire_time !== 0 && (
-                          <Renewal id={item.id} subscribe={item.subscribe} />
-                        )}
-                      <Unsubscribe
-                        allowDeduction={item.subscribe.allow_deduction}
-                        id={item.id}
-                        onSuccess={refetch}
-                      />
+                              {
+                                statusWatermarks[
+                                  item.status as keyof typeof statusWatermarks
+                                ]
+                              }
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="mb-3 flex w-full flex-col gap-3">
-                    <div className="flex flex-col justify-between gap-3 rounded-2xl border border-border/40 bg-muted/5 p-3 lg:flex-row lg:items-center">
-                      <div className="flex min-w-[160px] flex-col">
-                        <span className="mb-0 font-medium text-muted-foreground text-xs">
-                          {t("used", "Used")}
+                  <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 pb-2">
+                    <CardTitle className="flex flex-row items-center gap-3">
+                      <span className="flex size-7 items-center justify-center rounded-md bg-primary/10 font-bold text-primary text-sm">
+                        #{index + 1}
+                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-black text-primary text-xl tracking-tight">
+                          {item.subscribe.name}
                         </span>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="font-black text-2xl text-foreground tracking-tighter">
-                            <Display
-                              type="traffic"
-                              unlimited={!item.traffic}
-                              value={item.upload + item.download}
-                            />
+                        <span className="font-medium text-foreground/50 text-xs">
+                          {t("expireAt", "Expires At")}:{" "}
+                          {item.expire_time
+                            ? formatDate(item.expire_time)
+                            : t("noLimit", "No Limit")}
+                        </span>
+                      </div>
+                    </CardTitle>
+                    {item.status !== 4 && (
+                      <div className="flex flex-wrap gap-2">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="destructive">
+                              <Icon className="mr-1.5 size-4" icon="uil:sync" />
+                              {t("resetSubscription", "Reset Subscription")}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                {t("prompt", "Prompt")}
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {t(
+                                  "confirmResetSubscription",
+                                  "Are you sure you want to reset your subscription?"
+                                )}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>
+                                {t("cancel", "Cancel")}
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={async () => {
+                                  await resetUserSubscribeToken({
+                                    user_subscribe_id: item.id,
+                                  });
+                                  await refetch();
+                                  toast.success(
+                                    t("resetSuccess", "Reset Success")
+                                  );
+                                }}
+                              >
+                                {t("confirm", "Confirm")}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        {item.subscribe.allow_reset_traffic !== false && (
+                          <ResetTraffic
+                            id={item.id}
+                            replacement={item.subscribe.replacement}
+                          />
+                        )}
+                        {item.subscribe.allow_renewal !== false &&
+                          item.expire_time !== 0 && (
+                            <Renewal id={item.id} subscribe={item.subscribe} />
+                          )}
+                        <Unsubscribe
+                          allowDeduction={item.subscribe.allow_deduction}
+                          id={item.id}
+                          onSuccess={refetch}
+                        />
+                      </div>
+                    )}
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="mb-3 flex w-full flex-col gap-3">
+                      <div className="flex flex-col justify-between gap-3 rounded-2xl border border-border/40 bg-muted/5 p-3 lg:flex-row lg:items-center">
+                        <div className="flex min-w-[160px] flex-col">
+                          <span className="mb-0 font-medium text-muted-foreground text-xs">
+                            {t("used", "Used")}
                           </span>
-                          <span className="font-medium text-muted-foreground text-xs">
-                            /{" "}
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-black text-2xl text-foreground tracking-tighter">
+                              <Display
+                                type="traffic"
+                                unlimited={!item.traffic}
+                                value={item.upload + item.download}
+                              />
+                            </span>
+                            <span className="font-medium text-muted-foreground text-xs">
+                              /{" "}
+                              {item.traffic ? (
+                                <Display type="traffic" value={item.traffic} />
+                              ) : (
+                                "∞"
+                              )}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex max-w-lg flex-1 flex-col gap-2">
+                          <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted/50 shadow-inner">
                             {item.traffic ? (
-                              <Display type="traffic" value={item.traffic} />
+                              <>
+                                <div
+                                  className="relative h-full bg-blue-500 transition-all duration-500 ease-in-out hover:brightness-110"
+                                  style={{
+                                    width: `${Math.min(
+                                      100,
+                                      ((item.download || 0) /
+                                        (item.traffic || 1)) *
+                                        100
+                                    )}%`,
+                                  }}
+                                  title={"Download"}
+                                >
+                                  <div className="absolute inset-0 animate-pulse bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] opacity-50" />
+                                </div>
+                                <div
+                                  className="relative h-full bg-emerald-500 transition-all duration-500 ease-in-out hover:brightness-110"
+                                  style={{
+                                    width: `${Math.min(
+                                      100,
+                                      ((item.upload || 0) /
+                                        (item.traffic || 1)) *
+                                        100
+                                    )}%`,
+                                  }}
+                                  title={"Upload"}
+                                >
+                                  <div className="absolute inset-0 animate-pulse bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] opacity-50" />
+                                </div>
+                              </>
                             ) : (
-                              "∞"
+                              <div className="h-full w-full animate-pulse bg-[length:200%_100%] bg-gradient-to-r from-blue-500 via-emerald-500 to-blue-500 opacity-80" />
                             )}
-                          </span>
+                          </div>
+
+                          <div className="flex items-center justify-between font-medium text-xs">
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <span className="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-sm" />
+                                <Icon
+                                  className="size-3.5"
+                                  icon="uil:arrow-down"
+                                />
+                                <Display type="traffic" value={item.download} />
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-sm" />
+                                <Icon
+                                  className="size-3.5"
+                                  icon="uil:arrow-up"
+                                />
+                                <Display type="traffic" value={item.upload} />
+                              </div>
+                            </div>
+                            {!!item.traffic && (
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <span>{t("remaining", "Remaining")}:</span>
+                                <span className="text-foreground">
+                                  <Display
+                                    type="traffic"
+                                    value={Math.max(
+                                      0,
+                                      item.traffic -
+                                        (item.upload + item.download)
+                                    )}
+                                  />
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex max-w-lg flex-1 flex-col gap-2">
-                        <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted/50 shadow-inner">
-                          {item.traffic ? (
-                            <>
-                              <div
-                                className="relative h-full bg-blue-500 transition-all duration-500 ease-in-out hover:brightness-110"
-                                style={{
-                                  width: `${Math.min(
-                                    100,
-                                    ((item.download || 0) /
-                                      (item.traffic || 1)) *
-                                      100
-                                  )}%`,
-                                }}
-                                title={"Download"}
-                              >
-                                <div className="absolute inset-0 animate-pulse bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] opacity-50" />
-                              </div>
-                              <div
-                                className="relative h-full bg-emerald-500 transition-all duration-500 ease-in-out hover:brightness-110"
-                                style={{
-                                  width: `${Math.min(
-                                    100,
-                                    ((item.upload || 0) / (item.traffic || 1)) *
-                                      100
-                                  )}%`,
-                                }}
-                                title={"Upload"}
-                              >
-                                <div className="absolute inset-0 animate-pulse bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] opacity-50" />
-                              </div>
-                            </>
-                          ) : (
-                            <div className="h-full w-full animate-pulse bg-[length:200%_100%] bg-gradient-to-r from-blue-500 via-emerald-500 to-blue-500 opacity-80" />
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between font-medium text-xs">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <span className="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-sm" />
+                      {isActuallyExpired || item.status === 4 ? (
+                        <div className="flex flex-wrap gap-2.5">
+                          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 py-1 pr-3 pl-1 shadow-sm">
+                            <div className="flex size-6 items-center justify-center rounded-full bg-red-500/20 text-red-500">
                               <Icon
                                 className="size-3.5"
-                                icon="uil:arrow-down"
+                                icon="uil:times-circle"
                               />
-                              <Display type="traffic" value={item.download} />
                             </div>
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-sm" />
-                              <Icon className="size-3.5" icon="uil:arrow-up" />
-                              <Display type="traffic" value={item.upload} />
-                            </div>
+                            <span className="font-bold text-[11px] text-red-500">
+                              {item.status === 4
+                                ? t("deducted", "Deducted")
+                                : t("expired", "Expired")}
+                            </span>
                           </div>
-                          {!!item.traffic && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                              <span>{t("remaining", "Remaining")}:</span>
-                              <span className="text-foreground">
-                                <Display
-                                  type="traffic"
-                                  value={Math.max(
-                                    0,
-                                    item.traffic - (item.upload + item.download)
-                                  )}
-                                />
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2.5">
+                          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/40 bg-muted/5 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
+                            <div className="flex size-6 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+                              <Icon className="size-3.5" icon="uil:sync" />
+                            </div>
+                            <span className="font-medium text-[11px]">
+                              <span className="mr-1 text-muted-foreground">
+                                {t("nextResetDays", "Next Reset Days")}:
                               </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {isActuallyExpired || item.status === 4 ? (
-                      <div className="flex flex-wrap gap-2.5">
-                        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 py-1 pr-3 pl-1 shadow-sm">
-                          <div className="flex size-6 items-center justify-center rounded-full bg-red-500/20 text-red-500">
-                            <Icon className="size-3.5" icon="uil:times-circle" />
-                          </div>
-                          <span className="font-bold text-[11px] text-red-500">
-                            {item.status === 4 ? t("deducted", "Deducted") : t("expired", "Expired")}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-2.5">
-                        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/40 bg-muted/5 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
-                          <div className="flex size-6 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
-                            <Icon className="size-3.5" icon="uil:sync" />
-                          </div>
-                          <span className="font-medium text-[11px]">
-                            <span className="mr-1 text-muted-foreground">
-                              {t("nextResetDays", "Next Reset Days")}:
-                            </span>
-                            <span className="text-foreground">
-                              {item.reset_time
-                                ? Math.max(0, differenceInDays(item.reset_time, new Date()))
-                                : t("noReset", "No Reset")}
-                            </span>
-                          </span>
-                        </div>
-
-                        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/40 bg-muted/5 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
-                          <div className="flex size-6 items-center justify-center rounded-full bg-orange-500/10 text-orange-500">
-                            <Icon className="size-3.5" icon="uil:calendar-alt" />
-                          </div>
-                          <span className="font-medium text-[11px]">
-                            <span className="mr-1 text-muted-foreground">
-                              {t("expirationDays", "Expiration Days")}:
-                            </span>
-                            <span className="text-foreground">
-                              {item.expire_time
-                                ? Math.max(0, differenceInDays(item.expire_time, new Date())) || t("unknown", "Unknown")
-                                : t("noLimit", "No Limit")}
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <Separator className="mt-4" />
-                  <Accordion
-                    className="w-full"
-                    collapsible
-                    defaultValue="0"
-                    type="single"
-                  >
-                    {getUserSubscribe(item.short, item.token, protocol)?.map(
-                      (url, index) => (
-                        <AccordionItem key={url} value={String(index)}>
-                          <AccordionTrigger className="hover:no-underline">
-                            <div className="flex w-full flex-row items-center justify-between">
-                              <CardTitle className="font-medium text-sm">
-                                {t("subscriptionUrl", "Subscription URL")}{" "}
-                                {index + 1}
-                              </CardTitle>
-
-                              <CopyToClipboard
-                                onCopy={(_, result) => {
-                                  if (result) {
-                                    toast.success(
-                                      t("copySuccess", "Copy Success")
-                                    );
-                                  }
-                                }}
-                                text={url}
-                              >
-                                <span
-                                  className="mr-4 flex cursor-pointer rounded p-2 text-primary text-sm hover:bg-accent"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Icon
-                                    className="mr-2 size-5"
-                                    icon="uil:copy"
-                                  />
-                                  {t("copy", "Copy")}
-                                </span>
-                              </CopyToClipboard>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                              {applications
-                                ?.filter(
-                                  (application) =>
-                                    application.enabled !== false &&
-                                    !!(
-                                      application.scheme ||
-                                      application.download_link?.[platform]
+                              <span className="text-foreground">
+                                {item.reset_time
+                                  ? Math.max(
+                                      0,
+                                      differenceInDays(
+                                        item.reset_time,
+                                        new Date()
+                                      )
                                     )
-                                )
-                                .map((application) => {
-                                  const downloadUrl =
-                                    application.download_link?.[platform];
+                                  : t("noReset", "No Reset")}
+                              </span>
+                            </span>
+                          </div>
 
-                                  const handleCopy = (
-                                    _: string,
-                                    result: boolean
-                                  ) => {
+                          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/40 bg-muted/5 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
+                            <div className="flex size-6 items-center justify-center rounded-full bg-orange-500/10 text-orange-500">
+                              <Icon
+                                className="size-3.5"
+                                icon="uil:calendar-alt"
+                              />
+                            </div>
+                            <span className="font-medium text-[11px]">
+                              <span className="mr-1 text-muted-foreground">
+                                {t("expirationDays", "Expiration Days")}:
+                              </span>
+                              <span className="text-foreground">
+                                {item.expire_time
+                                  ? Math.max(
+                                      0,
+                                      differenceInDays(
+                                        item.expire_time,
+                                        new Date()
+                                      )
+                                    ) || t("unknown", "Unknown")
+                                  : t("noLimit", "No Limit")}
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <Separator className="mt-4" />
+                    <Accordion
+                      className="w-full"
+                      collapsible
+                      defaultValue="0"
+                      type="single"
+                    >
+                      {getUserSubscribe(item.short, item.token, protocol)?.map(
+                        (url, index) => (
+                          <AccordionItem key={url} value={String(index)}>
+                            <AccordionTrigger className="hover:no-underline">
+                              <div className="flex w-full flex-row items-center justify-between">
+                                <CardTitle className="font-medium text-sm">
+                                  {t("subscriptionUrl", "Subscription URL")}{" "}
+                                  {index + 1}
+                                </CardTitle>
+
+                                <CopyToClipboard
+                                  onCopy={(_, result) => {
                                     if (result) {
-                                      const href = getAppSubLink(
-                                        url,
-                                        application.scheme
+                                      toast.success(
+                                        t("copySuccess", "Copy Success")
                                       );
-                                      const showSuccessMessage = () => {
-                                        toast.success(
-                                          <>
-                                            <p>
-                                              {t("copySuccess", "Copy Success")}
-                                            </p>
-                                            <br />
-                                            <p>
-                                              {t(
-                                                "manualImportMessage",
-                                                "Please import manually"
-                                              )}
-                                            </p>
-                                          </>
-                                        );
-                                      };
-
-                                      if (isBrowser() && href) {
-                                        window.location.href = href;
-                                        const checkRedirect = setTimeout(() => {
-                                          if (window.location.href !== href) {
-                                            showSuccessMessage();
-                                          }
-                                          clearTimeout(checkRedirect);
-                                        }, 1000);
-                                        return;
-                                      }
-
-                                      showSuccessMessage();
                                     }
-                                  };
+                                  }}
+                                  text={url}
+                                >
+                                  <span
+                                    className="mr-4 flex cursor-pointer rounded p-2 text-primary text-sm hover:bg-accent"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Icon
+                                      className="mr-2 size-5"
+                                      icon="uil:copy"
+                                    />
+                                    {t("copy", "Copy")}
+                                  </span>
+                                </CopyToClipboard>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                                {applications
+                                  ?.filter(
+                                    (application) =>
+                                      application.enabled !== false &&
+                                      !!(
+                                        application.scheme ||
+                                        application.download_link?.[platform]
+                                      )
+                                  )
+                                  .map((application) => {
+                                    const downloadUrl =
+                                      application.download_link?.[platform];
 
-                                  return (
-                                    <div
-                                      className="group relative flex h-full w-full flex-col items-center justify-between gap-3 rounded-2xl border border-border/40 bg-muted/5 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-muted/10 hover:shadow-md"
-                                      key={application.name}
-                                    >
-                                      <span className="font-semibold text-foreground tracking-tight text-sm">
-                                        {application.name}
-                                      </span>
+                                    const handleCopy = (
+                                      _: string,
+                                      result: boolean
+                                    ) => {
+                                      if (result) {
+                                        const href = getAppSubLink(
+                                          url,
+                                          application.scheme
+                                        );
+                                        const showSuccessMessage = () => {
+                                          toast.success(
+                                            <>
+                                              <p>
+                                                {t(
+                                                  "copySuccess",
+                                                  "Copy Success"
+                                                )}
+                                              </p>
+                                              <br />
+                                              <p>
+                                                {t(
+                                                  "manualImportMessage",
+                                                  "Please import manually"
+                                                )}
+                                              </p>
+                                            </>
+                                          );
+                                        };
 
-                                      {application.icon ? (
-                                        <div className="relative flex size-16 items-center justify-center rounded-2xl bg-white p-2 shadow-sm dark:bg-white/5">
-                                          <img
-                                            alt={application.name}
-                                            className="object-contain"
-                                            src={application.icon}
-                                          />
-                                        </div>
-                                      ) : (
-                                        <div className="flex size-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground shadow-sm">
-                                          <Icon icon="uil:apps" className="size-8" />
-                                        </div>
-                                      )}
+                                        if (isBrowser() && href) {
+                                          window.location.href = href;
+                                          const checkRedirect = setTimeout(
+                                            () => {
+                                              if (
+                                                window.location.href !== href
+                                              ) {
+                                                showSuccessMessage();
+                                              }
+                                              clearTimeout(checkRedirect);
+                                            },
+                                            1000
+                                          );
+                                          return;
+                                        }
 
-                                      <div className="flex w-full overflow-hidden rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
-                                        {downloadUrl && (
-                                          <Button
-                                            asChild
-                                            className={
-                                              application.scheme
-                                                ? "h-8 flex-1 rounded-none border-r border-border/50 bg-transparent hover:bg-accent text-xs"
-                                                : "h-8 flex-1 rounded-none bg-transparent hover:bg-accent text-xs"
-                                            }
-                                            variant="ghost"
-                                          >
-                                            <a
-                                              href={downloadUrl}
-                                              rel="noopener noreferrer"
-                                              target="_blank"
-                                            >
-                                              {t("download", "Download")}
-                                            </a>
-                                          </Button>
+                                        showSuccessMessage();
+                                      }
+                                    };
+
+                                    return (
+                                      <div
+                                        className="group hover:-translate-y-1 relative flex h-full w-full flex-col items-center justify-between gap-3 rounded-2xl border border-border/40 bg-muted/5 p-4 shadow-sm transition-all duration-300 hover:bg-muted/10 hover:shadow-md"
+                                        key={application.name}
+                                      >
+                                        <span className="font-semibold text-foreground text-sm tracking-tight">
+                                          {application.name}
+                                        </span>
+
+                                        {application.icon ? (
+                                          <div className="relative flex size-16 items-center justify-center rounded-2xl bg-white p-2 shadow-sm dark:bg-white/5">
+                                            <img
+                                              alt={application.name}
+                                              className="object-contain"
+                                              height={48}
+                                              src={application.icon}
+                                              width={48}
+                                            />
+                                          </div>
+                                        ) : (
+                                          <div className="flex size-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground shadow-sm">
+                                            <Icon
+                                              className="size-8"
+                                              icon="uil:apps"
+                                            />
+                                          </div>
                                         )}
 
-                                        {application.scheme && (
-                                          <CopyToClipboard
-                                            onCopy={handleCopy}
-                                            text={getAppSubLink(
-                                              url,
-                                              application.scheme
-                                            )}
-                                          >
+                                        <div className="flex w-full overflow-hidden rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
+                                          {downloadUrl && (
                                             <Button
-                                              className="h-8 flex-1 rounded-none bg-transparent hover:bg-accent text-xs"
+                                              asChild
+                                              className={
+                                                application.scheme
+                                                  ? "h-8 flex-1 rounded-none border-border/50 border-r bg-transparent text-xs hover:bg-accent"
+                                                  : "h-8 flex-1 rounded-none bg-transparent text-xs hover:bg-accent"
+                                              }
                                               variant="ghost"
                                             >
-                                              {t("import", "Import")}
+                                              <a
+                                                href={downloadUrl}
+                                                rel="noopener noreferrer"
+                                                target="_blank"
+                                              >
+                                                {t("download", "Download")}
+                                              </a>
                                             </Button>
-                                          </CopyToClipboard>
-                                        )}
+                                          )}
+
+                                          {application.scheme && (
+                                            <CopyToClipboard
+                                              onCopy={handleCopy}
+                                              text={getAppSubLink(
+                                                url,
+                                                application.scheme
+                                              )}
+                                            >
+                                              <Button
+                                                className="h-8 flex-1 rounded-none bg-transparent text-xs hover:bg-accent"
+                                                variant="ghost"
+                                              >
+                                                {t("import", "Import")}
+                                              </Button>
+                                            </CopyToClipboard>
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  );
-                                })}
-                              <div className="hidden group relative h-full w-full flex-col items-center justify-between gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md lg:flex">
-                                <span className="font-semibold text-blue-500 tracking-tight text-sm">
-                                  {t("qrCode", "QR Code")}
-                                </span>
-                                <div className="relative flex size-16 items-center justify-center rounded-2xl bg-white p-1.5 shadow-[0_0_15px_rgba(59,130,246,0.3)] dark:bg-white/90">
-                                  <QRCodeCanvas
-                                    bgColor="transparent"
-                                    fgColor="rgb(59, 130, 246)"
-                                    size={56}
-                                    value={url}
-                                  />
+                                    );
+                                  })}
+                                <div className="group hover:-translate-y-1 relative hidden h-full w-full flex-col items-center justify-between gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 shadow-sm transition-all duration-300 hover:shadow-md lg:flex">
+                                  <span className="font-semibold text-blue-500 text-sm tracking-tight">
+                                    {t("qrCode", "QR Code")}
+                                  </span>
+                                  <div className="relative flex size-16 items-center justify-center rounded-2xl bg-white p-1.5 shadow-[0_0_15px_rgba(59,130,246,0.3)] dark:bg-white/90">
+                                    <QRCodeCanvas
+                                      bgColor="transparent"
+                                      fgColor="rgb(59, 130, 246)"
+                                      size={56}
+                                      value={url}
+                                    />
+                                  </div>
+                                  <span className="text-center text-muted-foreground text-xs">
+                                    {t("scanToSubscribe", "Scan to Subscribe")}
+                                  </span>
                                 </div>
-                                <span className="text-center text-xs text-muted-foreground">
-                                  {t("scanToSubscribe", "Scan to Subscribe")}
-                                </span>
                               </div>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      )
-                    )}
-                  </Accordion>
-                </CardContent>
-              </Card>
-            );
-          })
-        ) : (
-          <div className="flex h-32 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border/50 text-muted-foreground">
-            <Icon className="mb-2 size-8 opacity-50" icon="uil:box" />
-            <p className="text-sm">{t("noMatchSubscriptions", "No matching subscriptions found.")}</p>
-          </div>
-        )}
+                            </AccordionContent>
+                          </AccordionItem>
+                        )
+                      )}
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              );
+            })
+          ) : (
+            <div className="flex h-32 w-full flex-col items-center justify-center rounded-2xl border border-border/50 border-dashed text-muted-foreground">
+              <Icon className="mb-2 size-8 opacity-50" icon="uil:box" />
+              <p className="text-sm">
+                {t("noMatchSubscriptions", "No matching subscriptions found.")}
+              </p>
+            </div>
+          )}
         </>
       ) : (
         <>

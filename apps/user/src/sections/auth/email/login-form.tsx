@@ -68,7 +68,10 @@ export default function LoginForm({
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder="Enter your email..."
+                    placeholder={t(
+                      "login.emailPlaceholder",
+                      "Enter your email..."
+                    )}
                     type="email"
                     {...field}
                   />
@@ -84,7 +87,10 @@ export default function LoginForm({
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder="Enter your password..."
+                    placeholder={t(
+                      "login.passwordPlaceholder",
+                      "Enter your password..."
+                    )}
                     type="password"
                     {...field}
                   />

@@ -1,5 +1,6 @@
 {
   "empty": {
+    "title": "Empty",
     "tips": {
       "0": "Imagine this space filled with exciting content! For now, you'll have to use your imagination...",
       "1": "This area mysteriously disappeared, but we're summoning it back!",
@@ -11,6 +12,43 @@
       "7": "This place was supposed to have a big surprise, but the surprise slipped away!",
       "8": "There's nothing here for now, like an empty snack cabinet.",
       "9": "This empty space is waiting for its protagonist to take the stage!"
+    }
+  },
+  "areaCode": {
+    "search": "Search area code...",
+    "select": "Select Area Code"
+  },
+  "carousel": {
+    "nextSlide": "Next slide",
+    "previousSlide": "Previous slide"
+  },
+  "combobox": {
+    "search": "Search...",
+    "select": "Select..."
+  },
+  "common": {
+    "close": "Close",
+    "loading": "Loading",
+    "more": "More"
+  },
+  "editor": {
+    "goTemplate": {
+      "description": "Go text/template syntax",
+      "descriptionWithSprig": "Go text/template syntax with Sprig functions",
+      "placeholder": "Enter your Go template here...",
+      "title": "Go Template Editor"
+    },
+    "html": {
+      "description": "Support HTML",
+      "preview": "HTML Preview",
+      "title": "HTML Editor"
+    },
+    "json": {
+      "title": "Edit JSON"
+    },
+    "markdown": {
+      "description": "Support markdown and HTML syntax",
+      "title": "Markdown Editor"
     }
   },
   "error": {
@@ -58,6 +96,10 @@
     "privacyPolicy": "Privacy Policy",
     "tos": "Terms of Service"
   },
+  "filter": {
+    "choose": "Choose...",
+    "search": "Search..."
+  },
   "language": "Language",
   "loginRegister": "Login / Register",
   "membership": {
@@ -82,8 +124,31 @@
     "wallet": "Balance"
   },
   "pagination": {
+    "firstPage": "Go to first page",
+    "lastPage": "Go to last page",
+    "morePages": "More pages",
+    "next": "Next",
+    "nextPage": "Go to next page",
     "pageInfo": "Page {{page}} of {{total}}",
+    "previous": "Previous",
+    "previousPage": "Go to previous page",
+    "selectPageNumber": "Select page number",
     "rowsPerPage": "Rows per page"
+  },
+  "sidebar": {
+    "description": "Displays the mobile sidebar.",
+    "title": "Sidebar",
+    "toggle": "Toggle Sidebar"
+  },
+  "table": {
+    "asc": "ASC",
+    "desc": "DESC",
+    "hide": "Hide",
+    "selectAll": "Select all",
+    "selectRow": "Select row",
+    "selectedRows": "Selected {{count}} rows",
+    "selectedRows_one": "Selected {{count}} row",
+    "selectedRows_other": "Selected {{count}} rows"
   },
   "theme": {
     "dark": "Dark",

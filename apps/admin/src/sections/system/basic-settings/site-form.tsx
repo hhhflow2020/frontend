@@ -306,23 +306,50 @@ export default function SiteConfig() {
                           type: "object",
                           additionalProperties: true,
                           properties: {
-                            website: { type: "string", title: "Website" },
+                            website: {
+                              type: "string",
+                              title: t(
+                                "site.customDataFields.website",
+                                "Website"
+                              ),
+                            },
                             contacts: {
                               type: "object",
-                              title: "Contacts",
+                              title: t(
+                                "site.customDataFields.contacts",
+                                "Contacts"
+                              ),
                               additionalProperties: true,
                               properties: {
-                                email: { type: "string", title: "Email" },
+                                email: {
+                                  type: "string",
+                                  title: t(
+                                    "site.customDataFields.email",
+                                    "Email"
+                                  ),
+                                },
                                 telephone: {
                                   type: "string",
-                                  title: "Telephone",
+                                  title: t(
+                                    "site.customDataFields.telephone",
+                                    "Telephone"
+                                  ),
                                 },
-                                address: { type: "string", title: "Address" },
+                                address: {
+                                  type: "string",
+                                  title: t(
+                                    "site.customDataFields.address",
+                                    "Address"
+                                  ),
+                                },
                               },
                             },
                             community: {
                               type: "object",
-                              title: "Community",
+                              title: t(
+                                "site.customDataFields.community",
+                                "Community"
+                              ),
                               additionalProperties: true,
                               properties: {
                                 telegram: { type: "string", title: "Telegram" },

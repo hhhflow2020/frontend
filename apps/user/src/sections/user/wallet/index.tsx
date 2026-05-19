@@ -65,7 +65,7 @@ export default function Wallet() {
             </div>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="rounded-lg bg-secondary p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+            <div className="hover:-translate-y-1 rounded-lg bg-secondary p-4 shadow-sm transition-all duration-300 hover:shadow-md">
               <p className="font-medium text-secondary-foreground text-sm opacity-80">
                 {t("balance", "Balance")}
               </p>
@@ -73,7 +73,7 @@ export default function Wallet() {
                 <Display type="currency" value={user?.balance} />
               </p>
             </div>
-            <div className="rounded-lg bg-secondary p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+            <div className="hover:-translate-y-1 rounded-lg bg-secondary p-4 shadow-sm transition-all duration-300 hover:shadow-md">
               <p className="font-medium text-secondary-foreground text-sm opacity-80">
                 {t("giftAmount", "Gift Amount")}
               </p>
@@ -81,7 +81,7 @@ export default function Wallet() {
                 <Display type="currency" value={user?.gift_amount} />
               </p>
             </div>
-            <div className="rounded-lg bg-secondary p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+            <div className="hover:-translate-y-1 rounded-lg bg-secondary p-4 shadow-sm transition-all duration-300 hover:shadow-md">
               <p className="font-medium text-secondary-foreground text-sm opacity-80">
                 {t("commission", "Commission")}
               </p>
@@ -95,7 +95,7 @@ export default function Wallet() {
       <ProList<API.BalanceLog, Record<string, unknown>>
         action={ref}
         renderItem={(item) => (
-          <Card className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+          <Card className="hover:-translate-y-1 overflow-hidden transition-all duration-300 hover:shadow-md">
             <CardContent className="text-sm">
               <ul className="grid grid-cols-2 gap-3 *:flex *:flex-col lg:grid-cols-4">
                 <li className="font-semibold">

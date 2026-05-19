@@ -82,8 +82,10 @@
       "name": "名称",
       "outputFormat": "输出格式",
       "scheme": "URL Scheme",
-      "template": "订阅文件模板"
+      "template": "订阅文件模板",
+      "userAgent": "User-Agent"
     },
+    "selectPlaceholder": "请选择...",
     "tabs": {
       "basic": "基本信息",
       "download": "下载",
@@ -98,6 +100,7 @@
     "yaml": "YAML"
   },
   "protocol": {
+    "templateRepo": "模板仓库",
     "title": "客户端管理"
   },
   "table": {
@@ -107,7 +110,8 @@
       "enabled": "启用",
       "name": "客户端名称",
       "outputFormat": "输出格式",
-      "supportedPlatforms": "支持的平台"
+      "supportedPlatforms": "支持的平台",
+      "userAgent": "User-Agent"
     }
   },
   "templatePreview": {

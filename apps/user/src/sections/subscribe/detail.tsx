@@ -21,9 +21,7 @@ export function SubscribeDetail({ subscribe }: Readonly<SubscribeDetailProps>) {
       <ul className="grid gap-2">
         {subscribe?.name && (
           <li className="flex items-end justify-between pb-3">
-            <span className="font-bold text-foreground">
-              {subscribe?.name}
-            </span>
+            <span className="font-bold text-foreground">{subscribe?.name}</span>
             <span className="mx-2 mb-1 flex-grow border-border/50 border-b-2 border-dotted" />
             <span className="font-bold text-foreground">
               x{subscribe?.quantity || 1}

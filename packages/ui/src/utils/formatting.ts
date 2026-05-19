@@ -13,8 +13,12 @@ export function formatBytes(bytes: number) {
 export function formatDate(date?: Date | number, showTime = true) {
   if (!date) return;
   // Convert Unix seconds to milliseconds automatically
-  const finalDate = typeof date === "number" && date < 100000000000 ? date * 1000 : date;
-  const timeZone = typeof window !== "undefined" ? localStorage.getItem("timezone") || "UTC" : "UTC";
+  const finalDate =
+    typeof date === "number" && date < 100_000_000_000 ? date * 1000 : date;
+  const timeZone =
+    typeof window !== "undefined"
+      ? localStorage.getItem("timezone") || "UTC"
+      : "UTC";
 
   return intlFormat(finalDate, {
     year: "numeric",
@@ -34,12 +38,18 @@ export function differenceInDays(
   dateLeft: Date | number,
   dateRight: Date | number
 ) {
-  const finalDateLeft = typeof dateLeft === "number" && dateLeft < 100000000000 ? dateLeft * 1000 : dateLeft;
-  const finalDateRight = typeof dateRight === "number" && dateRight < 100000000000 ? dateRight * 1000 : dateRight;
+  const finalDateLeft =
+    typeof dateLeft === "number" && dateLeft < 100_000_000_000
+      ? dateLeft * 1000
+      : dateLeft;
+  const finalDateRight =
+    typeof dateRight === "number" && dateRight < 100_000_000_000
+      ? dateRight * 1000
+      : dateRight;
 
   const diffInMs = differenceInMilliseconds(finalDateLeft, finalDateRight);
   const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-  
+
   if (Math.abs(diffInDays) >= 1) return Number(diffInDays.toFixed(0));
   return Number(diffInDays.toFixed(2));
 }

@@ -17,12 +17,18 @@
     "updateSuccess": "Notification settings updated successfully"
   },
   "thirdParty": {
+    "areaCodePlaceholder": "Area code...",
+    "areaCodeRequired": "Area code is required",
     "bind": "thirdParty.bind",
     "bindFailed": "Bind failed",
     "bindMobile": "Bind Mobile",
     "bindSuccess": "Bind successfully",
+    "codePlaceholder": "Enter code...",
+    "codeRequired": "Verification code is required",
     "confirm": "Confirm",
+    "phoneRequired": "Phone number is required",
     "save": "thirdParty.save",
+    "telephonePlaceholder": "Enter your telephone...",
     "title": "Third-party Accounts",
     "unbind": "thirdParty.unbind",
     "update": "thirdParty.update",

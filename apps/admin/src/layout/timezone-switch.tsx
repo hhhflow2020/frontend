@@ -160,7 +160,7 @@ function getTimezoneOffset(timezone: string): string {
 }
 
 export default function TimezoneSwitch() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation("components");
   const locale = i18n.language;
   const [timezone, setTimezone] = useState<string>("UTC");
   const [open, setOpen] = useState(false);
@@ -208,9 +208,11 @@ export default function TimezoneSwitch() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <Command>
-          <CommandInput placeholder="Search..." />
+          <CommandInput
+            placeholder={t("timezone.search", "Search timezone...")}
+          />
           <CommandList>
-            <CommandGroup heading="Current">
+            <CommandGroup heading={t("timezone.current", "Current")}>
               {timezoneOptions
                 .filter((option) => option.value === timezone)
                 .map((option) => (
@@ -233,7 +235,7 @@ export default function TimezoneSwitch() {
                 ))}
             </CommandGroup>
             {serverTimezones.length > 0 && (
-              <CommandGroup heading="Server">
+              <CommandGroup heading={t("timezone.server", "Server")}>
                 {serverTimezones.map((option) => (
                   <CommandItem
                     key={option.value}
@@ -254,7 +256,7 @@ export default function TimezoneSwitch() {
               </CommandGroup>
             )}
 
-            <CommandGroup heading="Recommended">
+            <CommandGroup heading={t("timezone.recommended", "Recommended")}>
               {timezoneOptions
                 .filter(
                   (option) =>
@@ -280,7 +282,7 @@ export default function TimezoneSwitch() {
                 ))}
             </CommandGroup>
 
-            <CommandGroup heading="All">
+            <CommandGroup heading={t("timezone.all", "All")}>
               {timezoneOptions
                 .filter(
                   (option) =>

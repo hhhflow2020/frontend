@@ -173,7 +173,7 @@ export default function Content({
                     });
                   }
                 }}
-                placeholder="Email"
+                placeholder={t("emailPlaceholder", "Email")}
                 required
                 type="email"
                 value={params.identifier || ""}
@@ -194,7 +194,7 @@ export default function Content({
                   onValueChange={(value: string) =>
                     handleChange("password", value)
                   }
-                  placeholder="Password"
+                  placeholder={t("passwordPlaceholder", "Password")}
                   type="password"
                   value={params.password || ""}
                 />

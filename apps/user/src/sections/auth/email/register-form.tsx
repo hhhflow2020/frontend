@@ -114,7 +114,10 @@ export default function RegisterForm({
                 <FormItem>
                   <FormControl>
                     <Input
-                      placeholder="Enter your email..."
+                      placeholder={t(
+                        "register.emailPlaceholder",
+                        "Enter your email..."
+                      )}
                       type="email"
                       {...field}
                     />
@@ -130,7 +133,10 @@ export default function RegisterForm({
                 <FormItem>
                   <FormControl>
                     <Input
-                      placeholder="Enter your password..."
+                      placeholder={t(
+                        "register.passwordPlaceholder",
+                        "Enter your password..."
+                      )}
                       type="password"
                       {...field}
                     />
@@ -147,7 +153,10 @@ export default function RegisterForm({
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Enter password again..."
+                      placeholder={t(
+                        "register.repeatPasswordPlaceholder",
+                        "Enter password again..."
+                      )}
                       type="password"
                       {...field}
                     />
@@ -166,7 +175,10 @@ export default function RegisterForm({
                       <div className="flex items-center gap-2">
                         <Input
                           disabled={loading}
-                          placeholder="Enter code..."
+                          placeholder={t(
+                            "register.codePlaceholder",
+                            "Enter code..."
+                          )}
                           type="text"
                           {...field}
                           value={field.value as string}
