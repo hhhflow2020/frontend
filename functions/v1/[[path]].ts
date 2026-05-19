@@ -1,20 +1,41 @@
 interface Env {
-  API_BASE_URL: string;
+  API_BASE_URL?: string;
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
 
-  const apiBase = (env.API_BASE_URL || "https://api.ppanel.dev").replace(
-    /\/$/,
-    ""
-  );
+  const configuredApiBase = env.API_BASE_URL?.trim();
+  if (!configuredApiBase) {
+    return new Response(
+      JSON.stringify({ code: 500, msg: "API_BASE_URL is not configured" }),
+      {
+        headers: { "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
+  }
+
+  let apiBaseURL: URL;
+  try {
+    apiBaseURL = new URL(configuredApiBase);
+  } catch {
+    return new Response(
+      JSON.stringify({ code: 500, msg: "API_BASE_URL is invalid" }),
+      {
+        headers: { "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
+  }
+
+  const apiBase = configuredApiBase.replace(/\/$/, "");
 
   const url = new URL(request.url);
   const targetUrl = `${apiBase}${url.pathname}${url.search}`;
 
   const headers = new Headers(request.headers);
-  headers.set("Host", new URL(apiBase).host);
+  headers.set("Host", apiBaseURL.host);
   headers.delete("cf-connecting-ip");
   headers.delete("cf-ipcountry");
   headers.delete("cf-ray");

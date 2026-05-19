@@ -1,32 +1,40 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
 import type React from "react";
 
 interface IpLinkProps {
   ip: string;
   children?: React.ReactNode;
   className?: string;
-  target?: "_blank" | "_self";
 }
 
-export function IpLink({
-  ip,
-  children,
-  className = "",
-  target = "_blank",
-}: IpLinkProps) {
-  const url = `https://ipinfo.io/${ip}`;
+interface IpLocationProps {
+  className?: string;
+  location?: string;
+}
+
+export function IpLink({ ip, children, className = "" }: IpLinkProps) {
+  const cleanIP = ip.trim();
+
+  if (!cleanIP) {
+    return <span className="text-muted-foreground">-</span>;
+  }
 
   return (
-    <a
-      className={`inline-flex items-center gap-1 font-mono text-primary transition-colors hover:text-primary/80 hover:underline ${className}`}
-      href={url}
-      rel={target === "_blank" ? "noopener noreferrer" : undefined}
-      target={target}
+    <span className={`font-mono text-foreground ${className}`}>
+      {children || cleanIP}
+    </span>
+  );
+}
+
+export function IpLocation({ className = "", location }: IpLocationProps) {
+  const value = location?.trim();
+  return (
+    <span
+      className={`inline-block max-w-44 truncate text-muted-foreground ${className}`}
+      title={value || undefined}
     >
-      {children || ip}
-      <ExternalLink className="h-3 w-3" />
-    </a>
+      {value || "-"}
+    </span>
   );
 }

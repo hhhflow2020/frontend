@@ -51,7 +51,7 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         "/api": {
-          target: devProxyTarget || "https://api.ppanel.dev",
+          target: devProxyTarget || "http://127.0.0.1:27001",
           changeOrigin: true,
           secure: false,
         },

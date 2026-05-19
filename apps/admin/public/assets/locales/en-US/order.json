@@ -4,6 +4,7 @@
   "discount": "Discount Amount",
   "feeAmount": "Fee Amount",
   "method": "Payment Method",
+  "membershipPrice": "Membership Price",
   "orderNumber": "Order Number",
   "status": {
     "0": "Status",

@@ -4,6 +4,7 @@
   "discount": "折扣金额",
   "feeAmount": "手续费",
   "method": "支付方式",
+  "membershipPrice": "会员卡价格",
   "orderNumber": "订单编号",
   "status": {
     "0": "状态",

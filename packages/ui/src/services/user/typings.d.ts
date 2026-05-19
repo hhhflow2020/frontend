@@ -424,6 +424,8 @@ declare namespace API {
     trade_no: string;
     status: number;
     subscribe_id: number;
+    product_name: string;
+    membership_plan?: MembershipPlan;
     created_at: number;
     updated_at: number;
   };
@@ -449,6 +451,7 @@ declare namespace API {
     subscribe_id: number;
     subscribe: Subscribe;
     membership_plan?: MembershipPlan;
+    product_name: string;
     created_at: number;
     updated_at: number;
   };
@@ -1187,6 +1190,9 @@ declare namespace API {
   type UserDevice = {
     id: number;
     ip: string;
+    country_short?: string;
+    region?: string;
+    location?: string;
     identifier: string;
     user_agent: string;
     online: boolean;
@@ -1199,6 +1205,9 @@ declare namespace API {
     id: number;
     user_id: number;
     login_ip: string;
+    country_short?: string;
+    region?: string;
+    location?: string;
     user_agent: string;
     success: boolean;
     timestamp: number;
@@ -1210,6 +1219,7 @@ declare namespace API {
     order_id: number;
     subscribe_id: number;
     subscribe: Subscribe;
+    product_name: string;
     start_time: number;
     expire_time: number;
     finished_at: number;
@@ -1229,6 +1239,7 @@ declare namespace API {
     user_id: number;
     order_id: number;
     subscribe_id: number;
+    product_name: string;
     start_time: number;
     expire_time: number;
     finished_at: number;
@@ -1250,6 +1261,9 @@ declare namespace API {
     user_subscribe_id: number;
     token: string;
     ip: string;
+    country_short?: string;
+    region?: string;
+    location?: string;
     user_agent: string;
     timestamp: number;
   };

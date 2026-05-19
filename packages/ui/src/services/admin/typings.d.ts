@@ -1346,6 +1346,9 @@ declare namespace API {
     user_id: number;
     method: string;
     login_ip: string;
+    country_short?: string;
+    region?: string;
+    location?: string;
     user_agent: string;
     success: boolean;
     timestamp: number;
@@ -1430,6 +1433,8 @@ declare namespace API {
     trade_no: string;
     status: number;
     subscribe_id: number;
+    product_name: string;
+    membership_plan?: MembershipPlan;
     created_at: number;
     updated_at: number;
   };
@@ -1454,6 +1459,8 @@ declare namespace API {
     status: number;
     subscribe_id: number;
     subscribe: Subscribe;
+    product_name: string;
+    membership_plan?: MembershipPlan;
     created_at: number;
     updated_at: number;
   };
@@ -1463,6 +1470,8 @@ declare namespace API {
     amount_total: number;
     new_order_amount: number;
     renewal_order_amount: number;
+    membership_amount: number;
+    reset_traffic_amount: number;
     list?: OrdersStatistics[];
   };
 
@@ -1676,8 +1685,10 @@ declare namespace API {
 
   type QueryIPLocationResponse = {
     country: string;
+    country_short?: string;
     region?: string;
     city: string;
+    location?: string;
   };
 
   type QueryNodeTagResponse = {
@@ -1807,6 +1818,9 @@ declare namespace API {
     auth_method: string;
     identifier: string;
     register_ip: string;
+    country_short?: string;
+    region?: string;
+    location?: string;
     user_agent: string;
     timestamp: number;
   };
@@ -1873,6 +1887,9 @@ declare namespace API {
   };
 
   type RevenueStatisticsResponse = {
+    period: string;
+    granularity: string;
+    series: OrdersStatistics[];
     today: OrdersStatistics;
     monthly: OrdersStatistics;
     all: OrdersStatistics;
@@ -2041,25 +2058,24 @@ declare namespace API {
     last_apply_error?: string;
   };
 
-  type ServerTotalDataResponse = {
-    online_users: number;
-    online_servers: number;
-    offline_servers: number;
-    today_upload: number;
-    today_download: number;
-    monthly_upload: number;
-    monthly_download: number;
-    updated_at: number;
-    server_traffic_ranking_today: ServerTrafficData[];
-    server_traffic_ranking_yesterday: ServerTrafficData[];
-    user_traffic_ranking_today: UserTrafficData[];
-    user_traffic_ranking_yesterday: UserTrafficData[];
-  };
-
   type DashboardRealtimeResponse = {
     type: string;
+    full?: boolean;
+    seq?: number;
+    reason?: string;
     updated_at: number;
     online_users: number;
+    online_user_series: {
+      last_day: Array<{
+        timestamp: number;
+        value: number;
+      }>;
+      last_7_days: Array<{
+        timestamp: number;
+        value: number;
+      }>;
+    };
+    pending_tickets: number;
     servers: {
       total: number;
       online: number;
@@ -2093,6 +2109,33 @@ declare namespace API {
       max_mem: number;
       max_disk: number;
     };
+    business: {
+      revenue_today: number;
+      new_order_amount: number;
+      renewal_order_amount: number;
+      membership_amount: number;
+      reset_traffic_amount: number;
+      register_today: number;
+      new_order_count: number;
+      renewal_order_count: number;
+      membership_order_count: number;
+    };
+    traffic: {
+      today_upload: number;
+      today_download: number;
+      monthly_upload: number;
+      monthly_download: number;
+      today_series: Array<{
+        timestamp: number;
+        upload: number;
+        download: number;
+        total: number;
+      }>;
+      server_ranking_today: ServerTrafficData[];
+      user_ranking_today: UserTrafficData[];
+      server_ranking_monthly: ServerTrafficData[];
+      user_ranking_monthly: UserTrafficData[];
+    };
     alerts: Array<{
       level: string;
       server_id?: number;
@@ -2105,6 +2148,8 @@ declare namespace API {
       title: string;
       subject?: string;
       detail?: string;
+      ip?: string;
+      location?: string;
       status?: string;
       amount?: number;
       user_id?: number;
@@ -2281,6 +2326,9 @@ declare namespace API {
     token: string;
     user_agent: string;
     client_ip: string;
+    country_short?: string;
+    region?: string;
+    location?: string;
     user_subscribe_id: number;
     timestamp: number;
   };
@@ -2318,10 +2366,6 @@ declare namespace API {
     status: number;
     created_at: number;
     updated_at: number;
-  };
-
-  type TicketWaitRelpyResponse = {
-    count: number;
   };
 
   type TimePeriod = {
@@ -2648,6 +2692,9 @@ declare namespace API {
   type UserDevice = {
     id: number;
     ip: string;
+    country_short?: string;
+    region?: string;
+    location?: string;
     identifier: string;
     user_agent: string;
     online: boolean;
@@ -2660,6 +2707,9 @@ declare namespace API {
     id: number;
     user_id: number;
     login_ip: string;
+    country_short?: string;
+    region?: string;
+    location?: string;
     user_agent: string;
     success: boolean;
     timestamp: number;
@@ -2670,10 +2720,14 @@ declare namespace API {
     register: number;
     new_order_users: number;
     renewal_order_users: number;
+    membership_users: number;
     list?: UserStatistics[];
   };
 
   type UserStatisticsResponse = {
+    period: string;
+    granularity: string;
+    series: UserStatistics[];
     today: UserStatistics;
     monthly: UserStatistics;
     all: UserStatistics;
@@ -2685,6 +2739,7 @@ declare namespace API {
     order_id: number;
     subscribe_id: number;
     subscribe: Subscribe;
+    product_name: string;
     start_time: number;
     expire_time: number;
     finished_at: number;
@@ -2706,6 +2761,7 @@ declare namespace API {
     order_id: number;
     subscribe_id: number;
     subscribe: Subscribe;
+    product_name: string;
     start_time: number;
     expire_time: number;
     reset_time: number;
@@ -2724,6 +2780,9 @@ declare namespace API {
     user_subscribe_id: number;
     token: string;
     ip: string;
+    country_short?: string;
+    region?: string;
+    location?: string;
     user_agent: string;
     timestamp: number;
   };

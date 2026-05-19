@@ -111,6 +111,11 @@ function buildRealtimeWsUrl() {
   return url.toString();
 }
 
+function serverStatusVersion(status?: Partial<API.ServerStatus>) {
+  if (!status) return 0;
+  return Math.max(status.last_seen || 0, status.updated_at || 0);
+}
+
 function RegionIpCell({
   country,
   city,
@@ -377,34 +382,68 @@ export default function Servers() {
 
   useEffect(() => {
     if (!getAuthorizationToken()) return;
-    const ws = new WebSocket(buildRealtimeWsUrl());
-    ws.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        const applyStatus = (
-          item: Partial<API.ServerStatus> & { server_id?: number }
-        ) => {
-          if (!item.server_id) return;
-          const { server_id: serverId, ...status } = item;
-          setRealtimeStatus((prev) => ({
-            ...prev,
-            [serverId]: {
-              ...(prev[serverId] || {}),
-              ...status,
-            },
-          }));
-        };
-        if (message.type === "snapshot" && Array.isArray(message.data)) {
-          for (const item of message.data) applyStatus(item);
-          return;
+    let closed = false;
+    let ws: WebSocket | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const applyStatus = (
+      item: Partial<API.ServerStatus> & { server_id?: number }
+    ) => {
+      if (!item.server_id) return;
+      const { server_id: serverId, ...status } = item;
+      setRealtimeStatus((prev) => {
+        const previous = prev[serverId];
+        const previousVersion = serverStatusVersion(previous);
+        const nextVersion = serverStatusVersion(status);
+        if (
+          previousVersion > 0 &&
+          nextVersion > 0 &&
+          nextVersion < previousVersion
+        ) {
+          return prev;
         }
-        if (message.type === "node_status") applyStatus(message);
-      } catch {
-        // Ignore malformed realtime messages.
-      }
+        return {
+          ...prev,
+          [serverId]: {
+            ...(previous || {}),
+            ...status,
+          },
+        };
+      });
     };
+
+    const connect = () => {
+      ws = new WebSocket(buildRealtimeWsUrl());
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === "snapshot" && Array.isArray(message.data)) {
+            for (const item of message.data) applyStatus(item);
+            return;
+          }
+          if (message.type === "node_status") applyStatus(message);
+        } catch {
+          // Ignore malformed realtime messages.
+        }
+      };
+      ws.onclose = () => {
+        if (!closed) {
+          reconnectTimer = setTimeout(connect, 3000);
+        }
+      };
+      ws.onerror = () => {
+        ws?.close();
+      };
+    };
+
+    connect();
+
     return () => {
-      ws.close();
+      closed = true;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+      ws?.close();
     };
   }, []);
 

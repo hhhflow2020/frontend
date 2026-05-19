@@ -39,6 +39,23 @@ export default function Order() {
     5: t("type.5", "Membership Card"),
   };
 
+  const getProductName = (item: API.OrderDetail) => {
+    if (item.type === 4) {
+      return typeMap[item.type];
+    }
+    if (item.product_name) {
+      return item.product_name;
+    }
+    if (item.type === 5) {
+      return item.membership_plan?.name || typeMap[item.type];
+    }
+    return (
+      item.subscribe?.name ||
+      typeMap[item.type] ||
+      t(`type.${item.type}`, "Unknown Type")
+    );
+  };
+
   const ref = useRef<ProListActions>(null);
   return (
     <div className="space-y-4">
@@ -93,11 +110,7 @@ export default function Order() {
                   <span className="text-muted-foreground">
                     {t("name", "Product Name")}
                   </span>
-                  <span>
-                    {item.subscribe?.name ||
-                      typeMap[item.type] ||
-                      t(`type.${item.type}`, "Unknown Type")}
-                  </span>
+                  <span>{getProductName(item)}</span>
                 </li>
                 <li className="font-semibold">
                   <span className="text-muted-foreground">

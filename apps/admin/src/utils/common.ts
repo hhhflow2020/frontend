@@ -1,8 +1,10 @@
 import {
   clearLegacyAuthorizationToken,
+  getAuthorizationToken,
   removeAuthorizationToken,
   setAuthorizationToken,
 } from "@workspace/ui/lib/auth-token";
+import { getApiBaseURL, getApiPrefix } from "@workspace/ui/lib/runtime-config";
 import { isBrowser } from "@workspace/ui/utils/index";
 
 export function getPlatform(): string {
@@ -41,6 +43,18 @@ export function setRedirectUrl(value?: string) {
 
 export function Logout() {
   if (!isBrowser()) return;
+  const token = getAuthorizationToken();
+  if (token) {
+    const base = getApiBaseURL() || window.location.origin;
+    const url = new URL(`${getApiPrefix()}/v1/auth/logout`, base);
+    fetch(url.toString(), {
+      headers: { Authorization: token },
+      keepalive: true,
+      method: "POST",
+    }).catch((error) => {
+      console.debug("Failed to report logout:", error?.message || error);
+    });
+  }
   removeAuthorizationToken();
   clearLegacyAuthorizationToken();
 

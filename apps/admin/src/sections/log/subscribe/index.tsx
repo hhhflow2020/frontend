@@ -10,7 +10,7 @@ import {
 import { ProTable } from "@workspace/ui/composed/pro-table/pro-table";
 import { filterSubscribeLog } from "@workspace/ui/services/admin/log";
 import { useTranslation } from "react-i18next";
-import { IpLink } from "@/components/ip-link";
+import { IpLink, IpLocation } from "@/components/ip-link";
 import { UserDetail, UserSubscribeDetail } from "@/sections/user/user-detail";
 import { formatDate } from "@/utils/common";
 
@@ -51,6 +51,13 @@ export default function SubscribeLogPage() {
           header: t("column.ip", "IP"),
           cell: ({ row }) => (
             <IpLink ip={String((row.original as any).client_ip || "")} />
+          ),
+        },
+        {
+          accessorKey: "location",
+          header: t("column.location", "Location"),
+          cell: ({ row }) => (
+            <IpLocation location={(row.original as any).location} />
           ),
         },
         {

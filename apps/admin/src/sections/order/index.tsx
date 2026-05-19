@@ -57,6 +57,21 @@ export default function Order() {
   const ref = useRef<ProTableActions>(null);
 
   const { subscribes, getSubscribeName } = useSubscribe();
+  const getTypeLabel = (type: number) =>
+    typeOptions.find((opt) => opt.value === type)?.label || t(`type.${type}`);
+  const getOrderProductName = (order: API.Order) => {
+    if (order.product_name) {
+      return order.type === 4 ? getTypeLabel(order.type) : order.product_name;
+    }
+    if (order.type === 5) {
+      return order.membership_plan?.name || getTypeLabel(order.type);
+    }
+    if (order.type === 4) {
+      return getTypeLabel(order.type);
+    }
+    const name = getSubscribeName(order.subscribe_id);
+    return name ? `${name} × ${order.quantity}` : "";
+  };
 
   return (
     <ProTable<API.Order, any>
@@ -71,28 +86,13 @@ export default function Order() {
           header: t("type.0", "Type"),
           cell: ({ row }) => {
             const type = row.getValue("type") as number;
-            return (
-              typeOptions.find((opt) => opt.value === type)?.label ||
-              t(`type.${type}`)
-            );
+            return getTypeLabel(type);
           },
         },
         {
           accessorKey: "subscribe_id",
           header: t("subscribe", "Subscribe"),
-          cell: ({ row }) => {
-            const order = row.original as API.Order;
-            if ([4, 5].includes(order.type)) {
-              const type = row.getValue("type") as number;
-              return (
-                typeOptions.find((opt) => opt.value === type)?.label ||
-                t(`type.${type}`)
-              );
-            }
-            const name = getSubscribeName(order.subscribe_id);
-            const quantity = order.quantity;
-            return name ? `${name} × ${quantity}` : "";
-          },
+          cell: ({ row }) => getOrderProductName(row.original as API.Order),
         },
         {
           accessorKey: "amount",
@@ -122,7 +122,9 @@ export default function Order() {
                     <ul className="grid gap-3">
                       <li className="flex items-center justify-between">
                         <span className="text-muted-foreground">
-                          {t("subscribePrice", "Subscription Price")}
+                          {order.type === 5
+                            ? t("membershipPrice", "Membership Price")
+                            : t("subscribePrice", "Subscription Price")}
                         </span>
                         <span>
                           <Display type="currency" value={order.price} />

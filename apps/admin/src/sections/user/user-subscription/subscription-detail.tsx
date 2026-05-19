@@ -17,7 +17,7 @@ import {
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { IpLink } from "@/components/ip-link";
+import { IpLink, IpLocation } from "@/components/ip-link";
 import { formatDate } from "@/utils/common";
 
 export function SubscriptionDetail({
@@ -95,6 +95,13 @@ export function SubscriptionDetail({
                 accessorKey: "ip",
                 header: "IP",
                 cell: ({ row }) => <IpLink ip={row.getValue("ip")} />,
+              },
+              {
+                accessorKey: "location",
+                header: t("location", "Location"),
+                cell: ({ row }) => (
+                  <IpLocation location={(row.original as any).location} />
+                ),
               },
               {
                 accessorKey: "online",

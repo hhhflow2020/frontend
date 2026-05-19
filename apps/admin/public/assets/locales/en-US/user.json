@@ -48,6 +48,7 @@
   "kickOfflineConfirm": "kickOfflineConfirm",
   "kickOfflineSuccess": "Device kicked offline",
   "lastSeen": "Last Seen",
+  "location": "Location",
   "loading": "Loading...",
   "loginLogs": "Login Logs",
   "loginNotifications": "Login Notifications",
