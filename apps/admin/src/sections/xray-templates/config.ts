@@ -181,7 +181,7 @@ function settingsExtra(
       return omitKeys(settings, ["secretKey", "peers", "mtu"]);
     }
     if (protocol === "hysteria") {
-      return omitKeys(settings, ["version", "clients"]);
+      return omitKeys(settings, ["version", "users"]);
     }
     if (protocol === "tun") {
       return omitKeys(settings, ["name", "MTU", "UserLevel", "userLevel"]);
@@ -519,7 +519,7 @@ function buildInboundProtocolSettings(values: Record<string, any>) {
     return mergeSettings(
       {
         version: numberToUndefined(values.hysteria_version),
-        clients: safeJsonParse(values.hysteria_clients_json || "", []),
+        users: safeJsonParse(values.hysteria_users_json || "", []),
       },
       values.settings_json
     );
@@ -906,7 +906,7 @@ export function configToFormValues(
     wg_workers: settings.workers || undefined,
     wg_domain_strategy: settings.domainStrategy || "ForceIP",
     hysteria_version: settings.version || 2,
-    hysteria_clients_json: formatJson(settings.clients || []),
+    hysteria_users_json: formatJson(settings.users || []),
     tun_name: settings.name || "xray0",
     tun_mtu: settings.MTU || 1500,
     out_address: settings.address || "",

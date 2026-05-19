@@ -148,7 +148,7 @@ const formSchema = z.object({
   wg_workers: z.coerce.number().optional(),
   wg_domain_strategy: z.string().optional(),
   hysteria_version: z.coerce.number().optional(),
-  hysteria_clients_json: z.string().optional(),
+  hysteria_users_json: z.string().optional(),
   tun_name: z.string().optional(),
   tun_mtu: z.coerce.number().optional(),
   out_address: z.string().optional(),
@@ -278,7 +278,7 @@ function defaultValues(type: XrayTemplateType = "inbound"): FormValues {
     wg_reserved_json: "[]",
     wg_domain_strategy: "ForceIP",
     hysteria_version: 2,
-    hysteria_clients_json: "[]",
+    hysteria_users_json: "[]",
     tun_name: "xray0",
     tun_mtu: 1500,
     out_encryption: "none",
@@ -757,9 +757,9 @@ function ProtocolSettingsFields({
           />
           <JsonField
             control={control}
-            description='ClientObject[]: [{"auth":"password-or-uuid","level":0,"email":"user@example.com"}]'
-            label="Clients"
-            name="hysteria_clients_json"
+            description='UserObject[]: [{"auth":"password-or-uuid","level":0,"email":"user@example.com"}]'
+            label="Users"
+            name="hysteria_users_json"
           />
         </div>
       );
