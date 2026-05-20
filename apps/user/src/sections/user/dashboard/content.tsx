@@ -181,31 +181,31 @@ function SubscriptionCard({
       <CardHeader className="border-slate-100 border-b bg-slate-50/50 px-4.5 py-3 dark:border-border/30 dark:bg-muted/5">
         <div className="flex flex-row items-center justify-between gap-3">
           <CardTitle className="flex min-w-0 flex-row items-center gap-2">
-            <span className="flex size-5.5 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5 font-black text-[9px] text-primary shadow-xs">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5 font-black text-[10px] text-primary shadow-xs">
               #{index + 1}
             </span>
             <div className="flex min-w-0 flex-col">
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="truncate font-bold text-foreground text-sm leading-none tracking-tight">
+                <span className="truncate font-bold text-base text-foreground leading-none tracking-tight">
                   {item.subscribe.name}
                 </span>
 
                 {/* Expiration/Status Pill */}
                 {isActuallyExpired || item.status === 4 ? (
-                  <span className="inline-flex items-center gap-0.5 rounded-md border border-red-100 bg-red-50 px-1 py-0.5 font-bold text-[8px] text-red-600 uppercase leading-none tracking-wider dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-500">
+                  <span className="inline-flex items-center gap-0.5 rounded-md border border-red-100 bg-red-50 px-1.5 py-0.5 font-bold text-[10px] text-red-600 uppercase leading-none tracking-wider dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-500">
                     {item.status === 4
                       ? t("deducted", "Deducted")
                       : t("expired", "Expired")}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-0.5 rounded-md border border-emerald-100 bg-emerald-50 px-1 py-0.5 font-bold text-[8px] text-emerald-700 uppercase leading-none tracking-wider dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400">
+                  <span className="inline-flex items-center gap-0.5 rounded-md border border-emerald-100 bg-emerald-50 px-1.5 py-0.5 font-bold text-[10px] text-emerald-700 uppercase leading-none tracking-wider dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400">
                     {t("active", "Active")}
                   </span>
                 )}
               </div>
-              <span className="mt-0.5 flex items-center gap-0.5 font-semibold text-[10px] text-slate-500 dark:text-muted-foreground/80">
+              <span className="mt-1 flex items-center gap-1 font-semibold text-[11px] text-slate-500 dark:text-muted-foreground/80">
                 <Icon
-                  className="size-3 text-slate-400 dark:text-muted-foreground/60"
+                  className="size-3.5 text-slate-400 dark:text-muted-foreground/60"
                   icon="uil:clock"
                 />
                 {t("expireAt", "Expires At")}:{" "}
@@ -223,8 +223,8 @@ function SubscriptionCard({
                     id={item.id}
                     subscribe={item.subscribe}
                     trigger={
-                      <Button className="h-6.5 rounded-lg bg-gradient-to-r from-primary to-indigo-600 px-2.5 font-bold text-[10px] text-white shadow-sm transition-all duration-300 hover:from-primary/95 hover:to-indigo-500 hover:shadow-md hover:shadow-primary/10 active:scale-95">
-                        <Icon className="mr-1 size-3" icon="uil:history" />
+                      <Button className="h-7 rounded-lg bg-gradient-to-r from-primary to-indigo-600 px-3 font-bold text-[11px] text-white shadow-sm transition-all duration-300 hover:from-primary/95 hover:to-indigo-500 hover:shadow-md hover:shadow-primary/10 active:scale-95">
+                        <Icon className="mr-1 size-3.5" icon="uil:history" />
                         {t("renew", "Renew")}
                       </Button>
                     }
@@ -234,12 +234,12 @@ function SubscriptionCard({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    className="size-6.5 rounded-lg border-slate-200 transition-all duration-200 hover:bg-slate-50 active:scale-95 dark:border-border/40 dark:hover:bg-muted/10"
+                    className="size-7 rounded-lg border-slate-200 transition-all duration-200 hover:bg-slate-50 active:scale-95 dark:border-border/40 dark:hover:bg-muted/10"
                     size="icon"
                     variant="outline"
                   >
                     <Icon
-                      className="size-3 text-muted-foreground"
+                      className="size-3.5 text-muted-foreground"
                       icon="uil:ellipsis-h"
                     />
                   </Button>
@@ -348,7 +348,7 @@ function SubscriptionCard({
         {/* Main Info: Circular progress ring next to vertical aligned figures */}
         <div className="flex items-center gap-4.5">
           {/* Left: Circular SVG progress gauge */}
-          <div className="relative flex size-16 shrink-0 select-none items-center justify-center">
+          <div className="relative flex size-18 shrink-0 select-none items-center justify-center">
             <svg className="-rotate-90 size-full" viewBox="0 0 60 60">
               <title>{t("trafficUsage", "Traffic Usage")}</title>
               {/* Background Track */}
@@ -395,10 +395,10 @@ function SubscriptionCard({
               )}
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="mt-0.5 font-black text-foreground text-xs leading-none tracking-tighter">
+              <span className="mt-0.5 font-black text-foreground text-sm leading-none tracking-tighter">
                 {item.traffic ? `${percent}%` : "∞"}
               </span>
-              <span className="mt-0.5 scale-90 font-bold text-[7.5px] text-slate-500 uppercase leading-none tracking-wider dark:text-muted-foreground/80">
+              <span className="mt-0.5 font-bold text-[8.5px] text-slate-500 uppercase leading-none tracking-wider dark:text-muted-foreground/80">
                 {t("used", "Used")}
               </span>
             </div>
@@ -407,18 +407,18 @@ function SubscriptionCard({
           {/* Right: Detailed vertical aligned metrics */}
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-1 font-bold text-[10px] text-slate-500 uppercase tracking-wider dark:text-muted-foreground/80">
+              <div className="flex items-center gap-1 font-bold text-slate-500 text-xs uppercase tracking-wider dark:text-muted-foreground/80">
                 {t("usedTraffic", "Used Traffic")}
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="font-black text-foreground text-lg tracking-tight">
+                <span className="font-black text-foreground text-xl tracking-tight">
                   <Display
                     type="traffic"
                     unlimited={!item.traffic}
                     value={item.upload + item.download}
                   />
                 </span>
-                <span className="font-semibold text-[10px] text-slate-400 dark:text-muted-foreground/50">
+                <span className="font-semibold text-[11px] text-slate-400 dark:text-muted-foreground/50">
                   /{" "}
                   {item.traffic ? (
                     <Display type="traffic" value={item.traffic} />
@@ -432,7 +432,7 @@ function SubscriptionCard({
             {/* Remaining tag */}
             {!!item.traffic && (
               <div className="mt-1 flex items-center justify-between">
-                <span className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 font-bold text-[10px] text-blue-700 dark:border-primary/20 dark:bg-primary/10 dark:text-primary">
+                <span className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 font-bold text-[11px] text-blue-700 dark:border-primary/20 dark:bg-primary/10 dark:text-primary">
                   {t("remaining", "Remaining")}:{" "}
                   <Display
                     type="traffic"
@@ -444,17 +444,17 @@ function SubscriptionCard({
                 </span>
 
                 {/* Upload & Download inline indicators */}
-                <div className="flex items-center gap-2 font-medium text-[9px] text-slate-500 dark:text-muted-foreground/85">
+                <div className="flex items-center gap-2 font-medium text-[10px] text-slate-500 dark:text-muted-foreground/85">
                   <span className="flex items-center gap-0.5">
                     <Icon
-                      className="size-2.5 text-blue-500"
+                      className="size-3 text-blue-500"
                       icon="uil:arrow-down"
                     />
                     <Display type="traffic" value={item.download} />
                   </span>
                   <span className="flex items-center gap-0.5">
                     <Icon
-                      className="size-2.5 text-emerald-500"
+                      className="size-3 text-emerald-500"
                       icon="uil:arrow-up"
                     />
                     <Display type="traffic" value={item.upload} />
@@ -469,9 +469,9 @@ function SubscriptionCard({
         <div className="flex flex-wrap items-center gap-1.5 border-slate-100 border-t pt-3 dark:border-border/20">
           {!isActuallyExpired && item.status !== 4 && (
             <>
-              <span className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 font-bold text-[10px] text-blue-700 dark:border-blue-500/15 dark:bg-blue-500/5 dark:text-blue-400">
+              <span className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-0.5 font-bold text-[11px] text-blue-700 dark:border-blue-500/15 dark:bg-blue-500/5 dark:text-blue-400">
                 <Icon
-                  className="size-3 text-blue-500 dark:text-blue-400/90"
+                  className="size-3.5 text-blue-500 dark:text-blue-400/90"
                   icon="uil:sync"
                 />
                 <span>{t("reset", "Reset")}:</span>
@@ -485,9 +485,9 @@ function SubscriptionCard({
                 </span>
               </span>
 
-              <span className="inline-flex items-center gap-1 rounded-md border border-amber-100 bg-amber-50 px-2 py-0.5 font-bold text-[10px] text-amber-700 dark:border-orange-500/15 dark:bg-orange-500/5 dark:text-orange-400">
+              <span className="inline-flex items-center gap-1 rounded-md border border-amber-100 bg-amber-50 px-2.5 py-0.5 font-bold text-[11px] text-amber-700 dark:border-orange-500/15 dark:bg-orange-500/5 dark:text-orange-400">
                 <Icon
-                  className="size-3 text-amber-500 dark:text-orange-400/90"
+                  className="size-3.5 text-amber-500 dark:text-orange-400/90"
                   icon="uil:calendar-alt"
                 />
                 <span>{t("expire", "Expire")}:</span>
@@ -519,8 +519,8 @@ function SubscriptionCard({
                     }}
                     text={url}
                   >
-                    <Button className="h-8 flex-1 rounded-xl bg-gradient-to-r from-primary to-indigo-600 font-bold text-white text-xs shadow-xs transition-all hover:brightness-105 active:scale-95">
-                      <Icon className="mr-1.5 size-3.5" icon="uil:copy" />
+                    <Button className="h-8 flex-1 rounded-xl bg-gradient-to-r from-primary to-indigo-600 font-bold text-[13px] text-white shadow-xs transition-all hover:brightness-105 active:scale-95">
+                      <Icon className="mr-1.5 size-4" icon="uil:copy" />
                       {t("copySubscriptionLink", "Copy Subscription Link")}{" "}
                       {idx > 0 ? `#${idx + 1}` : ""}
                     </Button>
@@ -554,7 +554,7 @@ function SubscriptionCard({
 
                 {/* Micro capsule grid of client imports */}
                 <div className="space-y-1.5">
-                  <div className="font-semibold text-[10px] text-slate-500 uppercase tracking-wider dark:text-muted-foreground/85">
+                  <div className="font-semibold text-[11px] text-slate-500 uppercase tracking-wider dark:text-muted-foreground/85">
                     {t("quickImport", "Quick Import to Client")}
                   </div>
                   <div className="grid grid-cols-2 xs:grid-cols-3 gap-1.5 sm:grid-cols-2 xl:grid-cols-2">
@@ -588,31 +588,31 @@ function SubscriptionCard({
                             onCopy={handleCopy}
                             text={url}
                           >
-                            <div className="group hover:-translate-y-0.5 flex h-8 cursor-pointer items-center justify-between gap-1 rounded-xl border border-slate-100 bg-slate-50/60 px-2 py-1 shadow-xs transition-all duration-200 hover:border-slate-200 hover:bg-slate-100/80 dark:border-border/30 dark:bg-background/40 dark:hover:border-border/60 dark:hover:bg-background">
+                            <div className="group hover:-translate-y-0.5 flex h-8 cursor-pointer items-center justify-between gap-1.5 rounded-xl border border-slate-100 bg-slate-50/60 px-2.5 py-1 shadow-xs transition-all duration-200 hover:border-slate-200 hover:bg-slate-100/80 dark:border-border/30 dark:bg-background/40 dark:hover:border-border/60 dark:hover:bg-background">
                               <div className="flex min-w-0 flex-1 items-center gap-1.5">
                                 {application.icon ? (
-                                  <div className="relative flex size-5.5 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white p-0.5 shadow-xs dark:border-border/20 dark:bg-white/95">
+                                  <div className="relative flex size-6 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white p-0.5 shadow-xs dark:border-border/20 dark:bg-white/95">
                                     <img
                                       alt={application.name}
                                       className="object-contain"
-                                      height={16}
+                                      height={18}
                                       src={application.icon}
-                                      width={16}
+                                      width={18}
                                     />
                                   </div>
                                 ) : (
                                   <div
                                     className={cn(
-                                      "flex size-5.5 shrink-0 items-center justify-center rounded-md text-center text-white shadow-xs",
+                                      "flex size-6 shrink-0 items-center justify-center rounded-md text-center text-white shadow-xs",
                                       appGradient
                                     )}
                                   >
-                                    <span className="font-black text-[6px] uppercase leading-none tracking-tight">
+                                    <span className="font-black text-[7px] uppercase leading-none tracking-tight">
                                       {application.name.substring(0, 3)}
                                     </span>
                                   </div>
                                 )}
-                                <span className="truncate font-bold text-[10px] text-foreground/80 tracking-tight">
+                                <span className="truncate font-bold text-[11px] text-foreground/80 tracking-tight">
                                   {application.name}
                                 </span>
                               </div>
@@ -628,7 +628,7 @@ function SubscriptionCard({
                                     title={t("download", "Download")}
                                   >
                                     <Icon
-                                      className="size-2.5"
+                                      className="size-3"
                                       icon="uil:download"
                                     />
                                   </a>
@@ -637,7 +637,7 @@ function SubscriptionCard({
                                   className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted"
                                   title={t("copy", "Copy")}
                                 >
-                                  <Icon className="size-2.5" icon="uil:copy" />
+                                  <Icon className="size-3" icon="uil:copy" />
                                 </span>
                               </div>
                             </div>
