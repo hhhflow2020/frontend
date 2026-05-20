@@ -77,6 +77,19 @@ const ACTIVITY_TITLE_KEYS: Record<string, string> = {
   "User logout": "activity.title.userLogout",
 };
 
+const ACTIVITY_SHORT_TITLE_KEYS: Record<string, string> = {
+  "New registration": "activity.shortTitle.newRegistration",
+  "Balance recharged": "activity.shortTitle.balanceRecharged",
+  "Membership opened": "activity.shortTitle.membershipOpened",
+  "Order updated": "activity.shortTitle.orderUpdated",
+  "Subscription pulled": "activity.shortTitle.subscriptionPulled",
+  "Subscription purchased": "activity.shortTitle.subscriptionPurchased",
+  "Subscription renewed": "activity.shortTitle.subscriptionRenewed",
+  "Traffic reset": "activity.shortTitle.trafficReset",
+  "User login": "activity.shortTitle.userLogin",
+  "User logout": "activity.shortTitle.userLogout",
+};
+
 type OnlineRange = "1d" | "7d";
 
 type DashboardRealtimePatch = Partial<
@@ -331,6 +344,10 @@ function RealtimeOverview({
   const monthlyUpload = realtime?.traffic?.monthly_upload ?? 0;
   const monthlyDownload = realtime?.traffic?.monthly_download ?? 0;
   const monthlyTraffic = monthlyUpload + monthlyDownload;
+  const systemRxBps = realtime?.network?.system_rx_bps ?? 0;
+  const systemTxBps = realtime?.network?.system_tx_bps ?? 0;
+  const xrayRxBps = realtime?.network?.xray_rx_bps ?? 0;
+  const xrayTxBps = realtime?.network?.xray_tx_bps ?? 0;
   const onlineUsers = realtime?.online_users ?? 0;
   const totalServers = realtime?.servers.total ?? 0;
   const onlineServers = realtime?.servers.online ?? 0;
@@ -406,7 +423,7 @@ function RealtimeOverview({
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
         <OverviewTile
           icon="uil:exchange-alt"
           label={t("trafficToday", "Traffic today")}
@@ -443,9 +460,23 @@ function RealtimeOverview({
           value={pendingTickets}
         />
         <OverviewTile
+          icon="uil:server"
+          label={t("hostRate", "Host rate")}
+          sub={`↑ ${formatBitrate(systemTxBps)} · ↓ ${formatBitrate(systemRxBps)}`}
+          tone="blue"
+          value={formatBitrate(systemRxBps + systemTxBps)}
+        />
+        <OverviewTile
+          icon="uil:bolt"
+          label={t("xrayRate", "Xray rate")}
+          sub={`↑ ${formatBitrate(xrayTxBps)} · ↓ ${formatBitrate(xrayRxBps)}`}
+          tone="violet"
+          value={formatBitrate(xrayRxBps + xrayTxBps)}
+        />
+        <OverviewTile
           icon="uil:processor"
           label={t("resourceLoad", "Resource load")}
-          sub={`MEM ${formatPercent(realtime?.resources.avg_mem)} · ${t("network", "Network")} ${formatBitrate(realtime?.network.system_rx_bps)}`}
+          sub={`${t("memoryShort", "MEM")} ${formatPercent(realtime?.resources.avg_mem)} · ${t("diskShort", "Disk")} ${formatPercent(realtime?.resources.avg_disk)}`}
           tone="orange"
           value={`CPU ${formatPercent(realtime?.resources.avg_cpu)}`}
         />
@@ -453,13 +484,18 @@ function RealtimeOverview({
 
       <div className="grid items-start gap-3 xl:grid-cols-2">
         <Card className="self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
-          <CardHeader className="flex-row items-center justify-between gap-3 pb-2">
-            <div className="min-w-0">
+          <CardHeader className="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <CardTitle className="truncate text-base">
                 {t("trafficCurve", "Traffic curve")}
               </CardTitle>
-              <div className="mt-1 truncate text-muted-foreground text-xs">
-                {t("today", "Today")} · {formatBytes(todayTraffic)}
+              <div className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-2.5 text-xs">
+                <span className="text-muted-foreground">
+                  {t("today", "Today")}
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {formatBytes(todayTraffic)}
+                </span>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1.5 text-xs">
@@ -556,13 +592,18 @@ function RealtimeOverview({
         </Card>
 
         <Card className="self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
-          <CardHeader className="flex-row items-center justify-between gap-3 pb-2">
-            <div className="min-w-0">
+          <CardHeader className="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <CardTitle className="truncate text-base">
                 {t("onlineCurve", "Online curve")}
               </CardTitle>
-              <div className="mt-1 truncate text-muted-foreground text-xs">
-                {t("onlineNow", "Online now")} · {onlineUsers}
+              <div className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-2.5 text-xs">
+                <span className="text-muted-foreground">
+                  {t("onlineNow", "Online now")}
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {onlineUsers}
+                </span>
               </div>
             </div>
             <Tabs
@@ -716,11 +757,11 @@ function ActivityIcon({ status, type }: { status?: string; type: string }) {
   return (
     <div
       className={cn(
-        "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground",
+        "flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground",
         status ? toneMap[status] : ""
       )}
     >
-      <Icon className="h-3.5 w-3.5" icon={iconMap[type] || "uil:bell"} />
+      <Icon className="h-3 w-3" icon={iconMap[type] || "uil:bell"} />
     </div>
   );
 }
@@ -747,8 +788,31 @@ function LiveActivityCard({
     if (detail === "Balance recharge") {
       return t("activity.detail.balanceRecharge", "Balance recharge");
     }
-    return detail;
+    const normalized = detail?.trim().toLowerCase();
+    if (
+      normalized &&
+      ["email", "mail", "mobile", "phone", "telephone"].includes(normalized)
+    ) {
+      return "";
+    }
+    return detail?.trim() || "";
   };
+  const formatTitle = (
+    item: API.DashboardRealtimeResponse["activities"][number]
+  ) => {
+    const key = ACTIVITY_SHORT_TITLE_KEYS[item.title];
+    if (key) {
+      return t(key, item.title);
+    }
+    const titleKey = ACTIVITY_TITLE_KEYS[item.title];
+    return titleKey ? t(titleKey, item.title) : item.title;
+  };
+  const formatNetworkInfo = (
+    item: API.DashboardRealtimeResponse["activities"][number]
+  ) => ({
+    ip: item.ip?.trim() || "",
+    location: item.location?.trim() || "",
+  });
   const activityTone = (type: string) => {
     const toneMap: Record<string, string> = {
       login: "border-emerald-500/15 bg-emerald-500/10",
@@ -766,14 +830,12 @@ function LiveActivityCard({
   return (
     <Card className="rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
       <CardHeader className="flex-row items-center justify-between gap-3 pb-3">
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <CardTitle className="truncate whitespace-nowrap">
             {t("recentActivity", "Recent Activity")}
           </CardTitle>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
           <Badge
-            className="whitespace-nowrap"
+            className="shrink-0 whitespace-nowrap"
             variant={connected ? "secondary" : "outline"}
           >
             <span
@@ -784,18 +846,21 @@ function LiveActivityCard({
             />
             {connected ? t("live", "Live") : t("reconnecting", "Reconnecting")}
           </Badge>
-          <Badge variant="outline">{activities.length}</Badge>
+          <Badge className="shrink-0" variant="outline">
+            {activities.length}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent>
         {activities.length ? (
           <div className="max-h-[28rem] space-y-1.5 overflow-y-auto pr-1">
             {activities.map((item) => {
-              const titleKey = ACTIVITY_TITLE_KEYS[item.title];
+              const detail = formatDetail(item.detail);
+              const network = formatNetworkInfo(item);
               return (
                 <div
                   className={cn(
-                    "flex h-10 min-w-0 items-center gap-2 overflow-hidden rounded-xl border px-2.5",
+                    "flex h-8 min-w-0 items-center gap-1.5 overflow-hidden rounded-xl border px-2",
                     activityTone(item.type)
                   )}
                   key={item.id}
@@ -803,48 +868,53 @@ function LiveActivityCard({
                   <ActivityIcon status={item.status} type={item.type} />
                   <div className="min-w-0 flex-1 truncate whitespace-nowrap text-[13px]">
                     <span className="whitespace-nowrap font-medium">
-                      {titleKey ? t(titleKey, item.title) : item.title}
+                      {formatTitle(item)}
                     </span>
                     <span className="whitespace-nowrap text-muted-foreground">
                       {" "}
                       · {formatSubject(item.subject)}
-                      {item.detail ? ` · ${formatDetail(item.detail)}` : ""}
                     </span>
-                    {(item as any).ip ? (
+                    {detail ? (
                       <span className="whitespace-nowrap text-muted-foreground">
                         {" "}
-                        · {t("ip", "IP")} {(item as any).ip}
-                      </span>
-                    ) : null}
-                    {(item as any).location ? (
-                      <span className="whitespace-nowrap text-muted-foreground">
-                        {" "}
-                        · {t("location", "Location")} {(item as any).location}
+                        · {detail}
                       </span>
                     ) : null}
                   </div>
-                  {item.amount ? (
-                    <span className="shrink-0 whitespace-nowrap text-muted-foreground text-xs">
-                      <Display type="currency" value={item.amount} />
-                    </span>
+                  {network.ip || network.location ? (
+                    <div className="w-[7.5rem] shrink-0 text-[11px] leading-3">
+                      <div className="truncate font-medium tabular-nums">
+                        {network.ip || "—"}
+                      </div>
+                      <div className="truncate text-muted-foreground">
+                        {network.location || "—"}
+                      </div>
+                    </div>
                   ) : null}
-                  {item.status ? (
-                    <Badge
-                      className="h-6 shrink-0 whitespace-nowrap"
-                      variant={
-                        item.status === "failed" ? "destructive" : "outline"
-                      }
-                    >
-                      {t(`activity.status.${item.status}`, item.status)}
-                    </Badge>
-                  ) : null}
-                  <div className="w-16 shrink-0 whitespace-nowrap text-right text-muted-foreground text-xs">
-                    {item.created_at
-                      ? new Date(item.created_at).toLocaleTimeString(
-                          i18n.language,
-                          { hour: "2-digit", minute: "2-digit" }
-                        )
-                      : "--"}
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {item.amount ? (
+                      <span className="whitespace-nowrap text-muted-foreground text-xs">
+                        <Display type="currency" value={item.amount} />
+                      </span>
+                    ) : null}
+                    {item.status ? (
+                      <Badge
+                        className="h-5 whitespace-nowrap px-1.5 text-[11px]"
+                        variant={
+                          item.status === "failed" ? "destructive" : "outline"
+                        }
+                      >
+                        {t(`activity.status.${item.status}`, item.status)}
+                      </Badge>
+                    ) : null}
+                    <div className="w-10 whitespace-nowrap text-right text-muted-foreground text-xs">
+                      {item.created_at
+                        ? new Date(item.created_at).toLocaleTimeString(
+                            i18n.language,
+                            { hour: "2-digit", minute: "2-digit" }
+                          )
+                        : "--"}
+                    </div>
                   </div>
                 </div>
               );

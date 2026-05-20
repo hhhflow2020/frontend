@@ -28,7 +28,7 @@ function localDateKey() {
   return `${year}-${month}-${day}`;
 }
 
-function MetricTile({
+function MetricChip({
   label,
   tone,
   value,
@@ -38,22 +38,18 @@ function MetricTile({
   value?: number;
 }) {
   const toneMap = {
-    blue: "bg-blue-500/10 text-blue-600 dark:text-blue-300",
-    green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
-    orange: "bg-orange-500/10 text-orange-600 dark:text-orange-300",
-    violet: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
+    blue: "bg-blue-500",
+    green: "bg-emerald-500",
+    orange: "bg-orange-500",
+    violet: "bg-violet-500",
   };
   return (
-    <div className="flex h-11 min-w-0 items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/70 px-3">
-      <div className="flex min-w-0 items-center gap-2">
-        <span className={`size-2 shrink-0 rounded-full ${toneMap[tone]}`} />
-        <span className="truncate whitespace-nowrap text-muted-foreground text-xs">
-          {label}
-        </span>
-      </div>
-      <div className="shrink-0 font-semibold text-sm tabular-nums">
-        {value || 0}
-      </div>
+    <div className="inline-flex h-7 min-w-0 items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-2.5 text-xs">
+      <span className={`size-1.5 shrink-0 rounded-full ${toneMap[tone]}`} />
+      <span className="truncate whitespace-nowrap text-muted-foreground">
+        {label}
+      </span>
+      <div className="shrink-0 font-semibold tabular-nums">{value || 0}</div>
     </div>
   );
 }
@@ -121,144 +117,141 @@ export function UserStatisticsCard({
   return (
     <Card className="self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
       <CardHeader className="pb-0">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <CardTitle className="min-w-0 shrink truncate text-xl">
-              {t("userGrowth", "User Growth")}
-            </CardTitle>
-            <div className="flex h-9 shrink-0 items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3">
-              <span className="whitespace-nowrap text-muted-foreground text-xs">
-                {t("todayRegister", "Today Register")}
-              </span>
-              <span className="whitespace-nowrap font-semibold text-base tabular-nums">
-                {todayRegister}
-              </span>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <CardTitle className="min-w-0 shrink truncate text-xl">
+                {t("userGrowth", "User Growth")}
+              </CardTitle>
+              <div className="flex h-8 shrink-0 items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3">
+                <span className="whitespace-nowrap text-muted-foreground text-xs">
+                  {t("todayRegister", "Today Register")}
+                </span>
+                <span className="whitespace-nowrap font-semibold text-sm tabular-nums">
+                  {todayRegister}
+                </span>
+              </div>
             </div>
+            <Tabs
+              onValueChange={(value) => setPeriod(value as Period)}
+              value={period}
+            >
+              <TabsList>
+                <TabsTrigger value="7d">{t("last7Days", "7 days")}</TabsTrigger>
+                <TabsTrigger value="30d">
+                  {t("last30Days", "30 days")}
+                </TabsTrigger>
+                <TabsTrigger value="1y">{t("lastYear", "1 year")}</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-          <Tabs
-            onValueChange={(value) => setPeriod(value as Period)}
-            value={period}
-          >
-            <TabsList>
-              <TabsTrigger value="7d">{t("last7Days", "7 days")}</TabsTrigger>
-              <TabsTrigger value="30d">
-                {t("last30Days", "30 days")}
-              </TabsTrigger>
-              <TabsTrigger value="1y">{t("lastYear", "1 year")}</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-5">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
-          <div className="h-72">
-            {hasData ? (
-              <ChartContainer
-                className="h-full w-full"
-                config={{
-                  membership: {
-                    label: t("membershipOpened", "Membership"),
-                    color: "#AF52DE",
-                  },
-                  new_purchase: {
-                    label: t("newPurchase", "New Purchase"),
-                    color: "#0A84FF",
-                  },
-                  register: {
-                    label: t("register", "Register"),
-                    color: "#34C759",
-                  },
-                  renewal: {
-                    label: t("repurchase", "Repurchase"),
-                    color: "#FF9F0A",
-                  },
-                }}
-              >
-                <LineChart data={chartData} margin={{ left: 8, right: 12 }}>
-                  <XAxis
-                    axisLine={false}
-                    dataKey="date"
-                    minTickGap={22}
-                    tickFormatter={(value) =>
-                      new Date(String(value)).toLocaleDateString(
-                        i18n.language,
-                        {
-                          day: "numeric",
-                          month: "short",
-                        }
-                      )
-                    }
-                    tickLine={false}
-                    tickMargin={10}
-                  />
-                  <YAxis
-                    allowDecimals={false}
-                    axisLine={false}
-                    tickLine={false}
-                    width={28}
-                  />
-                  <ChartTooltip
-                    content={<ChartTooltipContent />}
-                    cursor={{ stroke: "hsl(var(--border))" }}
-                  />
-                  <Line
-                    dataKey="register"
-                    dot={false}
-                    stroke="#34C759"
-                    strokeWidth={2.2}
-                    type="monotone"
-                  />
-                  <Line
-                    dataKey="membership"
-                    dot={false}
-                    stroke="#AF52DE"
-                    strokeWidth={2.2}
-                    type="monotone"
-                  />
-                  <Line
-                    dataKey="new_purchase"
-                    dot={false}
-                    stroke="#0A84FF"
-                    strokeWidth={2.2}
-                    type="monotone"
-                  />
-                  <Line
-                    dataKey="renewal"
-                    dot={false}
-                    stroke="#FF9F0A"
-                    strokeWidth={2.2}
-                    type="monotone"
-                  />
-                </LineChart>
-              </ChartContainer>
-            ) : (
-              <EmptyChartState
-                message={t("empty.noAudienceData", "No audience data yet.")}
-              />
-            )}
-          </div>
-          <div className="grid grid-cols-2 content-start gap-2 xl:grid-cols-1 xl:self-start">
-            <MetricTile
+          <div className="flex min-w-0 flex-wrap gap-2">
+            <MetricChip
               label={t("register", "Register")}
               tone="green"
               value={todayRegister}
             />
-            <MetricTile
+            <MetricChip
               label={t("membershipOpened", "Membership")}
               tone="violet"
               value={todayMembership}
             />
-            <MetricTile
+            <MetricChip
               label={t("newPurchase", "New Purchase")}
               tone="blue"
               value={todayNew}
             />
-            <MetricTile
+            <MetricChip
               label={t("repurchase", "Repurchase")}
               tone="orange"
               value={todayRenewal}
             />
           </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-4">
+        <div className="h-72">
+          {hasData ? (
+            <ChartContainer
+              className="h-full w-full"
+              config={{
+                membership: {
+                  label: t("membershipOpened", "Membership"),
+                  color: "#AF52DE",
+                },
+                new_purchase: {
+                  label: t("newPurchase", "New Purchase"),
+                  color: "#0A84FF",
+                },
+                register: {
+                  label: t("register", "Register"),
+                  color: "#34C759",
+                },
+                renewal: {
+                  label: t("repurchase", "Repurchase"),
+                  color: "#FF9F0A",
+                },
+              }}
+            >
+              <LineChart data={chartData} margin={{ left: 8, right: 12 }}>
+                <XAxis
+                  axisLine={false}
+                  dataKey="date"
+                  minTickGap={22}
+                  tickFormatter={(value) =>
+                    new Date(String(value)).toLocaleDateString(i18n.language, {
+                      day: "numeric",
+                      month: "short",
+                    })
+                  }
+                  tickLine={false}
+                  tickMargin={10}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  axisLine={false}
+                  tickLine={false}
+                  width={28}
+                />
+                <ChartTooltip
+                  content={<ChartTooltipContent />}
+                  cursor={{ stroke: "hsl(var(--border))" }}
+                />
+                <Line
+                  dataKey="register"
+                  dot={false}
+                  stroke="#34C759"
+                  strokeWidth={2.2}
+                  type="monotone"
+                />
+                <Line
+                  dataKey="membership"
+                  dot={false}
+                  stroke="#AF52DE"
+                  strokeWidth={2.2}
+                  type="monotone"
+                />
+                <Line
+                  dataKey="new_purchase"
+                  dot={false}
+                  stroke="#0A84FF"
+                  strokeWidth={2.2}
+                  type="monotone"
+                />
+                <Line
+                  dataKey="renewal"
+                  dot={false}
+                  stroke="#FF9F0A"
+                  strokeWidth={2.2}
+                  type="monotone"
+                />
+              </LineChart>
+            </ChartContainer>
+          ) : (
+            <EmptyChartState
+              message={t("empty.noAudienceData", "No audience data yet.")}
+            />
+          )}
         </div>
       </CardContent>
     </Card>

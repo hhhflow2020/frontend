@@ -28,6 +28,18 @@
       "userLogin": "用户登录",
       "userLogout": "用户登出"
     },
+    "shortTitle": {
+      "newRegistration": "注册",
+      "balanceRecharged": "充值",
+      "membershipOpened": "会员卡",
+      "orderUpdated": "订单",
+      "subscriptionPulled": "拉取订阅",
+      "subscriptionPurchased": "新购",
+      "subscriptionRenewed": "续费",
+      "trafficReset": "重置流量",
+      "userLogin": "登录",
+      "userLogout": "登出"
+    },
     "unknownUser": "未知用户"
   },
   "alerts": {
@@ -53,6 +65,7 @@
   "currentlyOnline": "当前在线",
   "awaitingAction": "等待处理",
   "downloadShort": "下行",
+  "diskShort": "磁盘",
   "empty": {
     "moreAudienceHistory": "需要更多用户历史数据才能绘制趋势。",
     "moreRevenueHistory": "需要更多收入历史数据才能绘制趋势。",
@@ -63,6 +76,7 @@
     "noTrafficData": "暂无流量数据。"
   },
   "healthy": "运行正常",
+  "hostRate": "主机速率",
   "inboundShort": "入",
   "lastUpdated": "最后更新",
   "last1Day": "近 1 天",
@@ -72,6 +86,7 @@
   "location": "地理位置",
   "ip": "IP",
   "maxResource": "最高",
+  "memoryShort": "MEM",
   "month": "月",
   "monthTraffic": "本月用量",
   "membershipOpened": "会员卡",
@@ -134,6 +149,7 @@
   "userTitle": "用户统计",
   "userTraffic": "用户用量",
   "workOrders": "待办工单",
+  "xrayRate": "Xray 速率",
   "xrayRunning": "Xray 运行中",
   "yesterday": "昨日"
 }

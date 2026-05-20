@@ -28,6 +28,18 @@
       "userLogin": "User login",
       "userLogout": "User logout"
     },
+    "shortTitle": {
+      "newRegistration": "Register",
+      "balanceRecharged": "Recharge",
+      "membershipOpened": "Membership",
+      "orderUpdated": "Order",
+      "subscriptionPulled": "Pull",
+      "subscriptionPurchased": "New order",
+      "subscriptionRenewed": "Renewal",
+      "trafficReset": "Reset traffic",
+      "userLogin": "Login",
+      "userLogout": "Logout"
+    },
     "unknownUser": "Unknown user"
   },
   "alerts": {
@@ -53,6 +65,7 @@
   "currentlyOnline": "Currently Online",
   "awaitingAction": "Awaiting action",
   "downloadShort": "Down",
+  "diskShort": "Disk",
   "empty": {
     "moreAudienceHistory": "More audience history is needed to draw a trend.",
     "moreRevenueHistory": "More revenue history is needed to draw a trend.",
@@ -63,6 +76,7 @@
     "noTrafficData": "No traffic data yet."
   },
   "healthy": "Healthy",
+  "hostRate": "Host rate",
   "inboundShort": "In",
   "lastUpdated": "Last updated",
   "last1Day": "Last 1 day",
@@ -72,6 +86,7 @@
   "location": "Location",
   "ip": "IP",
   "maxResource": "Max",
+  "memoryShort": "MEM",
   "month": "Month",
   "monthTraffic": "Month usage",
   "membershipOpened": "Membership",
@@ -134,6 +149,7 @@
   "userTitle": "User Statistics",
   "userTraffic": "User usage",
   "workOrders": "Work orders",
+  "xrayRate": "Xray rate",
   "xrayRunning": "Xray running",
   "yesterday": "Yesterday"
 }

@@ -34,7 +34,7 @@ function localDateKey() {
   return `${year}-${month}-${day}`;
 }
 
-function MetricTile({
+function MetricChip({
   label,
   tone,
   value,
@@ -44,19 +44,17 @@ function MetricTile({
   value?: number;
 }) {
   const toneMap = {
-    blue: "bg-blue-500/10 text-blue-600 dark:text-blue-300",
-    green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
-    violet: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
+    blue: "bg-blue-500",
+    green: "bg-emerald-500",
+    violet: "bg-violet-500",
   };
   return (
-    <div className="flex h-10 min-w-0 items-center justify-between gap-2 rounded-xl border border-border/60 bg-background/70 px-2.5">
-      <div className="flex min-w-0 items-center gap-2">
-        <span className={`size-2 shrink-0 rounded-full ${toneMap[tone]}`} />
-        <span className="truncate whitespace-nowrap text-[11px] text-muted-foreground">
-          {label}
-        </span>
-      </div>
-      <div className="shrink-0 truncate font-semibold text-xs tabular-nums">
+    <div className="inline-flex h-7 min-w-0 items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-2.5 text-xs">
+      <span className={`size-1.5 shrink-0 rounded-full ${toneMap[tone]}`} />
+      <span className="truncate whitespace-nowrap text-muted-foreground">
+        {label}
+      </span>
+      <div className="shrink-0 font-semibold tabular-nums">
         <Display type="currency" value={value || 0} />
       </div>
     </div>
@@ -125,147 +123,144 @@ export function RevenueStatisticsCard({
   return (
     <Card className="self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
       <CardHeader className="pb-0">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <CardTitle className="min-w-0 shrink truncate text-xl">
-              {t("revenueTrend", "Revenue Trend")}
-            </CardTitle>
-            <div className="flex h-9 shrink-0 items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3">
-              <span className="whitespace-nowrap text-muted-foreground text-xs">
-                {t("todayRevenue", "Today Revenue")}
-              </span>
-              <span className="whitespace-nowrap font-semibold text-base tabular-nums">
-                <Display type="currency" value={todayRevenue} />
-              </span>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <CardTitle className="min-w-0 shrink truncate text-xl">
+                {t("revenueTrend", "Revenue Trend")}
+              </CardTitle>
+              <div className="flex h-8 shrink-0 items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3">
+                <span className="whitespace-nowrap text-muted-foreground text-xs">
+                  {t("todayRevenue", "Today Revenue")}
+                </span>
+                <span className="whitespace-nowrap font-semibold text-sm tabular-nums">
+                  <Display type="currency" value={todayRevenue} />
+                </span>
+              </div>
             </div>
+            <Tabs
+              onValueChange={(value) => setPeriod(value as Period)}
+              value={period}
+            >
+              <TabsList>
+                <TabsTrigger value="7d">{t("last7Days", "7 days")}</TabsTrigger>
+                <TabsTrigger value="30d">
+                  {t("last30Days", "30 days")}
+                </TabsTrigger>
+                <TabsTrigger value="1y">{t("lastYear", "1 year")}</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-          <Tabs
-            onValueChange={(value) => setPeriod(value as Period)}
-            value={period}
-          >
-            <TabsList>
-              <TabsTrigger value="7d">{t("last7Days", "7 days")}</TabsTrigger>
-              <TabsTrigger value="30d">
-                {t("last30Days", "30 days")}
-              </TabsTrigger>
-              <TabsTrigger value="1y">{t("lastYear", "1 year")}</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-5">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_172px]">
-          <div className="h-72">
-            {hasData ? (
-              <ChartContainer
-                className="h-full w-full"
-                config={{
-                  membership: {
-                    label: t("membershipOpened", "Membership"),
-                    color: "#AF52DE",
-                  },
-                  new_purchase: {
-                    label: t("newPurchase", "New Purchase"),
-                    color: "#0A84FF",
-                  },
-                  renewal: {
-                    label: t("repurchase", "Repurchase"),
-                    color: "#34C759",
-                  },
-                  total: {
-                    label: t("totalIncome", "Total Income"),
-                    color: "hsl(var(--foreground))",
-                  },
-                }}
-              >
-                <LineChart data={chartData} margin={{ left: 8, right: 12 }}>
-                  <XAxis
-                    axisLine={false}
-                    dataKey="date"
-                    minTickGap={22}
-                    tickFormatter={(value) =>
-                      new Date(String(value)).toLocaleDateString(
-                        i18n.language,
-                        {
-                          day: "numeric",
-                          month: "short",
-                        }
-                      )
-                    }
-                    tickLine={false}
-                    tickMargin={10}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickFormatter={(value) => String(Math.round(Number(value)))}
-                    tickLine={false}
-                    width={34}
-                  />
-                  <ChartTooltip
-                    content={
-                      <ChartTooltipContent
-                        formatter={(value) =>
-                          `$${Number(value || 0).toLocaleString(i18n.language, {
-                            maximumFractionDigits: 2,
-                          })}`
-                        }
-                      />
-                    }
-                    cursor={{ stroke: "hsl(var(--border))" }}
-                  />
-                  <Line
-                    dataKey="total"
-                    dot={false}
-                    stroke="hsl(var(--foreground))"
-                    strokeWidth={2.8}
-                    type="monotone"
-                  />
-                  <Line
-                    dataKey="new_purchase"
-                    dot={false}
-                    stroke="#0A84FF"
-                    strokeWidth={1.8}
-                    type="monotone"
-                  />
-                  <Line
-                    dataKey="renewal"
-                    dot={false}
-                    stroke="#34C759"
-                    strokeWidth={1.8}
-                    type="monotone"
-                  />
-                  <Line
-                    dataKey="membership"
-                    dot={false}
-                    stroke="#AF52DE"
-                    strokeWidth={1.8}
-                    type="monotone"
-                  />
-                </LineChart>
-              </ChartContainer>
-            ) : (
-              <EmptyChartState
-                message={t("empty.noRevenueData", "No revenue data yet.")}
-              />
-            )}
-          </div>
-          <div className="grid grid-cols-3 content-start gap-2 xl:grid-cols-1 xl:self-start">
-            <MetricTile
+          <div className="flex min-w-0 flex-wrap gap-2">
+            <MetricChip
               label={t("newPurchase", "New Purchase")}
               tone="blue"
               value={todayNew}
             />
-            <MetricTile
+            <MetricChip
               label={t("repurchase", "Repurchase")}
               tone="green"
               value={todayRenewal}
             />
-            <MetricTile
+            <MetricChip
               label={t("membershipOpened", "Membership")}
               tone="violet"
               value={todayMembership}
             />
           </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-4">
+        <div className="h-72">
+          {hasData ? (
+            <ChartContainer
+              className="h-full w-full"
+              config={{
+                membership: {
+                  label: t("membershipOpened", "Membership"),
+                  color: "#AF52DE",
+                },
+                new_purchase: {
+                  label: t("newPurchase", "New Purchase"),
+                  color: "#0A84FF",
+                },
+                renewal: {
+                  label: t("repurchase", "Repurchase"),
+                  color: "#34C759",
+                },
+                total: {
+                  label: t("totalIncome", "Total Income"),
+                  color: "hsl(var(--foreground))",
+                },
+              }}
+            >
+              <LineChart data={chartData} margin={{ left: 8, right: 12 }}>
+                <XAxis
+                  axisLine={false}
+                  dataKey="date"
+                  minTickGap={22}
+                  tickFormatter={(value) =>
+                    new Date(String(value)).toLocaleDateString(i18n.language, {
+                      day: "numeric",
+                      month: "short",
+                    })
+                  }
+                  tickLine={false}
+                  tickMargin={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickFormatter={(value) => String(Math.round(Number(value)))}
+                  tickLine={false}
+                  width={34}
+                />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value) =>
+                        `$${Number(value || 0).toLocaleString(i18n.language, {
+                          maximumFractionDigits: 2,
+                        })}`
+                      }
+                    />
+                  }
+                  cursor={{ stroke: "hsl(var(--border))" }}
+                />
+                <Line
+                  dataKey="total"
+                  dot={false}
+                  stroke="hsl(var(--foreground))"
+                  strokeWidth={2.8}
+                  type="monotone"
+                />
+                <Line
+                  dataKey="new_purchase"
+                  dot={false}
+                  stroke="#0A84FF"
+                  strokeWidth={1.8}
+                  type="monotone"
+                />
+                <Line
+                  dataKey="renewal"
+                  dot={false}
+                  stroke="#34C759"
+                  strokeWidth={1.8}
+                  type="monotone"
+                />
+                <Line
+                  dataKey="membership"
+                  dot={false}
+                  stroke="#AF52DE"
+                  strokeWidth={1.8}
+                  type="monotone"
+                />
+              </LineChart>
+            </ChartContainer>
+          ) : (
+            <EmptyChartState
+              message={t("empty.noRevenueData", "No revenue data yet.")}
+            />
+          )}
         </div>
       </CardContent>
     </Card>
