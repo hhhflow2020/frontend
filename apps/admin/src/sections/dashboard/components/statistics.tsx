@@ -1105,7 +1105,11 @@ export default function Statistics() {
             }
             hasFullSnapshot = true;
             lastSeq = messageSeq;
-            setRealtime(message as API.DashboardRealtimeResponse);
+            setRealtime((previous) =>
+              previous
+                ? mergeDashboardRealtime(previous, message)
+                : (message as API.DashboardRealtimeResponse)
+            );
           }
         } catch {
           // Ignore malformed realtime dashboard messages.
