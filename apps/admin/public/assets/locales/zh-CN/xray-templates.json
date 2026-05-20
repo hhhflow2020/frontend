@@ -1,5 +1,5 @@
 {
-  "title": "Xray 模版",
+  "title": "Xray 模板",
   "type": {
     "inbound": "入站",
     "outbound": "出站",
@@ -37,7 +37,7 @@
     "updated": "已更新",
     "deleted": "已删除",
     "bound": "已保存",
-    "deleteTitle": "删除该模版？",
+    "deleteTitle": "删除该模板？",
     "deleteDescription": "此操作不可撤销。"
   },
   "tabs": {
@@ -47,10 +47,10 @@
     "subscription": "订阅"
   },
   "form": {
-    "createTitle": "创建 Xray 模版",
-    "editTitle": "编辑 Xray 模版",
+    "createTitle": "创建 Xray 模板",
+    "editTitle": "编辑 Xray 模板",
     "name": "名称",
-    "namePlaceholder": "模版名称",
+    "namePlaceholder": "模板名称",
     "type": "类型",
     "description": "描述",
     "descriptionPlaceholder": "可选备注",
@@ -190,7 +190,7 @@
     "xver": "XVer"
   },
   "bind": {
-    "title": "绑定 Xray 模版",
+    "title": "绑定 Xray 模板",
     "preview": "预览",
     "variablesPreview": "变量",
     "alias": "别名",
@@ -201,6 +201,6 @@
     "variablesDesc": "变量 JSON 必须是对象。它会覆盖模板默认变量，并可差异化覆盖常用配置字段，如 port、tag、listen、transport、security、sni、host、path、service_name。",
     "subscriptionEnabled": "加入订阅",
     "subscriptionVariables": "订阅变量",
-    "empty": "暂无模版"
+    "empty": "暂无模板"
   }
 }
