@@ -15,13 +15,6 @@ import {
 } from "@workspace/ui/components/form";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
-import {
   Sheet,
   SheetContent,
   SheetFooter,
@@ -49,7 +42,6 @@ const nodeConfigSchema = z.object({
   node_pull_interval: z.number().optional(),
   node_push_interval: z.number().optional(),
   traffic_report_threshold: z.number().optional(),
-  ip_strategy: z.enum(["prefer_ipv4", "prefer_ipv6"]).optional(),
 });
 type NodeConfigFormData = z.infer<typeof nodeConfigSchema>;
 
@@ -74,7 +66,6 @@ export default function ServerConfig() {
       node_pull_interval: undefined,
       node_push_interval: undefined,
       traffic_report_threshold: undefined,
-      ip_strategy: "prefer_ipv4",
     },
   });
 
@@ -87,9 +78,6 @@ export default function ServerConfig() {
         traffic_report_threshold: cfgResp.traffic_report_threshold as
           | number
           | undefined,
-        ip_strategy:
-          (cfgResp.ip_strategy as "prefer_ipv4" | "prefer_ipv6" | undefined) ||
-          "prefer_ipv4",
       });
     }
   }, [cfgResp, form]);
@@ -97,8 +85,12 @@ export default function ServerConfig() {
   async function onSubmit(values: NodeConfigFormData) {
     setSaving(true);
     try {
-      await updateNodeConfig({
+      const currentConfig = {
         ...(cfgResp || {}),
+        ip_strategy: undefined,
+      } as Partial<API.NodeConfig>;
+      await updateNodeConfig({
+        ...currentConfig,
         ...values,
       } as API.NodeConfig);
       toast.success(t("server_config.saveSuccess", "Saved successfully"));
@@ -300,50 +292,6 @@ export default function ServerConfig() {
                       {t(
                         "server_config.fields.traffic_report_threshold_desc",
                         "Set the minimum threshold for traffic reporting."
-                      )}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="ip_strategy"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {t("server_config.fields.ip_strategy", "IP Strategy")}
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={t(
-                              "server_config.fields.ip_strategy_placeholder",
-                              "Select IP strategy"
-                            )}
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="prefer_ipv4">
-                          {t(
-                            "server_config.fields.ip_strategy_ipv4",
-                            "Prefer IPv4"
-                          )}
-                        </SelectItem>
-                        <SelectItem value="prefer_ipv6">
-                          {t(
-                            "server_config.fields.ip_strategy_ipv6",
-                            "Prefer IPv6"
-                          )}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      {t(
-                        "server_config.fields.ip_strategy_desc",
-                        "Choose IP version preference for network connections"
                       )}
                     </FormDescription>
                     <FormMessage />

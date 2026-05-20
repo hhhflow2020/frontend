@@ -49,14 +49,14 @@ function MetricTile({
     violet: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
   };
   return (
-    <div className="flex h-11 min-w-0 items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/70 px-3">
+    <div className="flex h-10 min-w-0 items-center justify-between gap-2 rounded-xl border border-border/60 bg-background/70 px-2.5">
       <div className="flex min-w-0 items-center gap-2">
         <span className={`size-2 shrink-0 rounded-full ${toneMap[tone]}`} />
-        <span className="truncate whitespace-nowrap text-muted-foreground text-xs">
+        <span className="truncate whitespace-nowrap text-[11px] text-muted-foreground">
           {label}
         </span>
       </div>
-      <div className="shrink-0 truncate font-semibold text-sm tabular-nums">
+      <div className="shrink-0 truncate font-semibold text-xs tabular-nums">
         <Display type="currency" value={value || 0} />
       </div>
     </div>
@@ -154,7 +154,7 @@ export function RevenueStatisticsCard({
         </div>
       </CardHeader>
       <CardContent className="pt-5">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_172px]">
           <div className="h-72">
             {hasData ? (
               <ChartContainer

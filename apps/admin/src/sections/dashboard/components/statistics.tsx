@@ -1098,7 +1098,7 @@ export default function Statistics() {
     <div className="w-full space-y-3">
       <RealtimeOverview connected={realtimeConnected} realtime={realtime} />
 
-      <div className="grid items-start gap-3 2xl:grid-cols-[minmax(0,1fr)_minmax(440px,520px)]">
+      <div className="grid items-start gap-3 2xl:grid-cols-[minmax(0,1fr)_minmax(520px,640px)]">
         <div className="space-y-3">
           <div className="grid items-start gap-3">
             <RevenueStatisticsCard realtime={realtime} />
