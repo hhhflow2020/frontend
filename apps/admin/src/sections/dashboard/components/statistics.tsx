@@ -12,7 +12,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@workspace/ui/components/chart";
-import { Separator } from "@workspace/ui/components/separator";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { Icon } from "@workspace/ui/composed/icon";
 import { getAuthorizationToken } from "@workspace/ui/lib/auth-token";
@@ -21,19 +20,8 @@ import { cn } from "@workspace/ui/lib/utils";
 import { formatBytes } from "@workspace/ui/utils/formatting";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  LabelList,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Line, LineChart, XAxis, YAxis } from "recharts";
 import { Display } from "@/components/display";
-import { UserSubscribeDetail } from "@/sections/user/user-detail";
 import { RevenueStatisticsCard } from "./revenue-statistics-card";
 import { UserStatisticsCard } from "./user-statistics-card";
 
@@ -48,8 +36,18 @@ function buildDashboardRealtimeWsUrl() {
 }
 
 function formatBitrate(value?: number) {
-  if (!value) return "0 bps";
-  return `${formatBytes(value / 8).replace("B", "b")}ps`;
+  const bitrate = Math.max(0, Number(value) || 0);
+  if (bitrate === 0) return "0 bps";
+
+  const units = ["bps", "Kbps", "Mbps", "Gbps", "Tbps"];
+  let scaled = bitrate;
+  let unitIndex = 0;
+  while (scaled >= 1000 && unitIndex < units.length - 1) {
+    scaled /= 1000;
+    unitIndex += 1;
+  }
+  const digits = unitIndex === 0 ? 0 : scaled >= 100 ? 0 : scaled >= 10 ? 1 : 2;
+  return `${scaled.toFixed(digits)} ${units[unitIndex]}`;
 }
 
 function formatPercent(value?: number) {
@@ -91,6 +89,7 @@ const ACTIVITY_SHORT_TITLE_KEYS: Record<string, string> = {
 };
 
 type OnlineRange = "1d" | "7d";
+type NetworkRange = "1h" | "5h" | "24h" | "72h";
 
 type DashboardRealtimePatch = Partial<
   Omit<
@@ -98,6 +97,7 @@ type DashboardRealtimePatch = Partial<
     | "business"
     | "connections"
     | "network"
+    | "network_series"
     | "online_user_series"
     | "resources"
     | "servers"
@@ -108,6 +108,7 @@ type DashboardRealtimePatch = Partial<
   connections?: Partial<API.DashboardRealtimeResponse["connections"]>;
   full?: boolean;
   network?: Partial<API.DashboardRealtimeResponse["network"]>;
+  network_series?: API.DashboardRealtimeResponse["network_series"];
   online_user_series?: Partial<
     API.DashboardRealtimeResponse["online_user_series"]
   >;
@@ -117,6 +118,14 @@ type DashboardRealtimePatch = Partial<
 };
 
 const MINUTE_MS = 60 * 1000;
+const RATE_BUCKET_MS = 5 * 1000;
+const NETWORK_RANGE_MS: Record<NetworkRange, number> = {
+  "1h": 60 * 60 * 1000,
+  "5h": 5 * 60 * 60 * 1000,
+  "24h": 24 * 60 * 60 * 1000,
+  "72h": 72 * 60 * 60 * 1000,
+};
+const NETWORK_SERIES_MS = NETWORK_RANGE_MS["72h"];
 const ACTIVITY_LIMIT = 50;
 
 function appendRealtimeValuePoint(
@@ -157,6 +166,42 @@ function appendRealtimeTrafficPoint(
   return next.filter((item) => item.timestamp >= cutoff);
 }
 
+function networkPointFromNetwork(
+  timestamp: number,
+  network: API.DashboardRealtimeResponse["network"]
+): API.DashboardRealtimeResponse["network_series"][number] {
+  return {
+    timestamp,
+    system_rx_bps: network.system_rx_bps || 0,
+    system_tx_bps: network.system_tx_bps || 0,
+    xray_rx_bps: network.xray_rx_bps || 0,
+    xray_tx_bps: network.xray_tx_bps || 0,
+  };
+}
+
+function appendRealtimeNetworkPoints(
+  points: API.DashboardRealtimeResponse["network_series"] | undefined,
+  incoming: API.DashboardRealtimeResponse["network_series"] | undefined,
+  cutoff: number
+) {
+  const next = [...(points || [])];
+  for (const point of incoming || []) {
+    const index = next.findIndex(
+      (item) =>
+        Math.floor(item.timestamp / RATE_BUCKET_MS) ===
+        Math.floor(point.timestamp / RATE_BUCKET_MS)
+    );
+    if (index >= 0) {
+      next[index] = point;
+    } else {
+      next.push(point);
+    }
+  }
+  return next
+    .filter((item) => item.timestamp >= cutoff)
+    .sort((a, b) => a.timestamp - b.timestamp);
+}
+
 function mergeDashboardRealtime(
   previous: API.DashboardRealtimeResponse,
   patch: DashboardRealtimePatch
@@ -169,6 +214,14 @@ function mergeDashboardRealtime(
     ...previous.traffic,
     ...(patch.traffic || {}),
   };
+  const nextNetwork = {
+    ...previous.network,
+    ...(patch.network || {}),
+  };
+  const nextNetworkSeries =
+    patch.network_series && patch.network_series.length > 0
+      ? patch.network_series
+      : [networkPointFromNetwork(updatedAt, nextNetwork)];
 
   return {
     ...previous,
@@ -183,10 +236,12 @@ function mergeDashboardRealtime(
       ...previous.connections,
       ...(patch.connections || {}),
     },
-    network: {
-      ...previous.network,
-      ...(patch.network || {}),
-    },
+    network: nextNetwork,
+    network_series: appendRealtimeNetworkPoints(
+      previous.network_series,
+      nextNetworkSeries,
+      updatedAt - NETWORK_SERIES_MS
+    ),
     online_user_series: {
       last_7_days: appendRealtimeValuePoint(
         patch.online_user_series?.last_7_days ??
@@ -250,30 +305,40 @@ function ensureValueSeries(
   ];
 }
 
-function ensureTrafficSeries(
-  points: API.DashboardRealtimeResponse["traffic"]["today_series"] | undefined,
-  upload: number,
-  download: number,
-  updatedAt?: number
+function ensureNetworkRateSeries(
+  points: API.DashboardRealtimeResponse["network_series"] | undefined,
+  network: API.DashboardRealtimeResponse["network"] | undefined,
+  updatedAt: number | undefined,
+  spanMs: number
 ) {
+  const now = updatedAt || Date.now();
+  const cutoff = now - spanMs;
   const data =
-    points?.map((item) => ({
-      download: item.download,
-      timestamp: item.timestamp,
-      total: item.total,
-      upload: item.upload,
-    })) || [];
+    points
+      ?.filter((item) => item.timestamp >= cutoff)
+      .map((item) => ({
+        systemRxBps: item.system_rx_bps,
+        systemTxBps: item.system_tx_bps,
+        timestamp: item.timestamp,
+        xrayRxBps: item.xray_rx_bps,
+        xrayTxBps: item.xray_tx_bps,
+      })) || [];
   if (data.length > 1) return data;
   const current = data[0] || {
-    download,
-    timestamp: updatedAt || Date.now(),
-    total: upload + download,
-    upload,
+    systemRxBps: network?.system_rx_bps || 0,
+    systemTxBps: network?.system_tx_bps || 0,
+    timestamp: now,
+    xrayRxBps: network?.xray_rx_bps || 0,
+    xrayTxBps: network?.xray_tx_bps || 0,
   };
-  const start = new Date(current.timestamp);
-  start.setHours(0, 0, 0, 0);
   return [
-    { download: 0, timestamp: start.getTime(), total: 0, upload: 0 },
+    {
+      systemRxBps: 0,
+      systemTxBps: 0,
+      timestamp: Math.max(0, current.timestamp - spanMs),
+      xrayRxBps: 0,
+      xrayTxBps: 0,
+    },
     current,
   ];
 }
@@ -316,6 +381,23 @@ function OverviewTile(props: {
   );
 }
 
+function RateMetric(props: { color: string; label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-muted/35 px-3 py-2">
+      <div className="flex min-w-0 items-center gap-2 text-[11px] text-muted-foreground">
+        <span
+          className="size-2 shrink-0 rounded-full"
+          style={{ backgroundColor: props.color }}
+        />
+        <span className="truncate">{props.label}</span>
+      </div>
+      <div className="shrink-0 font-semibold text-sm tabular-nums">
+        {props.value}
+      </div>
+    </div>
+  );
+}
+
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex h-28 items-center justify-center rounded-2xl border border-dashed bg-background/45 px-4 text-center text-muted-foreground text-sm">
@@ -333,6 +415,7 @@ function RealtimeOverview({
 }) {
   const { t, i18n } = useTranslation("dashboard");
   const [onlineRange, setOnlineRange] = useState<OnlineRange>("1d");
+  const [networkRange, setNetworkRange] = useState<NetworkRange>("1h");
   const alerts = realtime?.alerts || [];
   const hasRisk =
     (realtime?.servers.config_failed || 0) > 0 ||
@@ -368,12 +451,26 @@ function RealtimeOverview({
     onlineRange === "1d" ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
     realtime?.updated_at
   );
-  const trafficSeries = ensureTrafficSeries(
-    realtime?.traffic?.today_series,
-    todayUpload,
-    todayDownload,
-    realtime?.updated_at
+  const networkRateSeries = ensureNetworkRateSeries(
+    realtime?.network_series,
+    realtime?.network,
+    realtime?.updated_at,
+    NETWORK_RANGE_MS[networkRange]
   );
+  const networkTimeFormatter = (value: number) => {
+    const date = new Date(Number(value));
+    if (networkRange === "1h" || networkRange === "5h") {
+      return date.toLocaleTimeString(i18n.language, {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+    return date.toLocaleDateString(i18n.language, {
+      day: "numeric",
+      hour: "2-digit",
+      month: "short",
+    });
+  };
   const timeFormatter = (value: number) =>
     new Date(Number(value)).toLocaleDateString(i18n.language, {
       day: "numeric",
@@ -423,7 +520,7 @@ function RealtimeOverview({
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[1.15fr_1.15fr_.9fr_.9fr_.9fr]">
         <OverviewTile
           icon="uil:exchange-alt"
           label={t("trafficToday", "Traffic today")}
@@ -437,13 +534,6 @@ function RealtimeOverview({
           sub={`${t("uploadShort", "Up")} ${formatBytes(monthlyUpload)} · ${t("downloadShort", "Down")} ${formatBytes(monthlyDownload)}`}
           tone="violet"
           value={formatBytes(monthlyTraffic)}
-        />
-        <OverviewTile
-          icon="uil:user-check"
-          label={t("onlineNow", "Online now")}
-          sub={t("realtimeUsers", "Realtime users")}
-          tone="green"
-          value={onlineUsers}
         />
         <OverviewTile
           icon="uil:server-network"
@@ -460,20 +550,6 @@ function RealtimeOverview({
           value={pendingTickets}
         />
         <OverviewTile
-          icon="uil:server"
-          label={t("hostRate", "Host rate")}
-          sub={`↑ ${formatBitrate(systemTxBps)} · ↓ ${formatBitrate(systemRxBps)}`}
-          tone="blue"
-          value={formatBitrate(systemRxBps + systemTxBps)}
-        />
-        <OverviewTile
-          icon="uil:bolt"
-          label={t("xrayRate", "Xray rate")}
-          sub={`↑ ${formatBitrate(xrayTxBps)} · ↓ ${formatBitrate(xrayRxBps)}`}
-          tone="violet"
-          value={formatBitrate(xrayRxBps + xrayTxBps)}
-        />
-        <OverviewTile
           icon="uil:processor"
           label={t("resourceLoad", "Resource load")}
           sub={`${t("memoryShort", "MEM")} ${formatPercent(realtime?.resources.avg_mem)} · ${t("diskShort", "Disk")} ${formatPercent(realtime?.resources.avg_disk)}`}
@@ -482,142 +558,193 @@ function RealtimeOverview({
         />
       </div>
 
-      <div className="grid items-start gap-3 xl:grid-cols-2">
+      <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,.7fr)]">
         <Card className="self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
-          <CardHeader className="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <CardTitle className="truncate text-base">
-                {t("trafficCurve", "Traffic curve")}
-              </CardTitle>
-              <div className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-2.5 text-xs">
-                <span className="text-muted-foreground">
-                  {t("today", "Today")}
-                </span>
-                <span className="font-semibold tabular-nums">
-                  {formatBytes(todayTraffic)}
-                </span>
+          <CardHeader className="gap-3 pb-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <CardTitle className="truncate text-base">
+                    {t("realtimeRateCurve", "Realtime rate")}
+                  </CardTitle>
+                  <span className="inline-flex h-6 items-center rounded-full bg-blue-500/10 px-2 font-medium text-blue-600 text-xs dark:text-blue-300">
+                    {formatBitrate(
+                      systemRxBps + systemTxBps + xrayRxBps + xrayTxBps
+                    )}
+                  </span>
+                </div>
+                <div className="mt-1 text-muted-foreground text-xs">
+                  {t("networkRateHint", "Host and Xray throughput")}
+                </div>
               </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-1.5 text-xs">
-              <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-600 dark:text-emerald-300">
-                {t("uploadShort", "Up")} {formatBytes(todayUpload)}
-              </span>
-              <span className="rounded-full bg-blue-500/10 px-2.5 py-1 font-medium text-blue-600 dark:text-blue-300">
-                {t("downloadShort", "Down")} {formatBytes(todayDownload)}
-              </span>
+              <Tabs
+                onValueChange={(value) =>
+                  setNetworkRange(value as NetworkRange)
+                }
+                value={networkRange}
+              >
+                <TabsList className="h-8">
+                  <TabsTrigger className="h-7 px-2.5" value="1h">
+                    1h
+                  </TabsTrigger>
+                  <TabsTrigger className="h-7 px-2.5" value="5h">
+                    5h
+                  </TabsTrigger>
+                  <TabsTrigger className="h-7 px-2.5" value="24h">
+                    24h
+                  </TabsTrigger>
+                  <TabsTrigger className="h-7 px-2.5" value="72h">
+                    72h
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="h-40">
-              <ChartContainer
-                className="h-full w-full"
-                config={{
-                  total: {
-                    label: t("traffic", "Traffic"),
-                    color: "#0A84FF",
-                  },
-                }}
-              >
-                <AreaChart
-                  data={trafficSeries}
-                  margin={{ bottom: 0, left: 8, right: 12, top: 4 }}
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_13.5rem]">
+              <div className="h-56 rounded-2xl border border-border/50 bg-gradient-to-b from-muted/25 to-transparent px-2 py-3">
+                <ChartContainer
+                  className="h-full w-full"
+                  config={{
+                    total: {
+                      label: t("realtimeRateCurve", "Realtime rate"),
+                      color: "#0A84FF",
+                    },
+                  }}
                 >
-                  <defs>
-                    <linearGradient
-                      id="dashboardTrafficTotal"
-                      x1="0"
-                      x2="0"
-                      y1="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor="#0A84FF"
-                        stopOpacity={0.32}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor="#0A84FF"
-                        stopOpacity={0.02}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    axisLine={false}
-                    dataKey="timestamp"
-                    height={24}
-                    minTickGap={28}
-                    tickFormatter={(value) =>
-                      new Date(Number(value)).toLocaleTimeString(
-                        i18n.language,
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
-                      )
-                    }
-                    tickLine={false}
-                    tickMargin={8}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickFormatter={(value) => formatBytes(Number(value) || 0)}
-                    tickLine={false}
-                    width={54}
-                  />
-                  <ChartTooltip
-                    content={
-                      <ChartTooltipContent
-                        formatter={(value) => formatBytes(Number(value) || 0)}
-                        labelFormatter={(value) =>
-                          new Date(Number(value)).toLocaleTimeString(
-                            i18n.language
-                          )
-                        }
-                      />
-                    }
-                    cursor={{ stroke: "hsl(var(--border))" }}
-                  />
-                  <Area
-                    dataKey="total"
-                    fill="url(#dashboardTrafficTotal)"
-                    stroke="#0A84FF"
-                    strokeWidth={2.5}
-                    type="monotone"
-                  />
-                </AreaChart>
-              </ChartContainer>
+                  <LineChart
+                    data={networkRateSeries}
+                    margin={{ bottom: 0, left: 0, right: 12, top: 6 }}
+                  >
+                    <XAxis
+                      axisLine={false}
+                      dataKey="timestamp"
+                      height={24}
+                      minTickGap={28}
+                      tickFormatter={(value) =>
+                        networkTimeFormatter(Number(value))
+                      }
+                      tickLine={false}
+                      tickMargin={8}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickFormatter={(value) =>
+                        formatBitrate(Number(value) || 0)
+                      }
+                      tickLine={false}
+                      width={58}
+                    />
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          formatter={(value, name) => [
+                            formatBitrate(Number(value) || 0),
+                            t(`rate.${name}`, String(name)),
+                          ]}
+                          labelFormatter={(value) =>
+                            new Date(Number(value)).toLocaleString(
+                              i18n.language
+                            )
+                          }
+                        />
+                      }
+                      cursor={{ stroke: "hsl(var(--border))" }}
+                    />
+                    <Line
+                      dataKey="systemTxBps"
+                      dot={false}
+                      name="systemTxBps"
+                      stroke="#0A84FF"
+                      strokeWidth={2}
+                      type="monotone"
+                    />
+                    <Line
+                      dataKey="systemRxBps"
+                      dot={false}
+                      name="systemRxBps"
+                      stroke="#64D2FF"
+                      strokeWidth={2}
+                      type="monotone"
+                    />
+                    <Line
+                      dataKey="xrayTxBps"
+                      dot={false}
+                      name="xrayTxBps"
+                      stroke="#BF5AF2"
+                      strokeWidth={2}
+                      type="monotone"
+                    />
+                    <Line
+                      dataKey="xrayRxBps"
+                      dot={false}
+                      name="xrayRxBps"
+                      stroke="#FF9F0A"
+                      strokeWidth={2}
+                      type="monotone"
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </div>
+              <div className="grid content-start gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                <RateMetric
+                  color="#0A84FF"
+                  label={t("rate.systemTxBps", "Host up")}
+                  value={formatBitrate(systemTxBps)}
+                />
+                <RateMetric
+                  color="#64D2FF"
+                  label={t("rate.systemRxBps", "Host down")}
+                  value={formatBitrate(systemRxBps)}
+                />
+                <RateMetric
+                  color="#BF5AF2"
+                  label={t("rate.xrayTxBps", "Xray up")}
+                  value={formatBitrate(xrayTxBps)}
+                />
+                <RateMetric
+                  color="#FF9F0A"
+                  label={t("rate.xrayRxBps", "Xray down")}
+                  value={formatBitrate(xrayRxBps)}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="self-start overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
-          <CardHeader className="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <CardTitle className="truncate text-base">
-                {t("onlineCurve", "Online curve")}
-              </CardTitle>
-              <div className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-2.5 text-xs">
-                <span className="text-muted-foreground">
-                  {t("onlineNow", "Online now")}
-                </span>
-                <span className="font-semibold tabular-nums">
-                  {onlineUsers}
-                </span>
+          <CardHeader className="gap-3 pb-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <CardTitle className="truncate text-base">
+                    {t("onlineCurve", "Online curve")}
+                  </CardTitle>
+                  <span className="inline-flex h-6 items-center rounded-full bg-emerald-500/10 px-2 font-medium text-emerald-600 text-xs dark:text-emerald-300">
+                    {onlineUsers}
+                  </span>
+                </div>
+                <div className="mt-1 text-muted-foreground text-xs">
+                  {t("realtimeUsers", "Realtime users")}
+                </div>
               </div>
+              <Tabs
+                onValueChange={(value) => setOnlineRange(value as OnlineRange)}
+                value={onlineRange}
+              >
+                <TabsList className="h-8">
+                  <TabsTrigger className="h-7 px-2.5" value="1d">
+                    {t("last1Day", "1 day")}
+                  </TabsTrigger>
+                  <TabsTrigger className="h-7 px-2.5" value="7d">
+                    {t("last7Days", "7 days")}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
-            <Tabs
-              onValueChange={(value) => setOnlineRange(value as OnlineRange)}
-              value={onlineRange}
-            >
-              <TabsList>
-                <TabsTrigger value="1d">{t("last1Day", "1 day")}</TabsTrigger>
-                <TabsTrigger value="7d">{t("last7Days", "7 days")}</TabsTrigger>
-              </TabsList>
-            </Tabs>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="h-40">
+            <div className="h-56 rounded-2xl border border-border/50 bg-gradient-to-b from-muted/25 to-transparent px-2 py-3">
               <ChartContainer
                 className="h-full w-full"
                 config={{
@@ -629,7 +756,7 @@ function RealtimeOverview({
               >
                 <LineChart
                   data={onlineSeries}
-                  margin={{ bottom: 0, left: 6, right: 8, top: 4 }}
+                  margin={{ bottom: 0, left: 4, right: 8, top: 6 }}
                 >
                   <XAxis
                     axisLine={false}
@@ -638,6 +765,7 @@ function RealtimeOverview({
                     minTickGap={24}
                     tickFormatter={(value) => timeFormatter(Number(value))}
                     tickLine={false}
+                    tickMargin={8}
                   />
                   <YAxis
                     allowDecimals={false}
@@ -1009,24 +1137,24 @@ export default function Statistics() {
       nodes: {
         today:
           realtime?.traffic?.server_ranking_today?.map((item) => ({
-            name: item.name,
+            name: String(item.name),
             traffic: item.download + item.upload,
           })) || [],
         month:
           (realtime?.traffic?.server_ranking_monthly || [])?.map((item) => ({
-            name: item.name,
+            name: String(item.name),
             traffic: item.download + item.upload,
           })) || [],
       },
       users: {
         today:
           realtime?.traffic?.user_ranking_today?.map((item) => ({
-            name: item.sid,
+            name: String(item.sid),
             traffic: item.download + item.upload,
           })) || [],
         month:
           (realtime?.traffic?.user_ranking_monthly || [])?.map((item) => ({
-            name: item.sid,
+            name: String(item.sid),
             traffic: item.download + item.upload,
           })) || [],
       },
@@ -1037,6 +1165,7 @@ export default function Statistics() {
   const TrafficRankCard = ({ type }: { type: "nodes" | "users" }) => {
     const timeFrame = trafficTimeFrames[type];
     const currentData = trafficData[type][timeFrame];
+    const maxTraffic = Math.max(...currentData.map((item) => item.traffic), 1);
 
     return (
       <Card className="overflow-hidden rounded-3xl border border-white/10 bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl dark:bg-background/40">
@@ -1065,95 +1194,55 @@ export default function Statistics() {
         </CardHeader>
         <CardContent className="h-64">
           {currentData.length > 0 ? (
-            <ChartContainer
-              className="max-h-80"
-              config={{
-                traffic: {
-                  label: t("traffic", "Traffic"),
-                  color: "#0A84FF",
-                },
-                type: {
-                  label: t("type", "Type"),
-                  color: "var(--muted-foreground)",
-                },
-                label: {
-                  color: "var(--foreground)",
-                },
-              }}
-            >
-              <BarChart data={currentData} height={400} layout="vertical">
-                <defs>
-                  <linearGradient
-                    id={`${type}Traffic`}
-                    x1="0"
-                    x2="1"
-                    y1="0"
-                    y2="0"
+            <div className="h-full space-y-2 overflow-y-auto pr-1">
+              {currentData.map((item, index) => {
+                const percent =
+                  item.traffic > 0
+                    ? Math.max((item.traffic / maxTraffic) * 100, 2)
+                    : 0;
+                const scale = Math.min(percent / 100, 1);
+                return (
+                  <div
+                    className="min-w-0 rounded-xl border border-border/60 bg-background/45 px-3 py-2 transition-colors hover:bg-muted/40"
+                    key={`${type}-${timeFrame}-${item.name}`}
                   >
-                    <stop offset="0%" stopColor="#0A84FF" stopOpacity={0.45} />
-                    <stop
-                      offset="100%"
-                      stopColor="#0A84FF"
-                      stopOpacity={0.95}
-                    />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  axisLine={false}
-                  tickFormatter={(value) => formatBytes(value || 0)}
-                  tickLine={false}
-                  type="number"
-                />
-                <YAxis
-                  axisLine={false}
-                  dataKey="name"
-                  interval={0}
-                  tickFormatter={(_value, index) => String(index + 1)}
-                  tickLine={false}
-                  tickMargin={0}
-                  type="category"
-                  width={15}
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value) => formatBytes(Number(value) || 0)}
-                      label={true}
-                      labelFormatter={(label, [payload]) =>
-                        type === "nodes" ? (
-                          `${t("node", "Node")}: ${label}`
-                        ) : (
-                          <>
-                            <div className="w-80">
-                              <UserSubscribeDetail
-                                enabled={true}
-                                id={payload?.payload.name}
-                              />
-                            </div>
-                            <Separator className="my-2" />
-                            <div>{`${t("user", "User")}: ${label}`}</div>
-                          </>
-                        )
-                      }
-                    />
-                  }
-                  trigger="hover"
-                />
-                <Bar
-                  dataKey="traffic"
-                  fill={`url(#${type}Traffic)`}
-                  radius={[0, 8, 8, 0]}
-                >
-                  <LabelList
-                    className="fill-foreground"
-                    dataKey="name"
-                    fontSize={12}
-                    offset={8}
-                    position="insideLeft"
-                  />
-                </Bar>
-              </BarChart>
-            </ChartContainer>
+                    <div className="mb-1.5 flex min-w-0 items-center justify-between gap-3 text-xs">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted font-medium text-muted-foreground">
+                          {index + 1}
+                        </span>
+                        <span className="truncate font-medium">
+                          {type === "nodes"
+                            ? item.name
+                            : `${t("user", "User")} ${item.name}`}
+                        </span>
+                      </div>
+                      <span className="shrink-0 font-medium text-muted-foreground tabular-nums">
+                        {formatBytes(item.traffic)}
+                      </span>
+                    </div>
+                    <div
+                      aria-label={`${item.name} ${formatBytes(item.traffic)}`}
+                      aria-valuemax={100}
+                      aria-valuemin={0}
+                      aria-valuenow={Math.round(percent)}
+                      className="h-2 overflow-hidden rounded-full bg-muted"
+                      role="progressbar"
+                    >
+                      <div
+                        className={cn(
+                          "h-full w-full origin-left rounded-full transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
+                          type === "nodes"
+                            ? "bg-gradient-to-r from-blue-400/70 to-blue-500"
+                            : "bg-gradient-to-r from-violet-400/70 to-violet-500"
+                        )}
+                        style={{ transform: `scaleX(${scale})` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <div className="flex h-full items-center justify-center rounded-2xl border border-dashed bg-background/45 px-4 text-center text-muted-foreground text-sm">
               {t("empty.noTrafficData", "No traffic data yet.")}

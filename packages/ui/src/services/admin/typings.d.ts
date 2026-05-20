@@ -2095,6 +2095,13 @@ declare namespace API {
       xray_rx_bps: number;
       xray_tx_bps: number;
     };
+    network_series: Array<{
+      timestamp: number;
+      system_rx_bps: number;
+      system_tx_bps: number;
+      xray_rx_bps: number;
+      xray_tx_bps: number;
+    }>;
     connections: {
       system_inbound: number;
       system_outbound: number;
