@@ -31,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
-import { Separator } from "@workspace/ui/components/separator";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { Icon } from "@workspace/ui/composed/icon";
 import { cn } from "@workspace/ui/lib/utils";
@@ -143,6 +142,15 @@ export default function Content() {
     4: t("deducted", "Deducted"),
   };
 
+  const validSubscribeCount = React.useMemo(
+    () =>
+      userSubscribe.filter((item) => {
+        const isActuallyExpired = item.status === 3 && item.expire_time !== 0;
+        return !(isActuallyExpired || item.status === 4);
+      }).length,
+    [userSubscribe]
+  );
+
   const [subFilter, setSubFilter] = useState<"all" | "valid" | "usable">("all");
 
   const filteredSubscribe = React.useMemo(
@@ -169,49 +177,68 @@ export default function Content() {
     <>
       {userSubscribe.length ? (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <h2 className="flex items-center gap-1.5 font-semibold">
-                <Icon className="size-5" icon="uil:servers" />
-                {t("mySubscriptions", "My Subscriptions")}
-              </h2>
-              <Select
-                onValueChange={(v: any) => setSubFilter(v)}
-                value={subFilter}
-              >
-                <SelectTrigger className="h-8 w-32 rounded-full border border-border/40 bg-muted/20 text-xs shadow-sm backdrop-blur-md transition-colors hover:bg-muted/30 focus:ring-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("filterAll", "All")}</SelectItem>
-                  <SelectItem value="valid">
-                    {t("filterValid", "Valid")}
-                  </SelectItem>
-                  <SelectItem value="usable">
-                    {t("filterUsable", "Usable")}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                className={isLoading ? "animate-pulse" : ""}
-                onClick={() => {
-                  refetch();
-                }}
-                size="sm"
-                variant="outline"
-              >
-                <Icon icon="uil:sync" />
-              </Button>
-              <Button asChild size="sm">
-                <Link to="/subscribe">
-                  {t("purchaseSubscription", "Purchase Subscription")}
-                </Link>
-              </Button>
+          <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="mb-1 text-muted-foreground text-xs">
+                  {t("subscriptionOverview", "Subscription overview")}
+                </div>
+                <h2 className="flex items-center gap-2 font-semibold text-xl tracking-tight">
+                  <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="size-4" icon="uil:servers" />
+                  </span>
+                  {t("mySubscriptions", "My Subscriptions")}
+                </h2>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-muted-foreground text-xs">
+                  <span className="rounded-full bg-muted px-2.5 py-1">
+                    {t("activeSubscriptions", "Active")} {validSubscribeCount}
+                  </span>
+                  <span className="rounded-full bg-muted px-2.5 py-1">
+                    {t("totalSubscriptions", "Total")} {userSubscribe.length}
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select
+                  onValueChange={(v: any) => setSubFilter(v)}
+                  value={subFilter}
+                >
+                  <SelectTrigger className="h-9 w-32 rounded-full border-border/60 bg-background text-xs shadow-sm focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filterAll", "All")}</SelectItem>
+                    <SelectItem value="valid">
+                      {t("filterValid", "Valid")}
+                    </SelectItem>
+                    <SelectItem value="usable">
+                      {t("filterUsable", "Usable")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  className={cn("size-9 rounded-full", {
+                    "animate-pulse": isLoading,
+                  })}
+                  onClick={() => {
+                    refetch();
+                  }}
+                  size="icon"
+                  variant="outline"
+                >
+                  <Icon icon="uil:sync" />
+                </Button>
+                <Button asChild className="rounded-full" size="sm">
+                  <Link to="/subscribe">
+                    <Icon className="size-4" icon="uil:plus" />
+                    {t("purchaseSubscription", "Purchase Subscription")}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
-          <div className="flex flex-wrap justify-between gap-4">
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
             {availablePlatforms.length > 0 && (
               <Tabs
                 className="w-full max-w-full md:w-auto"
@@ -275,7 +302,7 @@ export default function Content() {
 
               return (
                 <Card
-                  className={cn("relative", {
+                  className={cn("relative overflow-hidden py-0", {
                     "relative opacity-80 grayscale": isActuallyExpired,
                     "relative hidden opacity-60 blur-[0.3px] grayscale":
                       item.status === 4,
@@ -319,85 +346,97 @@ export default function Content() {
                       </div>
                     </div>
                   )}
-                  <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 pb-2">
-                    <CardTitle className="flex flex-row items-center gap-3">
-                      <span className="flex size-7 items-center justify-center rounded-md bg-primary/10 font-bold text-primary text-sm">
-                        #{index + 1}
-                      </span>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-black text-primary text-xl tracking-tight">
-                          {item.subscribe.name}
+                  <CardHeader className="border-border/60 border-b bg-muted/15 p-4">
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                      <CardTitle className="flex min-w-0 flex-row items-center gap-3">
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 font-bold text-primary text-sm">
+                          #{index + 1}
                         </span>
-                        <span className="font-medium text-foreground/50 text-xs">
-                          {t("expireAt", "Expires At")}:{" "}
-                          {item.expire_time
-                            ? formatDate(item.expire_time)
-                            : t("noLimit", "No Limit")}
-                        </span>
-                      </div>
-                    </CardTitle>
-                    {item.status !== 4 && (
-                      <div className="flex flex-wrap gap-2">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="destructive">
-                              <Icon className="mr-1.5 size-4" icon="uil:sync" />
-                              {t("resetSubscription", "Reset Subscription")}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                {t("prompt", "Prompt")}
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {t(
-                                  "confirmResetSubscription",
-                                  "Are you sure you want to reset your subscription?"
-                                )}
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>
-                                {t("cancel", "Cancel")}
-                              </AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={async () => {
-                                  await resetUserSubscribeToken({
-                                    user_subscribe_id: item.id,
-                                  });
-                                  await refetch();
-                                  toast.success(
-                                    t("resetSuccess", "Reset Success")
-                                  );
-                                }}
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <span className="truncate font-semibold text-primary text-xl tracking-tight">
+                            {item.subscribe.name}
+                          </span>
+                          <span className="font-medium text-foreground/50 text-xs">
+                            {t("expireAt", "Expires At")}:{" "}
+                            {item.expire_time
+                              ? formatDate(item.expire_time)
+                              : t("noLimit", "No Limit")}
+                          </span>
+                        </div>
+                      </CardTitle>
+                      {item.status !== 4 && (
+                        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                className="rounded-full"
+                                size="sm"
+                                variant="destructive"
                               >
-                                {t("confirm", "Confirm")}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                        {item.subscribe.allow_reset_traffic !== false && (
-                          <ResetTraffic
-                            id={item.id}
-                            replacement={item.subscribe.replacement}
-                          />
-                        )}
-                        {item.subscribe.allow_renewal !== false &&
-                          item.expire_time !== 0 && (
-                            <Renewal id={item.id} subscribe={item.subscribe} />
+                                <Icon
+                                  className="mr-1.5 size-4"
+                                  icon="uil:sync"
+                                />
+                                {t("resetSubscription", "Reset Subscription")}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  {t("prompt", "Prompt")}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t(
+                                    "confirmResetSubscription",
+                                    "Are you sure you want to reset your subscription?"
+                                  )}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>
+                                  {t("cancel", "Cancel")}
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={async () => {
+                                    await resetUserSubscribeToken({
+                                      user_subscribe_id: item.id,
+                                    });
+                                    await refetch();
+                                    toast.success(
+                                      t("resetSuccess", "Reset Success")
+                                    );
+                                  }}
+                                >
+                                  {t("confirm", "Confirm")}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                          {item.subscribe.allow_reset_traffic !== false && (
+                            <ResetTraffic
+                              id={item.id}
+                              replacement={item.subscribe.replacement}
+                            />
                           )}
-                        <Unsubscribe
-                          allowDeduction={item.subscribe.allow_deduction}
-                          id={item.id}
-                          onSuccess={refetch}
-                        />
-                      </div>
-                    )}
+                          {item.subscribe.allow_renewal !== false &&
+                            item.expire_time !== 0 && (
+                              <Renewal
+                                id={item.id}
+                                subscribe={item.subscribe}
+                              />
+                            )}
+                          <Unsubscribe
+                            allowDeduction={item.subscribe.allow_deduction}
+                            id={item.id}
+                            onSuccess={refetch}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="mb-3 flex w-full flex-col gap-3">
-                      <div className="flex flex-col justify-between gap-3 rounded-2xl border border-border/40 bg-muted/5 p-3 lg:flex-row lg:items-center">
+                  <CardContent className="space-y-4 p-4">
+                    <div className="grid w-full gap-3 xl:grid-cols-[minmax(0,1fr)_17rem]">
+                      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-border/50 bg-background/80 p-4 lg:flex-row lg:items-center">
                         <div className="flex min-w-[160px] flex-col">
                           <span className="mb-0 font-medium text-muted-foreground text-xs">
                             {t("used", "Used")}
@@ -421,7 +460,7 @@ export default function Content() {
                           </div>
                         </div>
 
-                        <div className="flex max-w-lg flex-1 flex-col gap-2">
+                        <div className="flex min-w-0 flex-1 flex-col gap-2">
                           <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted/50 shadow-inner">
                             {item.traffic ? (
                               <>
@@ -498,7 +537,7 @@ export default function Content() {
                       </div>
 
                       {isActuallyExpired || item.status === 4 ? (
-                        <div className="flex flex-wrap gap-2.5">
+                        <div className="flex flex-wrap content-start gap-2.5">
                           <div className="inline-flex w-fit items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 py-1 pr-3 pl-1 shadow-sm">
                             <div className="flex size-6 items-center justify-center rounded-full bg-red-500/20 text-red-500">
                               <Icon
@@ -514,8 +553,8 @@ export default function Content() {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex flex-wrap gap-2.5">
-                          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/40 bg-muted/5 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
+                        <div className="grid content-start gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                          <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-border/50 bg-background/80 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
                             <div className="flex size-6 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
                               <Icon className="size-3.5" icon="uil:sync" />
                             </div>
@@ -537,7 +576,7 @@ export default function Content() {
                             </span>
                           </div>
 
-                          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/40 bg-muted/5 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
+                          <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-border/50 bg-background/80 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
                             <div className="flex size-6 items-center justify-center rounded-full bg-orange-500/10 text-orange-500">
                               <Icon
                                 className="size-3.5"
@@ -564,22 +603,36 @@ export default function Content() {
                         </div>
                       )}
                     </div>
-                    <Separator className="mt-4" />
                     <Accordion
-                      className="w-full"
+                      className="w-full rounded-2xl border border-border/60 bg-muted/10 px-4"
                       collapsible
                       defaultValue="0"
                       type="single"
                     >
                       {getUserSubscribe(item.short, item.token, protocol)?.map(
                         (url, index) => (
-                          <AccordionItem key={url} value={String(index)}>
-                            <AccordionTrigger className="hover:no-underline">
+                          <AccordionItem
+                            className="border-border/60"
+                            key={url}
+                            value={String(index)}
+                          >
+                            <AccordionTrigger className="py-3 hover:no-underline">
                               <div className="flex w-full flex-row items-center justify-between">
-                                <CardTitle className="font-medium text-sm">
-                                  {t("subscriptionUrl", "Subscription URL")}{" "}
-                                  {index + 1}
-                                </CardTitle>
+                                <div className="min-w-0 text-left">
+                                  <CardTitle className="font-medium text-sm">
+                                    {t(
+                                      "subscriptionMethods",
+                                      "Subscription methods"
+                                    )}{" "}
+                                    {index + 1}
+                                  </CardTitle>
+                                  <div className="mt-1 text-muted-foreground text-xs">
+                                    {t(
+                                      "subscriptionMethodsHint",
+                                      "Copy the link or import it with a client."
+                                    )}
+                                  </div>
+                                </div>
 
                                 <CopyToClipboard
                                   onCopy={(_, result) => {
@@ -592,20 +645,17 @@ export default function Content() {
                                   text={url}
                                 >
                                   <span
-                                    className="mr-4 flex cursor-pointer rounded p-2 text-primary text-sm hover:bg-accent"
+                                    className="mr-4 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border/60 bg-background px-3 py-1.5 text-primary text-xs hover:bg-accent"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <Icon
-                                      className="mr-2 size-5"
-                                      icon="uil:copy"
-                                    />
+                                    <Icon className="size-4" icon="uil:copy" />
                                     {t("copy", "Copy")}
                                   </span>
                                 </CopyToClipboard>
                               </div>
                             </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                            <AccordionContent className="pb-4">
+                              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
                                 {applications
                                   ?.filter(
                                     (application) =>
@@ -632,7 +682,7 @@ export default function Content() {
 
                                     return (
                                       <div
-                                        className="group hover:-translate-y-1 relative flex h-full w-full flex-col items-center justify-between gap-3 rounded-2xl border border-border/40 bg-muted/5 p-4 shadow-sm transition-all duration-300 hover:bg-muted/10 hover:shadow-md"
+                                        className="group hover:-translate-y-0.5 relative flex min-h-36 w-full flex-col items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/85 p-3 shadow-sm transition-all duration-300 hover:bg-background hover:shadow-md"
                                         key={application.name}
                                       >
                                         <span className="font-semibold text-foreground text-sm tracking-tight">
@@ -640,7 +690,7 @@ export default function Content() {
                                         </span>
 
                                         {application.icon ? (
-                                          <div className="relative flex size-16 items-center justify-center rounded-2xl bg-white p-2 shadow-sm dark:bg-white/5">
+                                          <div className="relative flex size-14 items-center justify-center rounded-2xl bg-white p-2 shadow-sm dark:bg-white/5">
                                             <img
                                               alt={application.name}
                                               className="object-contain"
@@ -650,14 +700,14 @@ export default function Content() {
                                             />
                                           </div>
                                         ) : (
-                                          <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10 p-2 text-center text-primary shadow-sm">
+                                          <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 p-2 text-center text-primary shadow-sm">
                                             <span className="line-clamp-2 font-bold text-xs leading-tight">
                                               {application.name}
                                             </span>
                                           </div>
                                         )}
 
-                                        <div className="flex w-full overflow-hidden rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
+                                        <div className="flex w-full overflow-hidden rounded-xl border border-border/60 bg-background/70 backdrop-blur-sm">
                                           {downloadUrl && (
                                             <Button
                                               asChild
@@ -689,15 +739,15 @@ export default function Content() {
                                       </div>
                                     );
                                   })}
-                                <div className="group hover:-translate-y-1 relative hidden h-full w-full flex-col items-center justify-between gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 shadow-sm transition-all duration-300 hover:shadow-md lg:flex">
+                                <div className="group hover:-translate-y-0.5 relative flex min-h-36 w-full flex-col items-center justify-between gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-3 shadow-sm transition-all duration-300 hover:shadow-md">
                                   <span className="font-semibold text-blue-500 text-sm tracking-tight">
                                     {t("qrCode", "QR Code")}
                                   </span>
-                                  <div className="relative flex size-16 items-center justify-center rounded-2xl bg-white p-1.5 shadow-[0_0_15px_rgba(59,130,246,0.3)] dark:bg-white/90">
+                                  <div className="relative flex size-14 items-center justify-center rounded-2xl bg-white p-1.5 shadow-[0_0_15px_rgba(59,130,246,0.25)] dark:bg-white/90">
                                     <QRCodeCanvas
                                       bgColor="transparent"
                                       fgColor="rgb(59, 130, 246)"
-                                      size={56}
+                                      size={48}
                                       value={url}
                                     />
                                   </div>

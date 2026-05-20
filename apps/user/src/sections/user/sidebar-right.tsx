@@ -25,65 +25,69 @@ export function SidebarRight({
 
   return (
     <Sidebar collapsible="none" side="right" {...props}>
-      <SidebarContent className="*:gap-0 *:py-0">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2">
-            <CardTitle className="font-medium text-sm">
-              {t("accountBalance", "Account Balance")}
-            </CardTitle>
-            <Recharge className="p-0" variant="link" />
+      <SidebarContent className="gap-3 py-0">
+        <Card className="overflow-hidden py-0">
+          <CardHeader className="border-border/60 border-b bg-muted/15 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <CardTitle className="font-semibold text-sm">
+                  {t("wallet", "Wallet")}
+                </CardTitle>
+                <div className="mt-1 text-muted-foreground text-xs">
+                  {t("availableBalance", "Available balance")}
+                </div>
+              </div>
+              <Recharge className="h-8 rounded-full px-3" variant="outline" />
+            </div>
           </CardHeader>
-          <CardContent className="p-3 font-bold text-2xl">
-            <Display type="currency" value={user?.balance} />
+          <CardContent className="space-y-4 p-4">
+            <div>
+              <div className="font-semibold text-3xl tracking-tight">
+                <Display type="currency" value={user?.balance} />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <div className="rounded-xl border border-border/60 bg-background/70 p-3">
+                <div className="text-muted-foreground text-xs">
+                  {t("giftAmount", "Gift Amount")}
+                </div>
+                <div className="mt-1 font-semibold text-lg">
+                  <Display type="currency" value={user?.gift_amount} />
+                </div>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-background/70 p-3">
+                <div className="text-muted-foreground text-xs">
+                  {t("commission", "Commission")}
+                </div>
+                <div className="mt-1 font-semibold text-lg">
+                  <Display type="currency" value={user?.commission} />
+                </div>
+              </div>
+            </div>
+            {user?.refer_code && (
+              <div className="rounded-xl border border-border/60 bg-background/70 p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <div className="font-medium text-sm">
+                    {t("inviteCode", "Invite Code")}
+                  </div>
+                  <CopyToClipboard
+                    onCopy={(_text: string, result: boolean) => {
+                      if (result) {
+                        toast.success(t("copySuccess", "Copy Success"));
+                      }
+                    }}
+                    text={`${isBrowser() && location?.origin}/#/auth?invite=${user?.refer_code}`}
+                  >
+                    <Button className="size-7 rounded-full p-0" variant="ghost">
+                      <Icon className="size-4 text-primary" icon="uil:copy" />
+                    </Button>
+                  </CopyToClipboard>
+                </div>
+                <div className="truncate font-semibold">{user.refer_code}</div>
+              </div>
+            )}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="space-y-0 p-3 pb-2">
-            <CardTitle className="font-medium text-sm">
-              {t("giftAmount", "Gift Amount")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 font-bold text-2xl">
-            <Display type="currency" value={user?.gift_amount} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="space-y-0 p-3 pb-2">
-            <CardTitle className="font-medium text-sm">
-              {t("commission", "Commission")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 font-bold text-2xl">
-            <Display type="currency" value={user?.commission} />
-          </CardContent>
-        </Card>
-        {user?.refer_code && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2">
-              <CardTitle className="font-medium text-sm">
-                {t("inviteCode", "Invite Code")}
-              </CardTitle>
-              <CopyToClipboard
-                onCopy={(_text: string, result: boolean) => {
-                  if (result) {
-                    toast.success(t("copySuccess", "Copy Success"));
-                  }
-                }}
-                text={`${isBrowser() && location?.origin}/#/auth?invite=${user?.refer_code}`}
-              >
-                <Button className="size-5 p-0" variant="ghost">
-                  <Icon
-                    className="text-2xl text-primary"
-                    icon="mdi:content-copy"
-                  />
-                </Button>
-              </CopyToClipboard>
-            </CardHeader>
-            <CardContent className="truncate p-3 font-bold">
-              {user?.refer_code}
-            </CardContent>
-          </Card>
-        )}
       </SidebarContent>
     </Sidebar>
   );
