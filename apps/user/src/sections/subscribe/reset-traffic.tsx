@@ -22,10 +22,12 @@ import PaymentMethods from "./payment-methods";
 interface ResetTrafficProps {
   id: number;
   replacement?: number;
+  trigger?: React.ReactNode;
 }
 export default function ResetTraffic({
   id,
   replacement,
+  trigger,
 }: Readonly<ResetTrafficProps>) {
   const { t } = useTranslation("subscribe");
   const { getUserInfo } = useGlobalStore();
@@ -52,10 +54,12 @@ export default function ResetTraffic({
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="secondary">
-          <Icon className="mr-1.5 size-4" icon="uil:tachometer-fast-alt" />
-          {t("resetTraffic", "Reset Traffic")}
-        </Button>
+        {trigger ?? (
+          <Button size="sm" variant="secondary">
+            <Icon className="mr-1.5 size-4" icon="uil:tachometer-fast-alt" />
+            {t("resetTraffic", "Reset Traffic")}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="flex h-full flex-col overflow-hidden md:h-auto">
         <DialogHeader>

@@ -6,6 +6,7 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@workspace/ui/components/radio-group";
+import { cn } from "@workspace/ui/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import type React from "react";
@@ -44,22 +45,32 @@ const DurationSelector: React.FC<DurationSelectorProps> = ({
     value: string;
     label: string;
     pct?: number;
-  }> = ({ value, label, pct }) => (
-    <div className="relative min-w-[30%] flex-1">
-      <RadioGroupItem className="peer sr-only" id={value} value={value} />
-      <Label
-        className="relative flex h-16 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-[1.5px] border-border/50 bg-background text-muted-foreground transition-all duration-300 hover:border-border hover:bg-muted/30 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:text-foreground peer-data-[state=checked]:shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
-        htmlFor={value}
-      >
-        <span className="font-semibold text-[15px]">{label}</span>
-        {pct && pct > 0 ? (
-          <div className="absolute top-0 right-0 rounded-bl-xl bg-emerald-500 px-2 py-0.5 font-bold text-[10px] text-white shadow-sm dark:bg-emerald-600">
-            -{pct.toFixed(0)}%
-          </div>
-        ) : null}
-      </Label>
-    </div>
-  );
+  }> = ({ value, label, pct }) => {
+    const selected = String(quantity) === value;
+
+    return (
+      <div className="relative min-w-[30%] flex-1">
+        <RadioGroupItem className="peer sr-only" id={value} value={value} />
+        <Label
+          className="relative flex h-16 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-[1.5px] border-slate-200 bg-white text-muted-foreground transition-all duration-300 hover:border-slate-300 hover:bg-slate-50/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:text-foreground peer-data-[state=checked]:shadow-[0_4px_12px_rgba(59,130,246,0.08)] dark:border-border/50 dark:bg-background dark:peer-data-[state=checked]:shadow-[0_2px_10px_rgba(0,0,0,0.05)] dark:hover:border-border dark:hover:bg-muted/30"
+          htmlFor={value}
+        >
+          <span className="font-semibold text-[15px]">{label}</span>
+          {pct && pct > 0 ? (
+            <div
+              className={cn(
+                "absolute top-0 right-0 rounded-bl-xl border-emerald-100 border-b border-l bg-emerald-50 px-2 py-0.5 font-bold text-[10px] text-emerald-700 transition-colors dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400",
+                selected &&
+                  "border-transparent bg-emerald-500 text-white dark:bg-emerald-600 dark:text-white"
+              )}
+            >
+              -{pct.toFixed(0)}%
+            </div>
+          ) : null}
+        </Label>
+      </div>
+    );
+  };
 
   return (
     <div className="grid gap-3">

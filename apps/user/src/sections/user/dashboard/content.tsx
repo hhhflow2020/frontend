@@ -1,12 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@workspace/ui/components/accordion";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -24,6 +18,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@workspace/ui/components/popover";
 import {
   Select,
   SelectContent,
@@ -62,9 +68,596 @@ const platforms: (keyof API.DownloadLink)[] = [
   "harmony",
 ];
 
+const getAppGradient = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes("shadowrocket"))
+    return "from-purple-500 via-indigo-500 to-blue-600 shadow-purple-500/25";
+  if (n.includes("clash"))
+    return "from-blue-500 via-cyan-500 to-sky-600 shadow-blue-500/25";
+  if (n.includes("singbox") || n.includes("sing-box"))
+    return "from-orange-500 via-amber-500 to-yellow-600 shadow-orange-500/25";
+  if (n.includes("surge"))
+    return "from-pink-500 via-rose-500 to-red-600 shadow-pink-500/25";
+  if (n.includes("v2ray") || n.includes("v2fly"))
+    return "from-teal-500 via-emerald-500 to-green-600 shadow-teal-500/25";
+  if (n.includes("trojan"))
+    return "from-violet-500 via-purple-500 to-fuchsia-600 shadow-violet-500/25";
+  return "from-slate-500 via-neutral-600 to-zinc-700 shadow-slate-500/25";
+};
+
+interface SubscriptionCardProps {
+  item: any;
+  index: number;
+  refetch: () => void;
+  statusWatermarks: Record<number, string>;
+  t: any;
+  platform: any;
+  applications: any[];
+  protocol: string;
+  getUserSubscribe: any;
+  common: any;
+}
+
+function SubscriptionCard({
+  item,
+  index,
+  refetch,
+  statusWatermarks,
+  t,
+  platform,
+  applications,
+  protocol,
+  getUserSubscribe,
+  common,
+}: Readonly<SubscriptionCardProps>) {
+  const isActuallyExpired = item.status === 3 && item.expire_time !== 0;
+  const shouldShowWatermark =
+    item.status === 2 || item.status === 4 || isActuallyExpired;
+
+  // Calculate usage percentage
+  const percent = item.traffic
+    ? Math.min(
+        100,
+        Math.round(((item.upload + item.download) / item.traffic) * 100)
+      )
+    : 0;
+
+  // SVG circular progress constants
+  const radius = 24;
+  const strokeWidth = 4.5;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percent / 100) * circumference;
+
+  return (
+    <Card
+      className={cn(
+        "hover:-translate-y-[2px] relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50/90 to-slate-50/50 p-0 shadow-md backdrop-blur-xl transition-all duration-300 hover:border-slate-300 hover:shadow-lg dark:border-border/30 dark:from-card/95 dark:via-card/75 dark:to-card/50 dark:shadow-lg dark:hover:border-border/60 dark:hover:shadow-xl",
+        {
+          "opacity-85 grayscale": isActuallyExpired,
+          "hidden opacity-60 blur-[0.3px] grayscale": item.status === 4,
+        }
+      )}
+      key={item.id}
+    >
+      {shouldShowWatermark && (
+        <div
+          className={cn(
+            "pointer-events-none absolute top-0 left-0 z-10 h-full w-full overflow-hidden mix-blend-difference brightness-150 contrast-200 invert-[0.2]",
+            {
+              "text-destructive": item.status === 2,
+              "text-white": isActuallyExpired || item.status === 4,
+            }
+          )}
+        >
+          <div className="absolute inset-0">
+            {Array.from({ length: 16 }).map((_, i) => {
+              const row = Math.floor(i / 4);
+              const col = i % 4;
+              const top = 10 + row * 25 + (col % 2 === 0 ? 5 : -5);
+              const left = 5 + col * 30 + (row % 2 === 0 ? 0 : 10);
+
+              return (
+                <span
+                  className="absolute rotate-[-30deg] whitespace-nowrap font-black text-lg opacity-40 shadow-[0px_0px_1px_rgba(255,255,255,0.5)]"
+                  key={i}
+                  style={{
+                    top: `${top}%`,
+                    left: `${left}%`,
+                  }}
+                >
+                  {
+                    statusWatermarks[
+                      item.status as keyof typeof statusWatermarks
+                    ]
+                  }
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Card Header: Name, Expiry Status Pill, Expiry Date, Renew Button */}
+      <CardHeader className="border-slate-100 border-b bg-slate-50/50 px-4.5 py-3 dark:border-border/30 dark:bg-muted/5">
+        <div className="flex flex-row items-center justify-between gap-3">
+          <CardTitle className="flex min-w-0 flex-row items-center gap-2">
+            <span className="flex size-5.5 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5 font-black text-[9px] text-primary shadow-xs">
+              #{index + 1}
+            </span>
+            <div className="flex min-w-0 flex-col">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="truncate font-bold text-foreground text-sm leading-none tracking-tight">
+                  {item.subscribe.name}
+                </span>
+
+                {/* Expiration/Status Pill */}
+                {isActuallyExpired || item.status === 4 ? (
+                  <span className="inline-flex items-center gap-0.5 rounded-md border border-red-100 bg-red-50 px-1 py-0.5 font-bold text-[8px] text-red-600 uppercase leading-none tracking-wider dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-500">
+                    {item.status === 4
+                      ? t("deducted", "Deducted")
+                      : t("expired", "Expired")}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-0.5 rounded-md border border-emerald-100 bg-emerald-50 px-1 py-0.5 font-bold text-[8px] text-emerald-700 uppercase leading-none tracking-wider dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400">
+                    {t("active", "Active")}
+                  </span>
+                )}
+              </div>
+              <span className="mt-0.5 flex items-center gap-0.5 font-semibold text-[10px] text-slate-500 dark:text-muted-foreground/80">
+                <Icon
+                  className="size-3 text-slate-400 dark:text-muted-foreground/60"
+                  icon="uil:clock"
+                />
+                {t("expireAt", "Expires At")}:{" "}
+                {item.expire_time
+                  ? formatDate(item.expire_time)
+                  : t("noLimit", "No Limit")}
+              </span>
+            </div>
+          </CardTitle>
+          {item.status !== 4 && (
+            <div className="flex shrink-0 items-center gap-1">
+              {item.subscribe.allow_renewal !== false &&
+                item.expire_time !== 0 && (
+                  <Renewal
+                    id={item.id}
+                    subscribe={item.subscribe}
+                    trigger={
+                      <Button className="h-6.5 rounded-lg bg-gradient-to-r from-primary to-indigo-600 px-2.5 font-bold text-[10px] text-white shadow-sm transition-all duration-300 hover:from-primary/95 hover:to-indigo-500 hover:shadow-md hover:shadow-primary/10 active:scale-95">
+                        <Icon className="mr-1 size-3" icon="uil:history" />
+                        {t("renew", "Renew")}
+                      </Button>
+                    }
+                  />
+                )}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    className="size-6.5 rounded-lg border-slate-200 transition-all duration-200 hover:bg-slate-50 active:scale-95 dark:border-border/40 dark:hover:bg-muted/10"
+                    size="icon"
+                    variant="outline"
+                  >
+                    <Icon
+                      className="size-3 text-muted-foreground"
+                      icon="uil:ellipsis-h"
+                    />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 rounded-2xl border-slate-200/80 bg-popover/95 p-1.5 shadow-xl backdrop-blur-xl dark:border-border/30"
+                >
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem
+                        className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <Icon
+                          className="size-4 text-muted-foreground"
+                          icon="uil:sync"
+                        />
+                        <span>
+                          {t("resetSubscription", "Reset Subscription")}
+                        </span>
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rounded-3xl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          {t("prompt", "Prompt")}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t(
+                            "confirmResetSubscription",
+                            "Are you sure you want to reset your subscription?"
+                          )}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="rounded-full">
+                          {t("cancel", "Cancel")}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          className="rounded-full"
+                          onClick={async () => {
+                            await resetUserSubscribeToken({
+                              user_subscribe_id: item.id,
+                            });
+                            await refetch();
+                            toast.success(t("resetSuccess", "Reset Success"));
+                          }}
+                        >
+                          {t("confirm", "Confirm")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  {item.subscribe.allow_reset_traffic !== false && (
+                    <ResetTraffic
+                      id={item.id}
+                      replacement={item.subscribe.replacement}
+                      trigger={
+                        <DropdownMenuItem
+                          className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs"
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          <Icon
+                            className="size-4 text-muted-foreground"
+                            icon="uil:tachometer-fast-alt"
+                          />
+                          <span>{t("resetTraffic", "Reset Traffic")}</span>
+                        </DropdownMenuItem>
+                      }
+                    />
+                  )}
+
+                  {(common?.subscribe?.single_model ||
+                    item.subscribe.allow_deduction) && (
+                    <>
+                      <DropdownMenuSeparator className="border-border/40" />
+                      <Unsubscribe
+                        allowDeduction={item.subscribe.allow_deduction}
+                        id={item.id}
+                        onSuccess={refetch}
+                        trigger={
+                          <DropdownMenuItem
+                            className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-destructive text-xs focus:bg-destructive/10 focus:text-destructive"
+                            onSelect={(e) => e.preventDefault()}
+                          >
+                            <Icon
+                              className="size-4 text-destructive"
+                              icon="uil:ban"
+                            />
+                            <span>{t("unsubscribe", "Unsubscribe")}</span>
+                          </DropdownMenuItem>
+                        }
+                      />
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex flex-1 flex-col gap-4 p-4.5">
+        {/* Main Info: Circular progress ring next to vertical aligned figures */}
+        <div className="flex items-center gap-4.5">
+          {/* Left: Circular SVG progress gauge */}
+          <div className="relative flex size-16 shrink-0 select-none items-center justify-center">
+            <svg className="-rotate-90 size-full" viewBox="0 0 60 60">
+              <title>{t("trafficUsage", "Traffic Usage")}</title>
+              {/* Background Track */}
+              <circle
+                className="stroke-slate-100 dark:stroke-muted/30"
+                cx="30"
+                cy="30"
+                fill="transparent"
+                r={radius}
+                strokeWidth={strokeWidth}
+              />
+              {/* Foreground circle segment */}
+              {item.traffic ? (
+                <circle
+                  className={cn(
+                    "origin-center transition-all duration-700 ease-in-out",
+                    percent > 90
+                      ? "stroke-red-500"
+                      : percent > 75
+                        ? "stroke-orange-500"
+                        : "stroke-primary"
+                  )}
+                  cx="30"
+                  cy="30"
+                  fill="transparent"
+                  r={radius}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  strokeWidth={strokeWidth}
+                />
+              ) : (
+                <circle
+                  className="animate-pulse stroke-primary"
+                  cx="30"
+                  cy="30"
+                  fill="transparent"
+                  r={radius}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={0}
+                  strokeLinecap="round"
+                  strokeWidth={strokeWidth}
+                />
+              )}
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span className="mt-0.5 font-black text-foreground text-xs leading-none tracking-tighter">
+                {item.traffic ? `${percent}%` : "∞"}
+              </span>
+              <span className="mt-0.5 scale-90 font-bold text-[7.5px] text-slate-500 uppercase leading-none tracking-wider dark:text-muted-foreground/80">
+                {t("used", "Used")}
+              </span>
+            </div>
+          </div>
+
+          {/* Right: Detailed vertical aligned metrics */}
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1 font-bold text-[10px] text-slate-500 uppercase tracking-wider dark:text-muted-foreground/80">
+                {t("usedTraffic", "Used Traffic")}
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="font-black text-foreground text-lg tracking-tight">
+                  <Display
+                    type="traffic"
+                    unlimited={!item.traffic}
+                    value={item.upload + item.download}
+                  />
+                </span>
+                <span className="font-semibold text-[10px] text-slate-400 dark:text-muted-foreground/50">
+                  /{" "}
+                  {item.traffic ? (
+                    <Display type="traffic" value={item.traffic} />
+                  ) : (
+                    "∞"
+                  )}
+                </span>
+              </div>
+            </div>
+
+            {/* Remaining tag */}
+            {!!item.traffic && (
+              <div className="mt-1 flex items-center justify-between">
+                <span className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 font-bold text-[10px] text-blue-700 dark:border-primary/20 dark:bg-primary/10 dark:text-primary">
+                  {t("remaining", "Remaining")}:{" "}
+                  <Display
+                    type="traffic"
+                    value={Math.max(
+                      0,
+                      item.traffic - (item.upload + item.download)
+                    )}
+                  />
+                </span>
+
+                {/* Upload & Download inline indicators */}
+                <div className="flex items-center gap-2 font-medium text-[9px] text-slate-500 dark:text-muted-foreground/85">
+                  <span className="flex items-center gap-0.5">
+                    <Icon
+                      className="size-2.5 text-blue-500"
+                      icon="uil:arrow-down"
+                    />
+                    <Display type="traffic" value={item.download} />
+                  </span>
+                  <span className="flex items-center gap-0.5">
+                    <Icon
+                      className="size-2.5 text-emerald-500"
+                      icon="uil:arrow-up"
+                    />
+                    <Display type="traffic" value={item.upload} />
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Secondary Info Badges Row */}
+        <div className="flex flex-wrap items-center gap-1.5 border-slate-100 border-t pt-3 dark:border-border/20">
+          {!isActuallyExpired && item.status !== 4 && (
+            <>
+              <span className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 font-bold text-[10px] text-blue-700 dark:border-blue-500/15 dark:bg-blue-500/5 dark:text-blue-400">
+                <Icon
+                  className="size-3 text-blue-500 dark:text-blue-400/90"
+                  icon="uil:sync"
+                />
+                <span>{t("reset", "Reset")}:</span>
+                <span className="font-extrabold text-foreground">
+                  {item.reset_time
+                    ? `${Math.max(
+                        0,
+                        differenceInDays(item.reset_time, new Date())
+                      )} ${t("days", "Days")}`
+                    : t("noReset", "No Reset")}
+                </span>
+              </span>
+
+              <span className="inline-flex items-center gap-1 rounded-md border border-amber-100 bg-amber-50 px-2 py-0.5 font-bold text-[10px] text-amber-700 dark:border-orange-500/15 dark:bg-orange-500/5 dark:text-orange-400">
+                <Icon
+                  className="size-3 text-amber-500 dark:text-orange-400/90"
+                  icon="uil:calendar-alt"
+                />
+                <span>{t("expire", "Expire")}:</span>
+                <span className="font-extrabold text-foreground">
+                  {item.expire_time
+                    ? `${Math.max(
+                        0,
+                        differenceInDays(item.expire_time, new Date())
+                      )} ${t("days", "Days")}`
+                    : t("noLimit", "No Limit")}
+                </span>
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* Accordion-Free Actions Panel: Direct Copier and One-Click Client Grid */}
+        <div className="space-y-3 border-slate-100 border-t pt-3.5 dark:border-border/20">
+          {getUserSubscribe(item.short, item.token, protocol)?.map(
+            (url: string, idx: number) => (
+              <div className="space-y-3" key={url}>
+                {/* Link Copier Row */}
+                <div className="flex items-center gap-2">
+                  <CopyToClipboard
+                    onCopy={(_, result) => {
+                      if (result) {
+                        toast.success(t("copySuccess", "Copy Success"));
+                      }
+                    }}
+                    text={url}
+                  >
+                    <Button className="h-8 flex-1 rounded-xl bg-gradient-to-r from-primary to-indigo-600 font-bold text-white text-xs shadow-xs transition-all hover:brightness-105 active:scale-95">
+                      <Icon className="mr-1.5 size-3.5" icon="uil:copy" />
+                      {t("copySubscriptionLink", "Copy Subscription Link")}{" "}
+                      {idx > 0 ? `#${idx + 1}` : ""}
+                    </Button>
+                  </CopyToClipboard>
+
+                  {/* Scan QR Code via Popover */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        className="size-8 rounded-xl border border-blue-100 bg-blue-50/70 p-0 text-blue-500 shadow-xs hover:bg-blue-100/80 dark:border-blue-500/20 dark:bg-blue-500/5 dark:hover:bg-blue-500/10"
+                        variant="outline"
+                      >
+                        <Icon className="size-4" icon="uil:qrcode-scan" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="flex w-44 flex-col items-center gap-2 rounded-2xl border-slate-200 bg-popover/95 p-3 shadow-xl backdrop-blur-xl dark:border-border/30">
+                      <span className="text-center font-black text-[9px] text-blue-500 uppercase tracking-widest">
+                        {t("scanToSubscribe", "Scan to Subscribe")}
+                      </span>
+                      <div className="relative flex size-28 items-center justify-center rounded-xl border border-blue-100 bg-white p-2 shadow-inner">
+                        <QRCodeCanvas
+                          bgColor="transparent"
+                          fgColor="rgb(59, 130, 246)"
+                          size={96}
+                          value={url}
+                        />
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Micro capsule grid of client imports */}
+                <div className="space-y-1.5">
+                  <div className="font-semibold text-[10px] text-slate-500 uppercase tracking-wider dark:text-muted-foreground/85">
+                    {t("quickImport", "Quick Import to Client")}
+                  </div>
+                  <div className="grid grid-cols-2 xs:grid-cols-3 gap-1.5 sm:grid-cols-2 xl:grid-cols-2">
+                    {applications
+                      ?.filter(
+                        (application) =>
+                          application.enabled !== false &&
+                          (application.scheme ||
+                            application.download_link?.[platform])
+                      )
+                      .map((application) => {
+                        const downloadUrl =
+                          application.download_link?.[platform];
+
+                        const handleCopy = (_: string, result: boolean) => {
+                          if (result) {
+                            toast.success(
+                              `${application.name} ${t(
+                                "copySuccess",
+                                "Copy Success"
+                              )}`
+                            );
+                          }
+                        };
+
+                        const appGradient = getAppGradient(application.name);
+
+                        return (
+                          <CopyToClipboard
+                            key={application.name}
+                            onCopy={handleCopy}
+                            text={url}
+                          >
+                            <div className="group hover:-translate-y-0.5 flex h-8 cursor-pointer items-center justify-between gap-1 rounded-xl border border-slate-100 bg-slate-50/60 px-2 py-1 shadow-xs transition-all duration-200 hover:border-slate-200 hover:bg-slate-100/80 dark:border-border/30 dark:bg-background/40 dark:hover:border-border/60 dark:hover:bg-background">
+                              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                                {application.icon ? (
+                                  <div className="relative flex size-5.5 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white p-0.5 shadow-xs dark:border-border/20 dark:bg-white/95">
+                                    <img
+                                      alt={application.name}
+                                      className="object-contain"
+                                      height={16}
+                                      src={application.icon}
+                                      width={16}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div
+                                    className={cn(
+                                      "flex size-5.5 shrink-0 items-center justify-center rounded-md text-center text-white shadow-xs",
+                                      appGradient
+                                    )}
+                                  >
+                                    <span className="font-black text-[6px] uppercase leading-none tracking-tight">
+                                      {application.name.substring(0, 3)}
+                                    </span>
+                                  </div>
+                                )}
+                                <span className="truncate font-bold text-[10px] text-foreground/80 tracking-tight">
+                                  {application.name}
+                                </span>
+                              </div>
+
+                              <div className="flex shrink-0 items-center gap-0.5 opacity-40 transition-opacity group-hover:opacity-100">
+                                {downloadUrl && (
+                                  <a
+                                    className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted"
+                                    href={downloadUrl}
+                                    onClick={(e) => e.stopPropagation()}
+                                    rel="noopener noreferrer"
+                                    target="_blank"
+                                    title={t("download", "Download")}
+                                  >
+                                    <Icon
+                                      className="size-2.5"
+                                      icon="uil:download"
+                                    />
+                                  </a>
+                                )}
+                                <span
+                                  className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted"
+                                  title={t("copy", "Copy")}
+                                >
+                                  <Icon className="size-2.5" icon="uil:copy" />
+                                </span>
+                              </div>
+                            </div>
+                          </CopyToClipboard>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Content() {
   const { t } = useTranslation("dashboard");
-  const { getUserSubscribe } = useGlobalStore();
+  const { common, getUserSubscribe } = useGlobalStore();
 
   const [protocol, setProtocol] = useState("");
 
@@ -177,23 +770,28 @@ export default function Content() {
     <>
       {userSubscribe.length ? (
         <>
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="rounded-3xl border border-border/40 bg-gradient-to-r from-card/95 via-card/75 to-card/50 p-6 shadow-md backdrop-blur-xl transition-all duration-300 hover:shadow-lg">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
-                <div className="mb-1 text-muted-foreground text-xs">
+                <div className="mb-1 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                   {t("subscriptionOverview", "Subscription overview")}
                 </div>
-                <h2 className="flex items-center gap-2 font-semibold text-xl tracking-tight">
-                  <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Icon className="size-4" icon="uil:servers" />
+                <h2 className="flex items-center gap-2.5 font-bold text-2xl text-foreground tracking-tight">
+                  <span className="flex size-9 items-center justify-center rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5 text-primary shadow-xs">
+                    <Icon className="size-4.5" icon="uil:servers" />
                   </span>
                   {t("mySubscriptions", "My Subscriptions")}
                 </h2>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-muted-foreground text-xs">
-                  <span className="rounded-full bg-muted px-2.5 py-1">
+                <div className="mt-3.5 flex flex-wrap items-center gap-2.5 text-xs">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/10 bg-emerald-500/5 px-3 py-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                    </span>
                     {t("activeSubscriptions", "Active")} {validSubscribeCount}
                   </span>
-                  <span className="rounded-full bg-muted px-2.5 py-1">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/10 bg-indigo-500/5 px-3 py-1 font-semibold text-indigo-600 dark:text-indigo-400">
+                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
                     {t("totalSubscriptions", "Total")} {userSubscribe.length}
                   </span>
                 </div>
@@ -203,7 +801,7 @@ export default function Content() {
                   onValueChange={(v: any) => setSubFilter(v)}
                   value={subFilter}
                 >
-                  <SelectTrigger className="h-9 w-32 rounded-full border-border/60 bg-background text-xs shadow-sm focus:ring-0">
+                  <SelectTrigger className="h-10 w-32 rounded-full border-border/40 bg-background/80 font-semibold text-xs shadow-xs transition-all hover:bg-background focus:ring-0 active:scale-95">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -217,20 +815,27 @@ export default function Content() {
                   </SelectContent>
                 </Select>
                 <Button
-                  className={cn("size-9 rounded-full", {
-                    "animate-pulse": isLoading,
-                  })}
+                  className={cn(
+                    "size-10 rounded-full border-border/40 transition-all hover:bg-muted/10 active:scale-95",
+                    {
+                      "animate-spin": isLoading,
+                    }
+                  )}
                   onClick={() => {
                     refetch();
                   }}
                   size="icon"
                   variant="outline"
                 >
-                  <Icon icon="uil:sync" />
+                  <Icon className="size-4" icon="uil:sync" />
                 </Button>
-                <Button asChild className="rounded-full" size="sm">
+                <Button
+                  asChild
+                  className="h-10 rounded-full bg-gradient-to-r from-primary to-indigo-600 px-5 font-semibold text-white shadow-md transition-all duration-300 hover:from-primary/95 hover:to-indigo-500 hover:shadow-lg hover:shadow-primary/20 active:scale-95"
+                  size="sm"
+                >
                   <Link to="/subscribe">
-                    <Icon className="size-4" icon="uil:plus" />
+                    <Icon className="mr-1.5 size-4" icon="uil:plus" />
                     {t("purchaseSubscription", "Purchase Subscription")}
                   </Link>
                 </Button>
@@ -247,15 +852,15 @@ export default function Content() {
                 }
                 value={platform}
               >
-                <TabsList className="flex *:flex-auto">
+                <TabsList className="flex rounded-full border border-border/40 bg-muted/60 p-1 backdrop-blur-sm *:flex-auto">
                   {availablePlatforms.map((item) => (
                     <TabsTrigger
-                      className="px-1 lg:px-3"
+                      className="rounded-full px-3 py-1.5 transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm lg:px-4"
                       key={item}
                       value={item}
                     >
                       <Icon
-                        className="size-5"
+                        className="size-4.5"
                         icon={`${
                           {
                             windows: "mdi:microsoft-windows",
@@ -278,10 +883,10 @@ export default function Content() {
                 onValueChange={setProtocol}
                 value={protocol}
               >
-                <TabsList className="flex *:flex-auto">
+                <TabsList className="flex rounded-full border border-border/40 bg-muted/60 p-1 backdrop-blur-sm *:flex-auto">
                   {["all", ...(data?.protocol || [])].map((item) => (
                     <TabsTrigger
-                      className="px-1 uppercase lg:px-3"
+                      className="rounded-full px-3 py-1.5 font-semibold text-xs uppercase transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm lg:px-4"
                       key={item}
                       value={item === "all" ? "" : item}
                     >
@@ -293,482 +898,30 @@ export default function Content() {
             )}
           </div>
           {filteredSubscribe.length > 0 ? (
-            filteredSubscribe.map((item, index) => {
-              // 如果过期时间为0，说明是永久订阅，不应该显示过期状态
-              const isActuallyExpired =
-                item.status === 3 && item.expire_time !== 0;
-              const shouldShowWatermark =
-                item.status === 2 || item.status === 4 || isActuallyExpired;
-
-              return (
-                <Card
-                  className={cn("relative overflow-hidden py-0", {
-                    "relative opacity-80 grayscale": isActuallyExpired,
-                    "relative hidden opacity-60 blur-[0.3px] grayscale":
-                      item.status === 4,
-                  })}
+            <div className="grid w-full grid-cols-1 gap-5 xl:grid-cols-2">
+              {filteredSubscribe.map((item, index) => (
+                <SubscriptionCard
+                  applications={applications || []}
+                  common={common}
+                  getUserSubscribe={getUserSubscribe}
+                  index={index}
+                  item={item}
                   key={item.id}
-                >
-                  {shouldShowWatermark && (
-                    <div
-                      className={cn(
-                        "pointer-events-none absolute top-0 left-0 z-10 h-full w-full overflow-hidden mix-blend-difference brightness-150 contrast-200 invert-[0.2]",
-                        {
-                          "text-destructive": item.status === 2,
-                          "text-white": isActuallyExpired || item.status === 4,
-                        }
-                      )}
-                    >
-                      <div className="absolute inset-0">
-                        {Array.from({ length: 16 }).map((_, i) => {
-                          const row = Math.floor(i / 4);
-                          const col = i % 4;
-                          const top = 10 + row * 25 + (col % 2 === 0 ? 5 : -5);
-                          const left = 5 + col * 30 + (row % 2 === 0 ? 0 : 10);
-
-                          return (
-                            <span
-                              className="absolute rotate-[-30deg] whitespace-nowrap font-black text-lg opacity-40 shadow-[0px_0px_1px_rgba(255,255,255,0.5)]"
-                              key={i}
-                              style={{
-                                top: `${top}%`,
-                                left: `${left}%`,
-                              }}
-                            >
-                              {
-                                statusWatermarks[
-                                  item.status as keyof typeof statusWatermarks
-                                ]
-                              }
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  <CardHeader className="border-border/60 border-b bg-muted/15 p-4">
-                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                      <CardTitle className="flex min-w-0 flex-row items-center gap-3">
-                        <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 font-bold text-primary text-sm">
-                          #{index + 1}
-                        </span>
-                        <div className="flex min-w-0 flex-col gap-1">
-                          <span className="truncate font-semibold text-primary text-xl tracking-tight">
-                            {item.subscribe.name}
-                          </span>
-                          <span className="font-medium text-foreground/50 text-xs">
-                            {t("expireAt", "Expires At")}:{" "}
-                            {item.expire_time
-                              ? formatDate(item.expire_time)
-                              : t("noLimit", "No Limit")}
-                          </span>
-                        </div>
-                      </CardTitle>
-                      {item.status !== 4 && (
-                        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                className="rounded-full"
-                                size="sm"
-                                variant="destructive"
-                              >
-                                <Icon
-                                  className="mr-1.5 size-4"
-                                  icon="uil:sync"
-                                />
-                                {t("resetSubscription", "Reset Subscription")}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  {t("prompt", "Prompt")}
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  {t(
-                                    "confirmResetSubscription",
-                                    "Are you sure you want to reset your subscription?"
-                                  )}
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>
-                                  {t("cancel", "Cancel")}
-                                </AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={async () => {
-                                    await resetUserSubscribeToken({
-                                      user_subscribe_id: item.id,
-                                    });
-                                    await refetch();
-                                    toast.success(
-                                      t("resetSuccess", "Reset Success")
-                                    );
-                                  }}
-                                >
-                                  {t("confirm", "Confirm")}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                          {item.subscribe.allow_reset_traffic !== false && (
-                            <ResetTraffic
-                              id={item.id}
-                              replacement={item.subscribe.replacement}
-                            />
-                          )}
-                          {item.subscribe.allow_renewal !== false &&
-                            item.expire_time !== 0 && (
-                              <Renewal
-                                id={item.id}
-                                subscribe={item.subscribe}
-                              />
-                            )}
-                          <Unsubscribe
-                            allowDeduction={item.subscribe.allow_deduction}
-                            id={item.id}
-                            onSuccess={refetch}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4 p-4">
-                    <div className="grid w-full gap-3 xl:grid-cols-[minmax(0,1fr)_17rem]">
-                      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-border/50 bg-background/80 p-4 lg:flex-row lg:items-center">
-                        <div className="flex min-w-[160px] flex-col">
-                          <span className="mb-0 font-medium text-muted-foreground text-xs">
-                            {t("used", "Used")}
-                          </span>
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-black text-2xl text-foreground tracking-tighter">
-                              <Display
-                                type="traffic"
-                                unlimited={!item.traffic}
-                                value={item.upload + item.download}
-                              />
-                            </span>
-                            <span className="font-medium text-muted-foreground text-xs">
-                              /{" "}
-                              {item.traffic ? (
-                                <Display type="traffic" value={item.traffic} />
-                              ) : (
-                                "∞"
-                              )}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex min-w-0 flex-1 flex-col gap-2">
-                          <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted/50 shadow-inner">
-                            {item.traffic ? (
-                              <>
-                                <div
-                                  className="relative h-full bg-blue-500 transition-all duration-500 ease-in-out hover:brightness-110"
-                                  style={{
-                                    width: `${Math.min(
-                                      100,
-                                      ((item.download || 0) /
-                                        (item.traffic || 1)) *
-                                        100
-                                    )}%`,
-                                  }}
-                                  title={"Download"}
-                                >
-                                  <div className="absolute inset-0 animate-pulse bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] opacity-50" />
-                                </div>
-                                <div
-                                  className="relative h-full bg-emerald-500 transition-all duration-500 ease-in-out hover:brightness-110"
-                                  style={{
-                                    width: `${Math.min(
-                                      100,
-                                      ((item.upload || 0) /
-                                        (item.traffic || 1)) *
-                                        100
-                                    )}%`,
-                                  }}
-                                  title={"Upload"}
-                                >
-                                  <div className="absolute inset-0 animate-pulse bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] opacity-50" />
-                                </div>
-                              </>
-                            ) : (
-                              <div className="h-full w-full animate-pulse bg-[length:200%_100%] bg-gradient-to-r from-blue-500 via-emerald-500 to-blue-500 opacity-80" />
-                            )}
-                          </div>
-
-                          <div className="flex items-center justify-between font-medium text-xs">
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-1 text-muted-foreground">
-                                <span className="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-sm" />
-                                <Icon
-                                  className="size-3.5"
-                                  icon="uil:arrow-down"
-                                />
-                                <Display type="traffic" value={item.download} />
-                              </div>
-                              <div className="flex items-center gap-1 text-muted-foreground">
-                                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-sm" />
-                                <Icon
-                                  className="size-3.5"
-                                  icon="uil:arrow-up"
-                                />
-                                <Display type="traffic" value={item.upload} />
-                              </div>
-                            </div>
-                            {!!item.traffic && (
-                              <div className="flex items-center gap-1.5 text-muted-foreground">
-                                <span>{t("remaining", "Remaining")}:</span>
-                                <span className="text-foreground">
-                                  <Display
-                                    type="traffic"
-                                    value={Math.max(
-                                      0,
-                                      item.traffic -
-                                        (item.upload + item.download)
-                                    )}
-                                  />
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {isActuallyExpired || item.status === 4 ? (
-                        <div className="flex flex-wrap content-start gap-2.5">
-                          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 py-1 pr-3 pl-1 shadow-sm">
-                            <div className="flex size-6 items-center justify-center rounded-full bg-red-500/20 text-red-500">
-                              <Icon
-                                className="size-3.5"
-                                icon="uil:times-circle"
-                              />
-                            </div>
-                            <span className="font-bold text-[11px] text-red-500">
-                              {item.status === 4
-                                ? t("deducted", "Deducted")
-                                : t("expired", "Expired")}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="grid content-start gap-2 sm:grid-cols-2 xl:grid-cols-1">
-                          <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-border/50 bg-background/80 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
-                            <div className="flex size-6 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
-                              <Icon className="size-3.5" icon="uil:sync" />
-                            </div>
-                            <span className="font-medium text-[11px]">
-                              <span className="mr-1 text-muted-foreground">
-                                {t("nextResetDays", "Next Reset Days")}:
-                              </span>
-                              <span className="text-foreground">
-                                {item.reset_time
-                                  ? Math.max(
-                                      0,
-                                      differenceInDays(
-                                        item.reset_time,
-                                        new Date()
-                                      )
-                                    )
-                                  : t("noReset", "No Reset")}
-                              </span>
-                            </span>
-                          </div>
-
-                          <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-border/50 bg-background/80 py-1 pr-3 pl-1 shadow-sm transition-colors hover:bg-muted/10">
-                            <div className="flex size-6 items-center justify-center rounded-full bg-orange-500/10 text-orange-500">
-                              <Icon
-                                className="size-3.5"
-                                icon="uil:calendar-alt"
-                              />
-                            </div>
-                            <span className="font-medium text-[11px]">
-                              <span className="mr-1 text-muted-foreground">
-                                {t("expirationDays", "Expiration Days")}:
-                              </span>
-                              <span className="text-foreground">
-                                {item.expire_time
-                                  ? Math.max(
-                                      0,
-                                      differenceInDays(
-                                        item.expire_time,
-                                        new Date()
-                                      )
-                                    ) || t("unknown", "Unknown")
-                                  : t("noLimit", "No Limit")}
-                              </span>
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <Accordion
-                      className="w-full rounded-2xl border border-border/60 bg-muted/10 px-4"
-                      collapsible
-                      defaultValue="0"
-                      type="single"
-                    >
-                      {getUserSubscribe(item.short, item.token, protocol)?.map(
-                        (url, index) => (
-                          <AccordionItem
-                            className="border-border/60"
-                            key={url}
-                            value={String(index)}
-                          >
-                            <AccordionTrigger className="py-3 hover:no-underline">
-                              <div className="flex w-full flex-row items-center justify-between">
-                                <div className="min-w-0 text-left">
-                                  <CardTitle className="font-medium text-sm">
-                                    {t(
-                                      "subscriptionMethods",
-                                      "Subscription methods"
-                                    )}{" "}
-                                    {index + 1}
-                                  </CardTitle>
-                                  <div className="mt-1 text-muted-foreground text-xs">
-                                    {t(
-                                      "subscriptionMethodsHint",
-                                      "Copy the link or import it with a client."
-                                    )}
-                                  </div>
-                                </div>
-
-                                <CopyToClipboard
-                                  onCopy={(_, result) => {
-                                    if (result) {
-                                      toast.success(
-                                        t("copySuccess", "Copy Success")
-                                      );
-                                    }
-                                  }}
-                                  text={url}
-                                >
-                                  <span
-                                    className="mr-4 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border/60 bg-background px-3 py-1.5 text-primary text-xs hover:bg-accent"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Icon className="size-4" icon="uil:copy" />
-                                    {t("copy", "Copy")}
-                                  </span>
-                                </CopyToClipboard>
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="pb-4">
-                              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-                                {applications
-                                  ?.filter(
-                                    (application) =>
-                                      application.enabled !== false &&
-                                      !!(
-                                        application.scheme ||
-                                        application.download_link?.[platform]
-                                      )
-                                  )
-                                  .map((application) => {
-                                    const downloadUrl =
-                                      application.download_link?.[platform];
-
-                                    const handleCopy = (
-                                      _: string,
-                                      result: boolean
-                                    ) => {
-                                      if (result) {
-                                        toast.success(
-                                          t("copySuccess", "Copy Success")
-                                        );
-                                      }
-                                    };
-
-                                    return (
-                                      <div
-                                        className="group hover:-translate-y-0.5 relative flex min-h-36 w-full flex-col items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/85 p-3 shadow-sm transition-all duration-300 hover:bg-background hover:shadow-md"
-                                        key={application.name}
-                                      >
-                                        <span className="font-semibold text-foreground text-sm tracking-tight">
-                                          {application.name}
-                                        </span>
-
-                                        {application.icon ? (
-                                          <div className="relative flex size-14 items-center justify-center rounded-2xl bg-white p-2 shadow-sm dark:bg-white/5">
-                                            <img
-                                              alt={application.name}
-                                              className="object-contain"
-                                              height={48}
-                                              src={application.icon}
-                                              width={48}
-                                            />
-                                          </div>
-                                        ) : (
-                                          <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 p-2 text-center text-primary shadow-sm">
-                                            <span className="line-clamp-2 font-bold text-xs leading-tight">
-                                              {application.name}
-                                            </span>
-                                          </div>
-                                        )}
-
-                                        <div className="flex w-full overflow-hidden rounded-xl border border-border/60 bg-background/70 backdrop-blur-sm">
-                                          {downloadUrl && (
-                                            <Button
-                                              asChild
-                                              className="h-8 flex-1 rounded-none border-border/50 border-r bg-transparent text-xs hover:bg-accent"
-                                              variant="ghost"
-                                            >
-                                              <a
-                                                href={downloadUrl}
-                                                rel="noopener noreferrer"
-                                                target="_blank"
-                                              >
-                                                {t("download", "Download")}
-                                              </a>
-                                            </Button>
-                                          )}
-
-                                          <CopyToClipboard
-                                            onCopy={handleCopy}
-                                            text={url}
-                                          >
-                                            <Button
-                                              className="h-8 flex-1 rounded-none bg-transparent text-xs hover:bg-accent"
-                                              variant="ghost"
-                                            >
-                                              {t("copy", "Copy")}
-                                            </Button>
-                                          </CopyToClipboard>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                <div className="group hover:-translate-y-0.5 relative flex min-h-36 w-full flex-col items-center justify-between gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-3 shadow-sm transition-all duration-300 hover:shadow-md">
-                                  <span className="font-semibold text-blue-500 text-sm tracking-tight">
-                                    {t("qrCode", "QR Code")}
-                                  </span>
-                                  <div className="relative flex size-14 items-center justify-center rounded-2xl bg-white p-1.5 shadow-[0_0_15px_rgba(59,130,246,0.25)] dark:bg-white/90">
-                                    <QRCodeCanvas
-                                      bgColor="transparent"
-                                      fgColor="rgb(59, 130, 246)"
-                                      size={48}
-                                      value={url}
-                                    />
-                                  </div>
-                                  <span className="text-center text-muted-foreground text-xs">
-                                    {t("scanToSubscribe", "Scan to Subscribe")}
-                                  </span>
-                                </div>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        )
-                      )}
-                    </Accordion>
-                  </CardContent>
-                </Card>
-              );
-            })
+                  platform={platform}
+                  protocol={protocol}
+                  refetch={refetch}
+                  statusWatermarks={statusWatermarks}
+                  t={t}
+                />
+              ))}
+            </div>
           ) : (
-            <div className="flex h-32 w-full flex-col items-center justify-center rounded-2xl border border-border/50 border-dashed text-muted-foreground">
-              <Icon className="mb-2 size-8 opacity-50" icon="uil:box" />
-              <p className="text-sm">
+            <div className="flex h-40 w-full flex-col items-center justify-center rounded-3xl border border-border/40 border-dashed bg-muted/5 text-muted-foreground/60 shadow-inner">
+              <Icon
+                className="mb-2.5 size-9 text-primary opacity-40"
+                icon="uil:box"
+              />
+              <p className="font-semibold text-sm tracking-tight">
                 {t("noMatchSubscriptions", "No matching subscriptions found.")}
               </p>
             </div>
@@ -776,8 +929,10 @@ export default function Content() {
         </>
       ) : (
         <>
-          <h2 className="flex items-center gap-1.5 font-semibold">
-            <Icon className="size-5" icon="uil:shop" />
+          <h2 className="mb-4 flex items-center gap-2 font-bold text-foreground text-xl tracking-tight">
+            <span className="flex size-8 items-center justify-center rounded-xl border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5 text-primary shadow-xs">
+              <Icon className="size-4" icon="uil:shop" />
+            </span>
             {t("purchaseSubscription", "Purchase Subscription")}
           </h2>
           <Subscribe />

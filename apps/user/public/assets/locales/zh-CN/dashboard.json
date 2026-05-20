@@ -1,11 +1,15 @@
 {
+  "active": "正常",
   "cancel": "取消",
   "confirm": "确认",
   "confirmResetSubscription": "您确定要重置订阅吗？",
   "copy": "复制",
   "copySuccess": "复制成功",
+  "copySubscriptionLink": "复制订阅链接",
+  "days": "天",
   "deducted": "已扣除",
   "download": "下载",
+  "expire": "到期",
   "expireAt": "到期时间",
   "expirationDays": "过期天数",
   "expired": "已过期",
@@ -25,7 +29,10 @@
   "prompt": "提示",
   "purchaseSubscription": "购买订阅",
   "qrCode": "二维码",
+  "renew": "续订",
+  "reset": "重置",
   "resetSubscription": "重置订阅",
+  "resetTraffic": "重置流量",
   "resetSuccess": "重置成功",
   "remaining": "剩余",
   "scanToSubscribe": "扫码订阅",
@@ -35,6 +42,10 @@
   "subscriptionUrl": "订阅链接",
   "totalSubscriptions": "全部订阅",
   "totalTraffic": "总流量",
+  "trafficUsage": "流量用量",
   "unknown": "未知",
-  "used": "已使用"
+  "unsubscribe": "取消订阅",
+  "used": "已使用",
+  "usedTraffic": "已用流量",
+  "quickImport": "快速导入客户端"
 }

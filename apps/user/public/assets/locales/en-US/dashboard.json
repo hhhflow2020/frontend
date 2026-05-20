@@ -1,11 +1,15 @@
 {
+  "active": "Active",
   "cancel": "Cancel",
   "confirm": "Confirm",
   "confirmResetSubscription": "Are you sure you want to reset your subscription?",
   "copy": "Copy",
   "copySuccess": "Copy Success",
+  "copySubscriptionLink": "Copy Subscription Link",
+  "days": "Days",
   "deducted": "Deducted",
   "download": "Download",
+  "expire": "Expire",
   "expireAt": "Expires At",
   "expirationDays": "Expiration Days",
   "expired": "Expired",
@@ -25,7 +29,10 @@
   "prompt": "Prompt",
   "purchaseSubscription": "Purchase Subscription",
   "qrCode": "QR Code",
+  "renew": "Renew",
+  "reset": "Reset",
   "resetSubscription": "Reset Subscription",
+  "resetTraffic": "Reset Traffic",
   "resetSuccess": "Reset Success",
   "remaining": "Remaining",
   "scanToSubscribe": "Scan to Subscribe",
@@ -35,6 +42,10 @@
   "subscriptionUrl": "Subscription URL",
   "totalSubscriptions": "Total",
   "totalTraffic": "Total Traffic",
+  "trafficUsage": "Traffic Usage",
   "unknown": "Unknown",
-  "used": "Used"
+  "unsubscribe": "Unsubscribe",
+  "used": "Used",
+  "usedTraffic": "Used Traffic",
+  "quickImport": "Quick Import to Client"
 }

@@ -27,9 +27,14 @@ import { SubscribeDetail } from "./detail";
 interface RenewalProps {
   id: number;
   subscribe: API.Subscribe;
+  trigger?: React.ReactNode;
 }
 
-export default function Renewal({ id, subscribe }: Readonly<RenewalProps>) {
+export default function Renewal({
+  id,
+  subscribe,
+  trigger,
+}: Readonly<RenewalProps>) {
   const { t } = useTranslation("subscribe");
   const { getUserInfo } = useGlobalStore();
   const navigate = useNavigate();
@@ -114,10 +119,12 @@ export default function Renewal({ id, subscribe }: Readonly<RenewalProps>) {
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Icon className="mr-1.5 size-4" icon="uil:history" />
-          {t("renew", "Renew")}
-        </Button>
+        {trigger ?? (
+          <Button size="sm">
+            <Icon className="mr-1.5 size-4" icon="uil:history" />
+            {t("renew", "Renew")}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="flex h-full flex-col overflow-y-auto md:h-auto md:max-w-screen-lg">
         <DialogHeader>

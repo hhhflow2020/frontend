@@ -23,12 +23,14 @@ interface UnsubscribeProps {
   id: number;
   allowDeduction?: boolean;
   onSuccess?: () => void;
+  trigger?: React.ReactNode;
 }
 
 export default function Unsubscribe({
   id,
   allowDeduction,
   onSuccess,
+  trigger,
 }: Readonly<UnsubscribeProps>) {
   const { t } = useTranslation("subscribe");
   const { common, getUserInfo } = useGlobalStore();
@@ -67,10 +69,12 @@ export default function Unsubscribe({
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="destructive">
-          <Icon className="mr-1.5 size-4" icon="uil:ban" />
-          {t("unsubscribe.unsubscribe", "Unsubscribe")}
-        </Button>
+        {trigger ?? (
+          <Button size="sm" variant="destructive">
+            <Icon className="mr-1.5 size-4" icon="uil:ban" />
+            {t("unsubscribe.unsubscribe", "Unsubscribe")}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
