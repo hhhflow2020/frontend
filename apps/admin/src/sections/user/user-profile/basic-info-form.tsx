@@ -82,7 +82,27 @@ export function BasicInfoForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form autoComplete="off" onSubmit={form.handleSubmit(onSubmit)}>
+        <input
+          aria-hidden="true"
+          autoComplete="username"
+          className="pointer-events-none absolute h-px w-px opacity-0"
+          name="username"
+          readOnly
+          tabIndex={-1}
+          type="text"
+          value=""
+        />
+        <input
+          aria-hidden="true"
+          autoComplete="current-password"
+          className="pointer-events-none absolute h-px w-px opacity-0"
+          name="password"
+          readOnly
+          tabIndex={-1}
+          type="password"
+          value=""
+        />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t("basicInfoTitle", "Basic Info")}</CardTitle>
@@ -326,12 +346,18 @@ export function BasicInfoForm({
                   <FormLabel>{t("password", "Password")}</FormLabel>
                   <FormControl>
                     <Input
+                      {...field}
+                      autoComplete="new-password"
+                      data-1p-ignore="true"
+                      data-lpignore="true"
+                      id={`admin-user-${user.id}-password-reset`}
+                      name={`admin-user-${user.id}-password-reset`}
                       placeholder={t(
                         "passwordPlaceholder",
                         "Enter new password"
                       )}
                       type="password"
-                      {...field}
+                      value={field.value ?? ""}
                     />
                   </FormControl>
                   <FormMessage />
