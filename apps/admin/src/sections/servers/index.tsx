@@ -386,7 +386,11 @@ export default function Servers() {
       item: Partial<API.ServerStatus> & { server_id?: number }
     ) => {
       if (!item.server_id) return;
-      const { server_id: serverId, ...status } = item;
+      const { server_id: serverId, ...incomingStatus } = item;
+      const status = {
+        xray_stats_error: "",
+        ...incomingStatus,
+      };
       setRealtimeStatus((prev) => {
         const previous = prev[serverId];
         const previousVersion = serverStatusVersion(previous);

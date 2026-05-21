@@ -9,6 +9,7 @@ import {
 import { Switch } from "@workspace/ui/components/switch";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { EnhancedInput } from "@workspace/ui/composed/enhanced-input";
+import { useEffect, useState } from "react";
 
 type JsonObject = Record<string, any>;
 
@@ -88,6 +89,49 @@ function columnClassName(column: JsonArrayColumn) {
   return column.span === "full" || column.multiline
     ? "space-y-1 md:col-span-2"
     : "space-y-1";
+}
+
+function MultilineCsvTextarea({
+  onValueChange,
+  placeholder,
+  value,
+}: {
+  onValueChange: (value: string[]) => void;
+  placeholder?: string;
+  value: unknown;
+}) {
+  const externalValue = arrayToLines(value);
+  const [draft, setDraft] = useState(externalValue);
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (!focused) {
+      setDraft(externalValue);
+    }
+  }, [externalValue, focused]);
+
+  function commit(text = draft) {
+    onValueChange(csvToArray(text));
+  }
+
+  return (
+    <div className="space-y-1">
+      <Textarea
+        className="min-h-24 resize-y whitespace-pre-wrap font-mono text-xs leading-5"
+        onBlur={() => {
+          setFocused(false);
+          commit();
+        }}
+        onChange={(event) => setDraft(event.target.value)}
+        onFocus={() => setFocused(true)}
+        placeholder={placeholder}
+        value={draft}
+      />
+      <div className="text-[11px] text-muted-foreground">
+        每行一条，也支持逗号分隔。
+      </div>
+    </div>
+  );
 }
 
 function inferValueType(value: unknown): JsonValueType {
@@ -384,23 +428,12 @@ export function JsonArrayObjectEditor({
                       {column.label}
                     </div>
                     {column.multiline ? (
-                      <Textarea
-                        className="min-h-24 resize-y font-mono text-xs leading-5"
-                        onChange={(event) =>
-                          updateItem(
-                            index,
-                            column.key,
-                            column.type === "csv"
-                              ? csvToArray(event.target.value)
-                              : event.target.value
-                          )
+                      <MultilineCsvTextarea
+                        onValueChange={(nextValue) =>
+                          updateItem(index, column.key, nextValue)
                         }
                         placeholder={column.placeholder}
-                        value={
-                          column.type === "csv"
-                            ? arrayToLines(rawValue)
-                            : String(rawValue ?? "")
-                        }
+                        value={rawValue}
                       />
                     ) : (
                       <EnhancedInput
