@@ -63,6 +63,51 @@ export const ROUTING_DOMAIN_STRATEGIES = [
   "IPIfNonMatch",
   "IPOnDemand",
 ] as const;
+export const ROUTING_PRESETS = [
+  {
+    id: "safety",
+    label: "基础安全",
+    description: "阻断内网地址与 BT 流量，适合作为节点默认路由。",
+    domainStrategy: "IPIfNonMatch",
+    rules: [
+      {
+        type: "field",
+        ip: ["geoip:private"],
+        outboundTag: "block",
+      },
+      {
+        type: "field",
+        protocol: ["bittorrent"],
+        outboundTag: "block",
+      },
+    ],
+    balancers: [],
+  },
+  {
+    id: "anti-abuse",
+    label: "防滥用增强",
+    description: "在基础安全上额外阻断常见邮件端口，降低滥用风险。",
+    domainStrategy: "IPIfNonMatch",
+    rules: [
+      {
+        type: "field",
+        ip: ["geoip:private"],
+        outboundTag: "block",
+      },
+      {
+        type: "field",
+        protocol: ["bittorrent"],
+        outboundTag: "block",
+      },
+      {
+        type: "field",
+        port: "25,465,587",
+        outboundTag: "block",
+      },
+    ],
+    balancers: [],
+  },
+] as const;
 
 export function safeJsonParse<T>(value: string, fallback: T): T {
   if (!value.trim()) return fallback;

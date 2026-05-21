@@ -1992,6 +1992,9 @@ declare namespace API {
 
   type QueryServerXrayTemplateListResponse = {
     list: ServerXrayTemplate[];
+    desired_config_hash?: string;
+    desired_config_error?: string;
+    status?: ServerStatus;
   };
 
   type ServerGroup = {

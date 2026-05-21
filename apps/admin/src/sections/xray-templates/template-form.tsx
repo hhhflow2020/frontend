@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
   Form,
@@ -52,15 +53,23 @@ import {
   configToFormValues,
   formatJson,
   INBOUND_PROTOCOLS,
+  linesToArray,
   NETWORKS,
   OUTBOUND_PROTOCOLS,
   QUERY_STRATEGIES,
   ROUTING_DOMAIN_STRATEGIES,
+  ROUTING_PRESETS,
   SECURITIES,
   safeJsonParse,
   XRAY_TEMPLATE_TYPES,
   type XrayTemplateType,
 } from "./config";
+import {
+  type JsonArrayColumn,
+  JsonArrayObjectEditor,
+  JsonObjectEditor,
+  parseJsonObjectText,
+} from "./json-form-controls";
 
 const formSchema = z.object({
   name: z.string().min(1),
@@ -212,7 +221,142 @@ type TemplatePayload = {
   subscription_meta?: Record<string, any>;
 };
 
+type JsonFieldRule = {
+  name: keyof FormValues;
+  label: string;
+  shape: "array" | "object";
+};
+
 const REALITY_NETWORKS = ["raw", "tcp", "xhttp", "grpc"];
+
+const ROUTING_RULE_COLUMNS: JsonArrayColumn[] = [
+  { key: "type", label: "类型", type: "select", options: ["field"] },
+  {
+    key: "inboundTag",
+    label: "入站 Tag",
+    type: "csv",
+    placeholder: "{{ .Ref.inbound.main.tag }}",
+  },
+  { key: "outboundTag", label: "出站 Tag", placeholder: "direct" },
+  { key: "balancerTag", label: "负载均衡 Tag", placeholder: "auto" },
+  { key: "domain", label: "域名规则", type: "csv", placeholder: "geosite:cn" },
+  { key: "ip", label: "IP 规则", type: "csv", placeholder: "geoip:private" },
+  { key: "protocol", label: "协议", type: "csv", placeholder: "bittorrent" },
+  { key: "port", label: "端口", placeholder: "25,465,587" },
+];
+
+const ROUTING_BALANCER_COLUMNS: JsonArrayColumn[] = [
+  { key: "tag", label: "Tag", placeholder: "auto" },
+  { key: "selector", label: "Selector", type: "csv", placeholder: "proxy" },
+  { key: "strategy", label: "策略", placeholder: "leastPing" },
+];
+
+const GEODATA_ASSET_COLUMNS: JsonArrayColumn[] = [
+  {
+    key: "url",
+    label: "下载地址",
+    placeholder: "https://example.com/geoip.dat",
+  },
+  { key: "file", label: "文件名", placeholder: "geoip.dat" },
+];
+
+const DNS_SERVER_OBJECT_COLUMNS: JsonArrayColumn[] = [
+  {
+    key: "address",
+    label: "地址",
+    placeholder: "https://dns.google/dns-query",
+  },
+  { key: "domains", label: "匹配域名", type: "csv", placeholder: "geosite:cn" },
+  {
+    key: "expectedIPs",
+    label: "期望 IP",
+    type: "csv",
+    placeholder: "geoip:cn",
+  },
+  {
+    key: "queryStrategy",
+    label: "查询策略",
+    type: "select",
+    options: [...QUERY_STRATEGIES],
+  },
+  { key: "skipFallback", label: "跳过 fallback", type: "boolean" },
+];
+
+const VLESS_CLIENT_COLUMNS: JsonArrayColumn[] = [
+  { key: "id", label: "UUID", placeholder: "{{ .Vars.uuid }}" },
+  { key: "email", label: "Email", placeholder: "{{ .Vars.email }}" },
+  { key: "flow", label: "Flow", placeholder: "xtls-rprx-vision" },
+  { key: "level", label: "Level", type: "number" },
+];
+
+const VMESS_CLIENT_COLUMNS: JsonArrayColumn[] = [
+  { key: "id", label: "UUID", placeholder: "{{ .Vars.uuid }}" },
+  { key: "email", label: "Email", placeholder: "{{ .Vars.email }}" },
+  { key: "alterId", label: "Alter ID", type: "number" },
+  { key: "level", label: "Level", type: "number" },
+];
+
+const TROJAN_CLIENT_COLUMNS: JsonArrayColumn[] = [
+  { key: "password", label: "密码", placeholder: "{{ .Vars.password }}" },
+  { key: "email", label: "Email", placeholder: "{{ .Vars.email }}" },
+  { key: "flow", label: "Flow" },
+  { key: "level", label: "Level", type: "number" },
+];
+
+const FALLBACK_COLUMNS: JsonArrayColumn[] = [
+  { key: "dest", label: "目标", placeholder: "80 / 127.0.0.1:8443" },
+  { key: "name", label: "SNI 名称", placeholder: "example.com" },
+  { key: "alpn", label: "ALPN", placeholder: "h2,http/1.1" },
+  { key: "path", label: "Path", placeholder: "/fallback" },
+];
+
+const SHADOWSOCKS_CLIENT_COLUMNS: JsonArrayColumn[] = [
+  { key: "password", label: "密码" },
+  { key: "method", label: "Method", placeholder: "aes-256-gcm" },
+  { key: "email", label: "Email" },
+  { key: "level", label: "Level", type: "number" },
+];
+
+const ACCOUNT_COLUMNS: JsonArrayColumn[] = [
+  { key: "user", label: "用户名" },
+  { key: "pass", label: "密码" },
+];
+
+const WG_PEER_COLUMNS: JsonArrayColumn[] = [
+  { key: "publicKey", label: "Public Key" },
+  { key: "endpoint", label: "Endpoint", placeholder: "example.com:51820" },
+  {
+    key: "allowedIPs",
+    label: "Allowed IPs",
+    type: "csv",
+    placeholder: "0.0.0.0/0, ::/0",
+  },
+  { key: "keepAlive", label: "Keep Alive", type: "number" },
+];
+
+const HYSTERIA_USER_COLUMNS: JsonArrayColumn[] = [
+  { key: "auth", label: "Auth", placeholder: "{{ .Vars.password }}" },
+  { key: "email", label: "Email", placeholder: "{{ .Vars.email }}" },
+  { key: "level", label: "Level", type: "number" },
+];
+
+const DNS_OUT_RULE_COLUMNS: JsonArrayColumn[] = [
+  { key: "action", label: "动作", placeholder: "reject / direct" },
+  {
+    key: "domain",
+    label: "域名",
+    type: "csv",
+    placeholder: "domain:example.com",
+  },
+  { key: "ip", label: "IP", type: "csv", placeholder: "geoip:cn" },
+  { key: "qtype", label: "QType", type: "number" },
+];
+
+const FREEDOM_NOISE_COLUMNS: JsonArrayColumn[] = [
+  { key: "type", label: "类型", placeholder: "base64" },
+  { key: "packet", label: "Packet" },
+  { key: "delay", label: "延迟", placeholder: "10-16" },
+];
 
 function defaultValues(type: XrayTemplateType = "inbound"): FormValues {
   return {
@@ -334,6 +478,170 @@ function JsonTextarea({
       placeholder={placeholder}
       value={value || ""}
     />
+  );
+}
+
+function SummaryPill({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | number | boolean;
+}) {
+  return (
+    <div className="rounded-md border bg-background px-3 py-2">
+      <div className="text-muted-foreground text-xs">{label}</div>
+      <div className="truncate font-medium text-sm">
+        {value === undefined || value === "" ? "—" : String(value)}
+      </div>
+    </div>
+  );
+}
+
+function jsonArrayCount(value?: string) {
+  const parsed = safeJsonParse<unknown>(value || "", []);
+  return Array.isArray(parsed) ? parsed.length : 0;
+}
+
+function objectJsonField(name: keyof FormValues, label: string): JsonFieldRule {
+  return { name, label, shape: "object" };
+}
+
+function arrayJsonField(name: keyof FormValues, label: string): JsonFieldRule {
+  return { name, label, shape: "array" };
+}
+
+function pushUniqueJsonField(
+  map: Map<keyof FormValues, JsonFieldRule>,
+  rule: JsonFieldRule
+) {
+  map.set(rule.name, rule);
+}
+
+function getActiveJsonFieldRules(values: FormValues, useAdvancedJson: boolean) {
+  const rules = new Map<keyof FormValues, JsonFieldRule>();
+  const add = (rule: JsonFieldRule) => pushUniqueJsonField(rules, rule);
+
+  add(objectJsonField("variables_schema_json", "Variables Schema"));
+  add(objectJsonField("default_variables_json", "Default Variables"));
+  add(objectJsonField("subscription_meta_json", "Subscription Meta"));
+  if (useAdvancedJson) {
+    add(objectJsonField("advanced_json", "Advanced JSON"));
+  }
+
+  if (values.type === "routing") {
+    add(arrayJsonField("routing_rules_json", "Routing Rules"));
+    add(arrayJsonField("routing_balancers_json", "Routing Balancers"));
+    return [...rules.values()];
+  }
+
+  if (values.type === "dns") {
+    add(arrayJsonField("dns_servers_json", "DNS Object Servers"));
+    add(objectJsonField("hosts_json", "Hosts JSON"));
+    return [...rules.values()];
+  }
+
+  if (values.type === "geodata") {
+    add(arrayJsonField("geodata_assets_json", "Geodata Assets"));
+    return [...rules.values()];
+  }
+
+  add(objectJsonField("settings_json", "Settings JSON"));
+
+  if (values.protocol === "vless") {
+    add(arrayJsonField("vless_clients_json", "VLESS Clients"));
+    add(arrayJsonField("fallbacks_json", "Fallbacks"));
+  }
+  if (values.protocol === "vmess") {
+    add(arrayJsonField("vmess_clients_json", "VMess Clients"));
+    add(objectJsonField("vmess_default_json", "VMess Default"));
+  }
+  if (values.protocol === "trojan") {
+    add(arrayJsonField("trojan_clients_json", "Trojan Clients"));
+    add(arrayJsonField("fallbacks_json", "Fallbacks"));
+  }
+  if (values.protocol === "shadowsocks") {
+    add(arrayJsonField("ss_clients_json", "Shadowsocks Clients"));
+  }
+  if (values.protocol === "socks" || values.protocol === "http") {
+    add(arrayJsonField("accounts_json", "Accounts"));
+  }
+  if (values.protocol === "dokodemo-door") {
+    add(objectJsonField("dokodemo_port_map_json", "Port Map"));
+  }
+  if (values.protocol === "wireguard") {
+    add(arrayJsonField("wg_peers_json", "WireGuard Peers"));
+  }
+  if (values.protocol === "hysteria") {
+    add(arrayJsonField("hysteria_users_json", "Hysteria Users"));
+  }
+
+  if (values.type === "outbound") {
+    if (values.protocol === "freedom") {
+      add(objectJsonField("fragment_json", "Fragment"));
+      add(arrayJsonField("noises_json", "Noises"));
+    }
+    if (values.protocol === "http") {
+      add(objectJsonField("headers_json", "Headers"));
+    }
+    if (values.protocol === "dns") {
+      add(arrayJsonField("dns_out_rules_json", "DNS Rules"));
+    }
+    if (values.protocol === "wireguard") {
+      add(arrayJsonField("wg_reserved_json", "WireGuard Reserved"));
+    }
+  }
+
+  const streamUnsupported =
+    (values.type === "inbound" &&
+      ["tun", "wireguard"].includes(values.protocol || "")) ||
+    (values.type === "outbound" &&
+      ["dns", "loopback", "wireguard"].includes(values.protocol || ""));
+  if (!streamUnsupported) {
+    if (values.network === "xhttp") {
+      add(objectJsonField("xhttp_extra_json", "XHTTP Extra"));
+    }
+    if (values.network === "raw" || values.network === "tcp") {
+      add(objectJsonField("raw_settings_json", "Raw Settings"));
+    }
+    if (values.network === "kcp") {
+      add(objectJsonField("kcp_settings_json", "KCP Settings"));
+    }
+    if (values.network === "hysteria") {
+      add(objectJsonField("hysteria_settings_json", "Hysteria Settings"));
+    }
+    add(objectJsonField("sockopt_json", "Sockopt"));
+    add(objectJsonField("finalmask_json", "Finalmask"));
+  }
+
+  return [...rules.values()];
+}
+
+function parseJsonField(value: unknown) {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text) return;
+  return JSON.parse(text);
+}
+
+function isPlainJsonObject(value: unknown) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+const NON_CONFIG_DIRTY_FIELDS = new Set<keyof FormValues>([
+  "name",
+  "description",
+  "enabled",
+  "config",
+  "config_template",
+  "variables_schema_json",
+  "default_variables_json",
+  "subscription_meta_json",
+  "advanced_json",
+]);
+
+function hasStructuredConfigChanges(dirtyFields: Record<string, unknown>) {
+  return Object.keys(dirtyFields || {}).some(
+    (key) => !NON_CONFIG_DIRTY_FIELDS.has(key as keyof FormValues)
   );
 }
 
@@ -506,6 +814,295 @@ function JsonField({
   );
 }
 
+function JsonObjectField({
+  control,
+  name,
+  label,
+  description,
+  addLabel,
+}: {
+  control: any;
+  name: keyof FormValues;
+  label: string;
+  description?: string;
+  addLabel?: string;
+}) {
+  const translatedLabel = useXrayFieldLabel(label);
+
+  return (
+    <FormField
+      control={control}
+      name={name as any}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{translatedLabel}</FormLabel>
+          {description ? (
+            <FormDescription>{description}</FormDescription>
+          ) : null}
+          <FormControl>
+            <JsonObjectEditor
+              addLabel={addLabel}
+              onChange={field.onChange}
+              value={field.value}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function JsonArrayObjectField({
+  addLabel,
+  columns,
+  control,
+  defaultItem,
+  description,
+  emptyText,
+  label,
+  name,
+}: {
+  addLabel?: string;
+  columns: JsonArrayColumn[];
+  control: any;
+  defaultItem?: Record<string, any>;
+  description?: string;
+  emptyText?: string;
+  label: string;
+  name: keyof FormValues;
+}) {
+  const translatedLabel = useXrayFieldLabel(label);
+
+  return (
+    <FormField
+      control={control}
+      name={name as any}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{translatedLabel}</FormLabel>
+          {description ? (
+            <FormDescription>{description}</FormDescription>
+          ) : null}
+          <FormControl>
+            <JsonArrayObjectEditor
+              addLabel={addLabel}
+              columns={columns}
+              defaultItem={defaultItem}
+              emptyText={emptyText}
+              onChange={field.onChange}
+              value={field.value}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function VariableSchemaField({
+  control,
+  name,
+}: {
+  control: any;
+  name: keyof FormValues;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name as any}
+      render={({ field }) => {
+        const schema = parseJsonObjectText(field.value);
+        const schemaMetaKeys = new Set([
+          "type",
+          "required",
+          "properties",
+          "additionalProperties",
+          "description",
+          "title",
+        ]);
+        const properties =
+          schema.properties && typeof schema.properties === "object"
+            ? (schema.properties as Record<string, any>)
+            : Object.fromEntries(
+                Object.entries(schema).filter(
+                  ([key, value]) =>
+                    !schemaMetaKeys.has(key) &&
+                    value &&
+                    typeof value === "object" &&
+                    !Array.isArray(value)
+                )
+              );
+        const required = Array.isArray(schema.required) ? schema.required : [];
+        const rows = Object.entries(properties);
+
+        const commit = (
+          nextProperties: Record<string, any>,
+          nextRequired = required
+        ) => {
+          const baseSchema = { ...schema };
+          if (!schema.properties) {
+            for (const key of Object.keys(properties)) {
+              delete baseSchema[key];
+            }
+          }
+          field.onChange(
+            formatJson({
+              ...baseSchema,
+              type: schema.type || "object",
+              properties: nextProperties,
+              required: nextRequired,
+            })
+          );
+        };
+
+        return (
+          <FormItem>
+            <FormLabel>变量结构</FormLabel>
+            <FormDescription>
+              定义绑定服务器时要填写的变量，绑定页会自动生成对应表单。
+            </FormDescription>
+            <FormControl>
+              <div className="space-y-2 rounded-md border bg-muted/20 p-3">
+                {rows.length ? (
+                  rows.map(([key, item]) => (
+                    <div
+                      className="grid grid-cols-1 gap-2 rounded-md border bg-background p-2 md:grid-cols-[120px_120px_1fr_1fr_1fr_auto]"
+                      key={key}
+                    >
+                      <EnhancedInput
+                        onValueChange={(nextKey) => {
+                          const normalized = nextKey.trim();
+                          if (!normalized || normalized === key) return;
+                          const next = { ...properties };
+                          delete next[key];
+                          next[normalized] = item;
+                          commit(
+                            next,
+                            required.map((requiredKey: string) =>
+                              requiredKey === key ? normalized : requiredKey
+                            )
+                          );
+                        }}
+                        placeholder="变量名"
+                        value={key}
+                      />
+                      <Select
+                        onValueChange={(typeValue) =>
+                          commit({
+                            ...properties,
+                            [key]: { ...item, type: typeValue },
+                          })
+                        }
+                        value={item?.type || "string"}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="string">文本</SelectItem>
+                          <SelectItem value="number">数字</SelectItem>
+                          <SelectItem value="boolean">开关</SelectItem>
+                          <SelectItem value="array">数组</SelectItem>
+                          <SelectItem value="object">对象</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <EnhancedInput
+                        onValueChange={(titleValue) =>
+                          commit({
+                            ...properties,
+                            [key]: { ...item, title: titleValue },
+                          })
+                        }
+                        placeholder="显示名"
+                        value={item?.title || item?.label || ""}
+                      />
+                      <EnhancedInput
+                        onValueChange={(descriptionValue) =>
+                          commit({
+                            ...properties,
+                            [key]: {
+                              ...item,
+                              description: descriptionValue,
+                            },
+                          })
+                        }
+                        placeholder="说明"
+                        value={item?.description || item?.desc || ""}
+                      />
+                      <EnhancedInput
+                        onValueChange={(defaultValue) =>
+                          commit({
+                            ...properties,
+                            [key]: { ...item, default: defaultValue },
+                          })
+                        }
+                        placeholder="默认值"
+                        value={item?.default ?? ""}
+                      />
+                      <div className="flex items-center justify-end gap-2">
+                        <Switch
+                          checked={required.includes(key)}
+                          onCheckedChange={(checked) =>
+                            commit(
+                              properties,
+                              checked
+                                ? [...required, key]
+                                : required.filter(
+                                    (requiredKey: string) => requiredKey !== key
+                                  )
+                            )
+                          }
+                        />
+                        <Button
+                          onClick={() => {
+                            const next = { ...properties };
+                            delete next[key];
+                            commit(
+                              next,
+                              required.filter(
+                                (requiredKey: string) => requiredKey !== key
+                              )
+                            );
+                          }}
+                          type="button"
+                          variant="outline"
+                        >
+                          删除
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-md border border-dashed p-4 text-center text-muted-foreground text-sm">
+                    还没有变量定义。
+                  </div>
+                )}
+                <Button
+                  onClick={() => {
+                    const nextKey = `var_${rows.length + 1}`;
+                    commit({
+                      ...properties,
+                      [nextKey]: { type: "string", title: nextKey },
+                    });
+                  }}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  添加变量
+                </Button>
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
+    />
+  );
+}
+
 function ProtocolSettingsFields({
   control,
   type,
@@ -535,15 +1132,20 @@ function ProtocolSettingsFields({
               type="number"
             />
           </div>
-          <JsonField
+          <JsonArrayObjectField
+            addLabel="添加客户端"
+            columns={VLESS_CLIENT_COLUMNS}
             control={control}
-            description='ClientObject[]: [{"id":"uuid","level":0,"email":"user@example.com","flow":"xtls-rprx-vision"}]'
+            defaultItem={{ id: "{{ .Vars.uuid }}", email: "{{ .Vars.email }}" }}
+            description="每一行会生成一个 VLESS 客户端，支持直接使用 Vars 模板变量。"
             label="VLESS Clients"
             name="vless_clients_json"
           />
-          <JsonField
+          <JsonArrayObjectField
+            addLabel="添加回落"
+            columns={FALLBACK_COLUMNS}
             control={control}
-            description='FallbackObject[]: [{"dest":80},{"name":"example.com","alpn":"h2","dest":"127.0.0.1:8443"}]'
+            description="按需配置 REALITY/TLS 回落目标，留空则不生成 fallbacks。"
             label="Fallbacks"
             name="fallbacks_json"
           />
@@ -553,15 +1155,22 @@ function ProtocolSettingsFields({
     if (protocol === "vmess") {
       return (
         <div className="space-y-4">
-          <JsonField
+          <JsonArrayObjectField
+            addLabel="添加客户端"
+            columns={VMESS_CLIENT_COLUMNS}
             control={control}
-            description='ClientObject[]: [{"id":"uuid","level":0,"email":"user@example.com","alterId":0}]'
+            defaultItem={{
+              alterId: 0,
+              email: "{{ .Vars.email }}",
+              id: "{{ .Vars.uuid }}",
+            }}
+            description="每一行会生成一个 VMess 客户端。"
             label="VMess Clients"
             name="vmess_clients_json"
           />
-          <JsonField
+          <JsonObjectField
             control={control}
-            description='VMess DefaultObject, e.g. {"level":0}'
+            description="VMess default 对象，常用字段可直接新增键值。"
             label="VMess Default"
             name="vmess_default_json"
           />
@@ -571,15 +1180,23 @@ function ProtocolSettingsFields({
     if (protocol === "trojan") {
       return (
         <div className="space-y-4">
-          <JsonField
+          <JsonArrayObjectField
+            addLabel="添加客户端"
+            columns={TROJAN_CLIENT_COLUMNS}
             control={control}
-            description='ClientObject[]: [{"password":"password","email":"user@example.com","level":0}]'
+            defaultItem={{
+              email: "{{ .Vars.email }}",
+              password: "{{ .Vars.password }}",
+            }}
+            description="每一行会生成一个 Trojan 客户端。"
             label="Trojan Clients"
             name="trojan_clients_json"
           />
-          <JsonField
+          <JsonArrayObjectField
+            addLabel="添加回落"
+            columns={FALLBACK_COLUMNS}
             control={control}
-            description='FallbackObject[]: [{"dest":80}]'
+            description="按需配置回落目标，留空则不生成 fallbacks。"
             label="Fallbacks"
             name="fallbacks_json"
           />
@@ -616,9 +1233,11 @@ function ProtocolSettingsFields({
               type="number"
             />
           </div>
-          <JsonField
+          <JsonArrayObjectField
+            addLabel="添加客户端"
+            columns={SHADOWSOCKS_CLIENT_COLUMNS}
             control={control}
-            description='Optional multi-user ClientObject[]: [{"password":"pass","method":"aes-256-gcm","level":0,"email":"user@example.com"}]'
+            description="多用户 Shadowsocks 客户端；单用户场景可只填写上方密码。"
             label="Clients"
             name="ss_clients_json"
           />
@@ -643,9 +1262,11 @@ function ProtocolSettingsFields({
             type="number"
           />
           <div className="md:col-span-2">
-            <JsonField
+            <JsonArrayObjectField
+              addLabel="添加账号"
+              columns={ACCOUNT_COLUMNS}
               control={control}
-              description='AccountObject[]: [{"user":"username","pass":"password"}]'
+              description="SOCKS 用户名密码账号。"
               label="Accounts"
               name="accounts_json"
             />
@@ -669,9 +1290,11 @@ function ProtocolSettingsFields({
               type="number"
             />
           </div>
-          <JsonField
+          <JsonArrayObjectField
+            addLabel="添加账号"
+            columns={ACCOUNT_COLUMNS}
             control={control}
-            description='AccountObject[]: [{"user":"username","pass":"password"}]'
+            description="HTTP 用户名密码账号。"
             label="Accounts"
             name="accounts_json"
           />
@@ -710,9 +1333,9 @@ function ProtocolSettingsFields({
             type="number"
           />
           <div className="md:col-span-2">
-            <JsonField
+            <JsonObjectField
               control={control}
-              description='portMap object: {"5555":"1.1.1.1:7777","5556":":8888"}'
+              description="Port Map 键为监听端口，值为转发目标。"
               label="Port Map"
               name="dokodemo_port_map_json"
             />
@@ -736,9 +1359,11 @@ function ProtocolSettingsFields({
               type="number"
             />
           </div>
-          <JsonField
+          <JsonArrayObjectField
+            addLabel="添加 Peer"
+            columns={WG_PEER_COLUMNS}
             control={control}
-            description='Peers[]: [{"publicKey":"PUBLIC_KEY","allowedIPs":["0.0.0.0/0","::/0"]}]'
+            description="WireGuard Peer 列表。"
             label="Peers"
             name="wg_peers_json"
           />
@@ -755,9 +1380,11 @@ function ProtocolSettingsFields({
             name="hysteria_version"
             type="number"
           />
-          <JsonField
+          <JsonArrayObjectField
+            addLabel="添加用户"
+            columns={HYSTERIA_USER_COLUMNS}
             control={control}
-            description='UserObject[]: [{"auth":"password-or-uuid","level":0,"email":"user@example.com"}]'
+            description="Hysteria2 用户列表。"
             label="Users"
             name="hysteria_users_json"
           />
@@ -814,9 +1441,11 @@ function ProtocolSettingsFields({
             type="number"
           />
         </div>
-        <JsonField
+        <JsonArrayObjectField
+          addLabel="添加规则"
+          columns={DNS_OUT_RULE_COLUMNS}
           control={control}
-          description='DNS RuleObject[]: [{"action":"reject","domain":["domain:example.com"]},{"action":"direct","qtype":65}]'
+          description="DNS 出站规则。"
           label="Rules"
           name="dns_out_rules_json"
         />
@@ -894,9 +1523,11 @@ function ProtocolSettingsFields({
             name="wg_reserved_json"
           />
         </div>
-        <JsonField
+        <JsonArrayObjectField
+          addLabel="添加 Peer"
+          columns={WG_PEER_COLUMNS}
           control={control}
-          description='Peers[]: [{"endpoint":"example.com:51820","publicKey":"PUBLIC_KEY"}]'
+          description="WireGuard Peer 列表。"
           label="Peers"
           name="wg_peers_json"
         />
@@ -1028,9 +1659,9 @@ function ProtocolSettingsFields({
           ) : null}
         </div>
         {protocol === "http" ? (
-          <JsonField
+          <JsonObjectField
             control={control}
-            description='HTTP headers object: {"User-Agent":"Mozilla/5.0"}'
+            description="HTTP Header 键值。"
             label="Headers"
             name="headers_json"
           />
@@ -1085,6 +1716,8 @@ export default function XrayTemplateForm({
   const protocol = useWatch({ control: form.control, name: "protocol" });
   const security = useWatch({ control: form.control, name: "security" });
   const network = useWatch({ control: form.control, name: "network" });
+  const watchedValues = useWatch({ control: form.control }) as FormValues;
+  const { dirtyFields } = form.formState;
   const supportsStreamSettings = !(
     (type === "inbound" && ["tun", "wireguard"].includes(protocol || "")) ||
     (type === "outbound" &&
@@ -1158,8 +1791,25 @@ export default function XrayTemplateForm({
     }
   }, [form, network, protocol, security, supportsStreamSettings]);
 
-  function buildConfig(values: FormValues) {
-    const source = advancedTouched ? values : { ...values, advanced_json: "" };
+  function applyRoutingPreset(preset: (typeof ROUTING_PRESETS)[number]) {
+    const options = {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    };
+    form.setValue("routing_domain_strategy", preset.domainStrategy, options);
+    form.setValue("routing_rules_json", formatJson(preset.rules), options);
+    form.setValue(
+      "routing_balancers_json",
+      formatJson(preset.balancers),
+      options
+    );
+    form.setValue("advanced_json", "{}", options);
+    setAdvancedTouched(false);
+  }
+
+  function buildConfig(values: FormValues, useAdvancedJson = advancedTouched) {
+    const source = useAdvancedJson ? values : { ...values, advanced_json: "" };
     if (source.type === "routing") {
       return buildRoutingConfig(source);
     }
@@ -1167,6 +1817,40 @@ export default function XrayTemplateForm({
     if (source.type === "dns") return buildDnsConfig(source);
     if (source.type === "outbound") return buildOutboundConfig(source);
     return buildInboundConfig(source);
+  }
+
+  function validateJsonFields(
+    values: FormValues,
+    useAdvancedJson = advancedTouched
+  ) {
+    const rules = getActiveJsonFieldRules(values, useAdvancedJson);
+    form.clearErrors(rules.map((rule) => rule.name as any));
+    for (const rule of rules) {
+      try {
+        const parsed = parseJsonField(values[rule.name]);
+        if (parsed === undefined) {
+          continue;
+        }
+        if (rule.shape === "array" && !Array.isArray(parsed)) {
+          form.setError(rule.name as any, {
+            message: `${rule.label} 必须是 JSON 数组。`,
+          });
+          return false;
+        }
+        if (rule.shape === "object" && !isPlainJsonObject(parsed)) {
+          form.setError(rule.name as any, {
+            message: `${rule.label} 必须是 JSON 对象。`,
+          });
+          return false;
+        }
+      } catch {
+        form.setError(rule.name as any, {
+          message: `${rule.label} 不是合法 JSON。`,
+        });
+        return false;
+      }
+    }
+    return true;
   }
 
   function validateXrayConfig(values: FormValues, config: Record<string, any>) {
@@ -1205,7 +1889,14 @@ export default function XrayTemplateForm({
   }
 
   async function handleSubmit(values: FormValues) {
-    const config = buildConfig(values);
+    if (!validateJsonFields(values)) return;
+    const preserveInitialConfig =
+      initialValues?.config &&
+      !advancedTouched &&
+      !hasStructuredConfigChanges(dirtyFields);
+    const config = preserveInitialConfig
+      ? (initialValues.config as Record<string, any>)
+      : buildConfig(values);
     if (!validateXrayConfig(values, config)) return;
     const ok = await onSubmit({
       name: values.name,
@@ -1224,304 +1915,332 @@ export default function XrayTemplateForm({
   }
 
   function syncAdvancedJson() {
-    const config = buildConfig(form.getValues());
-    form.setValue("advanced_json", formatJson(config));
-    setAdvancedTouched(true);
+    const values = form.getValues();
+    if (!validateJsonFields(values, false)) return;
+    const config = buildConfig(values, false);
+    form.setValue("advanced_json", formatJson(config), {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.clearErrors("advanced_json");
+    setAdvancedTouched(false);
   }
+
+  const previewConfig = useMemo(() => {
+    try {
+      const values = {
+        ...defaultValues(type),
+        ...form.getValues(),
+        ...watchedValues,
+      } as FormValues;
+      return {
+        error: "",
+        json: formatJson(buildConfig(values)),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : "JSON preview error",
+        json: "{}",
+      };
+    }
+  }, [advancedTouched, form, type, watchedValues]);
+  const typeLabel = String(t(`type.${type}`, type || ""));
+  const summaryItems = useMemo(() => {
+    const stateLabel = watchedValues?.enabled
+      ? t("state.enabled", "Enabled")
+      : t("state.disabled", "Disabled");
+    const base = [
+      { label: t("form.type", "Type"), value: typeLabel },
+      { label: t("summary.status", "Status"), value: stateLabel },
+    ];
+
+    if (type === "routing") {
+      return [
+        ...base,
+        {
+          label: t("form.domainStrategy", "Domain Strategy"),
+          value: watchedValues?.routing_domain_strategy,
+        },
+        {
+          label: t("form.routingRules", "Routing Rules"),
+          value: jsonArrayCount(watchedValues?.routing_rules_json),
+        },
+        {
+          label: t("form.routingBalancers", "Balancers"),
+          value: jsonArrayCount(watchedValues?.routing_balancers_json),
+        },
+      ];
+    }
+
+    if (type === "dns") {
+      return [
+        ...base,
+        {
+          label: t("form.dnsServers", "DNS Servers"),
+          value:
+            linesToArray(watchedValues?.servers).length +
+            jsonArrayCount(watchedValues?.dns_servers_json),
+        },
+        {
+          label: t("form.queryStrategy", "Query Strategy"),
+          value: watchedValues?.query_strategy,
+        },
+      ];
+    }
+
+    if (type === "geodata") {
+      return [
+        ...base,
+        {
+          label: t("form.geodataAssets", "Geodata Assets"),
+          value: jsonArrayCount(watchedValues?.geodata_assets_json),
+        },
+        {
+          label: t("form.geodataCron", "Update Cron"),
+          value: watchedValues?.geodata_cron,
+        },
+        {
+          label: t("form.geodataOutbound", "Download Outbound"),
+          value: watchedValues?.geodata_outbound,
+        },
+      ];
+    }
+
+    const protocolItems = [
+      ...base,
+      { label: t("form.protocol", "Protocol"), value: protocol },
+      { label: t("form.tag", "Tag"), value: watchedValues?.tag },
+    ];
+
+    if (type === "inbound") {
+      protocolItems.push(
+        { label: t("form.listen", "Listen"), value: watchedValues?.listen },
+        { label: t("form.port", "Port"), value: watchedValues?.port }
+      );
+    }
+
+    if (supportsStreamSettings) {
+      protocolItems.push(
+        { label: t("form.network", "Network"), value: network },
+        { label: t("form.security", "Security"), value: security }
+      );
+    }
+
+    return protocolItems;
+  }, [
+    network,
+    protocol,
+    security,
+    supportsStreamSettings,
+    t,
+    type,
+    typeLabel,
+    watchedValues,
+  ]);
 
   return (
     <Sheet onOpenChange={setOpen} open={open}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent className="w-[760px] max-w-full md:max-w-4xl">
+      <SheetContent className="w-[min(1160px,calc(100vw-24px))] max-w-full md:max-w-6xl">
         <SheetHeader>
-          <SheetTitle>{title}</SheetTitle>
+          <SheetTitle className="flex items-center gap-2">
+            {title}
+            <Badge variant="secondary">{typeLabel}</Badge>
+            <Badge variant={advancedTouched ? "outline" : "secondary"}>
+              {advancedTouched ? "高级 JSON 生效" : "表单配置生效"}
+            </Badge>
+          </SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(100dvh-48px-36px-36px-env(safe-area-inset-top))] px-6">
-          <Form {...form}>
-            <form
-              className="space-y-5 pt-4"
-              id="xray-template-form"
-              onSubmit={form.handleSubmit(handleSubmit)}
-            >
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("form.name", "Name")}</FormLabel>
-                      <FormControl>
-                        <EnhancedInput
-                          onValueChange={field.onChange}
-                          placeholder={t(
-                            "form.namePlaceholder",
-                            "Template name"
-                          )}
-                          value={field.value}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("form.type", "Type")}</FormLabel>
-                      <Select
-                        disabled={Boolean(initialValues?.id)}
-                        onValueChange={(value) => {
-                          const next = value as XrayTemplateType;
-                          setAdvancedTouched(false);
-                          form.reset({
-                            ...defaultValues(next),
-                            name: form.getValues("name"),
-                            type: next,
-                            description: form.getValues("description"),
-                            enabled: form.getValues("enabled"),
-                          });
-                        }}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {XRAY_TEMPLATE_TYPES.map((item) => (
-                            <SelectItem key={item} value={item}>
-                              {t(`type.${item}`, item)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t("form.description", "Description")}
-                      </FormLabel>
-                      <FormControl>
-                        <EnhancedInput
-                          onValueChange={field.onChange}
-                          placeholder={t(
-                            "form.descriptionPlaceholder",
-                            "Optional note"
-                          )}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <SwitchField
-                  control={form.control}
-                  label={t("form.enabled", "Enabled")}
-                  name="enabled"
-                />
+        <div className="grid h-[calc(100dvh-148px)] grid-cols-1 gap-4 overflow-hidden px-6 pt-4 lg:grid-cols-[300px_minmax(0,1fr)]">
+          <aside className="min-h-0 space-y-4 overflow-y-auto rounded-md border bg-muted/20 p-3">
+            <div className="space-y-2">
+              <div className="font-medium text-sm">配置概览</div>
+              <div className="grid grid-cols-2 gap-2">
+                {summaryItems.map((item) => (
+                  <SummaryPill
+                    key={item.label}
+                    label={item.label}
+                    value={item.value}
+                  />
+                ))}
               </div>
+            </div>
+            <div className="space-y-2 rounded-md border bg-background p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-medium text-sm">草稿预览</div>
+                <Badge variant={previewConfig.error ? "outline" : "secondary"}>
+                  {previewConfig.error ? "异常" : "JSON"}
+                </Badge>
+              </div>
+              {previewConfig.error ? (
+                <div className="rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1.5 text-destructive text-xs">
+                  {previewConfig.error}
+                </div>
+              ) : null}
+              <Textarea
+                className="max-h-[340px] min-h-[260px] resize-none font-mono text-[11px]"
+                readOnly
+                value={previewConfig.json}
+              />
+            </div>
+          </aside>
 
-              <Tabs defaultValue="form">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="form">
-                    {t("tabs.form", "Form")}
-                  </TabsTrigger>
-                  <TabsTrigger value="advanced">
-                    {t("tabs.advanced", "Advanced JSON")}
-                  </TabsTrigger>
-                  <TabsTrigger value="template">
-                    {t("tabs.template", "Template")}
-                  </TabsTrigger>
-                  <TabsTrigger value="subscription">
-                    {t("tabs.subscription", "Subscription")}
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent className="space-y-4 pt-4" value="form">
-                  {type === "routing" ? (
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="routing_domain_strategy"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              {t("form.domainStrategy", "Domain Strategy")}
-                            </FormLabel>
-                            <Select
+          <ScrollArea className="min-h-0 rounded-md border bg-background px-5">
+            <Form {...form}>
+              <form
+                className="space-y-5 py-4"
+                id="xray-template-form"
+                onSubmit={form.handleSubmit(handleSubmit)}
+              >
+                <div className="space-y-4 rounded-md border bg-muted/20 p-4">
+                  <div>
+                    <div className="font-medium text-sm">基础信息</div>
+                    <div className="text-muted-foreground text-xs">
+                      先确定模板类型和命名，再进入具体协议参数。
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("form.name", "Name")}</FormLabel>
+                          <FormControl>
+                            <EnhancedInput
                               onValueChange={field.onChange}
-                              value={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {ROUTING_DOMAIN_STRATEGIES.map((item) => (
-                                  <SelectItem key={item} value={item}>
-                                    {item}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField
-                          control={form.control}
-                          name="routing_rules_json"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {t("form.routingRules", "Routing Rules")}
-                              </FormLabel>
-                              <FormDescription>
-                                {t(
-                                  "form.routingRulesDesc",
-                                  "JSON array of RuleObject. Use inboundTag/outboundTag with template aliases."
-                                )}
-                              </FormDescription>
-                              <FormControl>
-                                <JsonTextarea
-                                  onChange={field.onChange}
-                                  placeholder='[{"type":"field","inboundTag":["{{ .Ref.inbound.main.tag }}"],"outboundTag":"direct"}]'
-                                  value={field.value}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="routing_balancers_json"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {t("form.routingBalancers", "Balancers")}
-                              </FormLabel>
-                              <FormDescription>
-                                {t(
-                                  "form.routingBalancersDesc",
-                                  "JSON array of BalancerObject."
-                                )}
-                              </FormDescription>
-                              <FormControl>
-                                <JsonTextarea
-                                  onChange={field.onChange}
-                                  placeholder='[{"tag":"auto","selector":["proxy"]}]'
-                                  value={field.value}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                  ) : type === "geodata" ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField
-                          control={form.control}
-                          name="geodata_cron"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {t("form.geodataCron", "Update Cron")}
-                              </FormLabel>
-                              <FormDescription>
-                                {t(
-                                  "form.geodataCronDesc",
-                                  "Five-field cron expression in the Xray runtime local timezone, e.g. 0 4 * * *."
-                                )}
-                              </FormDescription>
-                              <FormControl>
-                                <EnhancedInput
-                                  onValueChange={field.onChange}
-                                  value={field.value || ""}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="geodata_outbound"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {t("form.geodataOutbound", "Download Outbound")}
-                              </FormLabel>
-                              <FormDescription>
-                                {t(
-                                  "form.geodataOutboundDesc",
-                                  "Optional outbound tag used when downloading geodata files."
-                                )}
-                              </FormDescription>
-                              <FormControl>
-                                <EnhancedInput
-                                  onValueChange={field.onChange}
-                                  placeholder="direct"
-                                  value={field.value || ""}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="geodata_assets_json"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              {t("form.geodataAssets", "Geodata Assets")}
-                            </FormLabel>
-                            <FormDescription>
-                              {t(
-                                "form.geodataAssetsDesc",
-                                "JSON array of HTTPS url/file pairs. File names are resolved inside the Xray asset directory."
+                              placeholder={t(
+                                "form.namePlaceholder",
+                                "Template name"
                               )}
-                            </FormDescription>
+                              value={field.value}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("form.type", "Type")}</FormLabel>
+                          <Select
+                            disabled={Boolean(initialValues?.id)}
+                            onValueChange={(value) => {
+                              const next = value as XrayTemplateType;
+                              setAdvancedTouched(false);
+                              form.reset({
+                                ...defaultValues(next),
+                                name: form.getValues("name"),
+                                type: next,
+                                description: form.getValues("description"),
+                                enabled: form.getValues("enabled"),
+                              });
+                            }}
+                            value={field.value}
+                          >
                             <FormControl>
-                              <JsonTextarea
-                                onChange={field.onChange}
-                                placeholder='[{"url":"https://example.com/geoip.dat","file":"geoip.dat"}]'
-                                value={field.value}
-                              />
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
                             </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  ) : type !== "dns" ? (
-                    <>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <SelectContent>
+                              {XRAY_TEMPLATE_TYPES.map((item) => (
+                                <SelectItem key={item} value={item}>
+                                  {t(`type.${item}`, item)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {t("form.description", "Description")}
+                          </FormLabel>
+                          <FormControl>
+                            <EnhancedInput
+                              onValueChange={field.onChange}
+                              placeholder={t(
+                                "form.descriptionPlaceholder",
+                                "Optional note"
+                              )}
+                              value={field.value || ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <SwitchField
+                      control={form.control}
+                      label={t("form.enabled", "Enabled")}
+                      name="enabled"
+                    />
+                  </div>
+                </div>
+
+                <Tabs defaultValue="form">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="form">
+                      {t("tabs.form", "Form")}
+                    </TabsTrigger>
+                    <TabsTrigger value="advanced">
+                      {t("tabs.advanced", "Advanced JSON")}
+                    </TabsTrigger>
+                    <TabsTrigger value="template">
+                      {t("tabs.template", "Template")}
+                    </TabsTrigger>
+                    <TabsTrigger value="subscription">
+                      {t("tabs.subscription", "Subscription")}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent className="space-y-4 pt-4" value="form">
+                    {type === "routing" ? (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="font-medium text-sm">
+                            {t("form.routingPresets", "Routing Presets")}
+                          </div>
+                          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                            {ROUTING_PRESETS.map((preset) => (
+                              <Button
+                                className="h-auto justify-start whitespace-normal p-3 text-left"
+                                key={preset.id}
+                                onClick={() => applyRoutingPreset(preset)}
+                                type="button"
+                                variant="outline"
+                              >
+                                <span className="space-y-1">
+                                  <span className="block font-medium">
+                                    {preset.label}
+                                  </span>
+                                  <span className="block text-muted-foreground text-xs leading-5">
+                                    {preset.description}
+                                  </span>
+                                </span>
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
                         <FormField
                           control={form.control}
-                          name="protocol"
+                          name="routing_domain_strategy"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>
-                                {t("form.protocol", "Protocol")}
+                                {t("form.domainStrategy", "Domain Strategy")}
                               </FormLabel>
                               <Select
                                 onValueChange={field.onChange}
@@ -1533,7 +2252,7 @@ export default function XrayTemplateForm({
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {protocolOptions.map((item) => (
+                                  {ROUTING_DOMAIN_STRATEGIES.map((item) => (
                                     <SelectItem key={item} value={item}>
                                       {item}
                                     </SelectItem>
@@ -1544,16 +2263,932 @@ export default function XrayTemplateForm({
                             </FormItem>
                           )}
                         />
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <JsonArrayObjectField
+                            addLabel="添加路由规则"
+                            columns={ROUTING_RULE_COLUMNS}
+                            control={form.control}
+                            defaultItem={{
+                              outboundTag: "direct",
+                              type: "field",
+                            }}
+                            description={t(
+                              "form.routingRulesDesc",
+                              "按行配置 RuleObject，可用模板引用填入 inboundTag/outboundTag。"
+                            )}
+                            label={t("form.routingRules", "Routing Rules")}
+                            name="routing_rules_json"
+                          />
+                          <JsonArrayObjectField
+                            addLabel="添加负载均衡器"
+                            columns={ROUTING_BALANCER_COLUMNS}
+                            control={form.control}
+                            description={t(
+                              "form.routingBalancersDesc",
+                              "按行配置 BalancerObject。"
+                            )}
+                            label={t("form.routingBalancers", "Balancers")}
+                            name="routing_balancers_json"
+                          />
+                        </div>
+                      </div>
+                    ) : type === "geodata" ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <FormField
+                            control={form.control}
+                            name="geodata_cron"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {t("form.geodataCron", "Update Cron")}
+                                </FormLabel>
+                                <FormDescription>
+                                  {t(
+                                    "form.geodataCronDesc",
+                                    "Five-field cron expression in the Xray runtime local timezone, e.g. 0 4 * * *."
+                                  )}
+                                </FormDescription>
+                                <FormControl>
+                                  <EnhancedInput
+                                    onValueChange={field.onChange}
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="geodata_outbound"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {t(
+                                    "form.geodataOutbound",
+                                    "Download Outbound"
+                                  )}
+                                </FormLabel>
+                                <FormDescription>
+                                  {t(
+                                    "form.geodataOutboundDesc",
+                                    "Optional outbound tag used when downloading geodata files."
+                                  )}
+                                </FormDescription>
+                                <FormControl>
+                                  <EnhancedInput
+                                    onValueChange={field.onChange}
+                                    placeholder="direct"
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <JsonArrayObjectField
+                          addLabel="添加文件"
+                          columns={GEODATA_ASSET_COLUMNS}
+                          control={form.control}
+                          description={t(
+                            "form.geodataAssetsDesc",
+                            "配置要下载到 Xray asset 目录的地理数据文件。"
+                          )}
+                          label={t("form.geodataAssets", "Geodata Assets")}
+                          name="geodata_assets_json"
+                        />
+                      </div>
+                    ) : type !== "dns" ? (
+                      <>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                          <FormField
+                            control={form.control}
+                            name="protocol"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {t("form.protocol", "Protocol")}
+                                </FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {protocolOptions.map((item) => (
+                                      <SelectItem key={item} value={item}>
+                                        {item}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="tag"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t("form.tag", "Tag")}</FormLabel>
+                                <FormControl>
+                                  <EnhancedInput
+                                    onValueChange={field.onChange}
+                                    placeholder="proxy-in"
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          {type === "inbound" ? (
+                            <FormField
+                              control={form.control}
+                              name="port"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    {t("form.port", "Port")}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <EnhancedInput
+                                      max={65_535}
+                                      min={1}
+                                      onValueChange={field.onChange}
+                                      placeholder="443"
+                                      type="number"
+                                      value={field.value}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          ) : null}
+                          {type === "inbound" ? (
+                            <FormField
+                              control={form.control}
+                              name="listen"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    {t("form.listen", "Listen")}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <EnhancedInput
+                                      onValueChange={field.onChange}
+                                      placeholder="0.0.0.0"
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          ) : null}
+                          {supportsStreamSettings ? (
+                            <>
+                              <FormField
+                                control={form.control}
+                                name="network"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>
+                                      {t("form.network", "Network")}
+                                    </FormLabel>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      value={field.value}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {networkOptions.map((item) => (
+                                          <SelectItem key={item} value={item}>
+                                            {item}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="security"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>
+                                      {t("form.security", "Security")}
+                                    </FormLabel>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      value={field.value}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {securityOptions.map((item) => (
+                                          <SelectItem key={item} value={item}>
+                                            {item}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </>
+                          ) : null}
+                        </div>
+
+                        {supportsStreamSettings &&
+                        ["ws", "xhttp", "httpupgrade"].includes(
+                          network || ""
+                        ) ? (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <FormField
+                              control={form.control}
+                              name="host"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    {t("form.host", "Host")}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <EnhancedInput
+                                      onValueChange={field.onChange}
+                                      placeholder="example.com"
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="path"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    {t("form.path", "Path")}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <EnhancedInput
+                                      onValueChange={field.onChange}
+                                      placeholder="/ray"
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        ) : null}
+
+                        {supportsStreamSettings && network === "xhttp" ? (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <InputField
+                              control={form.control}
+                              label={t("form.xhttpMode", "XHTTP Mode")}
+                              name="xhttp_mode"
+                              placeholder="auto / packet-up / stream-up / stream-one"
+                            />
+                            <JsonObjectField
+                              control={form.control}
+                              description="XHTTP extra 对象。需要 xmux.maxConnections 这类嵌套字段时，值类型选择 JSON。"
+                              label={t("form.xhttpExtra", "XHTTP Extra")}
+                              name="xhttp_extra_json"
+                            />
+                          </div>
+                        ) : null}
+
+                        {supportsStreamSettings && network === "grpc" ? (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <InputField
+                              control={form.control}
+                              label={t("form.serviceName", "Service Name")}
+                              name="service_name"
+                            />
+                            <InputField
+                              control={form.control}
+                              label={t("form.grpcAuthority", "Authority")}
+                              name="grpc_authority"
+                            />
+                            <SwitchField
+                              control={form.control}
+                              label={t("form.grpcMultiMode", "Multi Mode")}
+                              name="grpc_multi_mode"
+                            />
+                            <InputField
+                              control={form.control}
+                              label={t("form.grpcIdleTimeout", "Idle Timeout")}
+                              name="grpc_idle_timeout"
+                              type="number"
+                            />
+                            <InputField
+                              control={form.control}
+                              label={t(
+                                "form.grpcHealthCheckTimeout",
+                                "Health Check Timeout"
+                              )}
+                              name="grpc_health_check_timeout"
+                              type="number"
+                            />
+                          </div>
+                        ) : null}
+
+                        {supportsStreamSettings && network === "kcp" ? (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <InputField
+                              control={form.control}
+                              label="MTU"
+                              name="kcp_mtu"
+                              type="number"
+                            />
+                            <InputField
+                              control={form.control}
+                              label="TTI"
+                              name="kcp_tti"
+                              type="number"
+                            />
+                            <InputField
+                              control={form.control}
+                              label="Uplink Capacity"
+                              name="kcp_uplink_capacity"
+                              type="number"
+                            />
+                            <InputField
+                              control={form.control}
+                              label="Downlink Capacity"
+                              name="kcp_downlink_capacity"
+                              type="number"
+                            />
+                            <SwitchField
+                              control={form.control}
+                              label="Congestion"
+                              name="kcp_congestion"
+                            />
+                            <InputField
+                              control={form.control}
+                              label="Header Type"
+                              name="kcp_header_type"
+                              placeholder="none / srtp / utp / wechat-video"
+                            />
+                          </div>
+                        ) : null}
+
+                        {supportsStreamSettings &&
+                        ["raw", "tcp", "kcp", "hysteria"].includes(
+                          network || ""
+                        ) ? (
+                          <FormField
+                            control={form.control}
+                            name={
+                              network === "kcp"
+                                ? "kcp_settings_json"
+                                : network === "hysteria"
+                                  ? "hysteria_settings_json"
+                                  : "raw_settings_json"
+                            }
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {network === "kcp"
+                                    ? t("form.kcpSettings", "KCP Settings")
+                                    : network === "hysteria"
+                                      ? t(
+                                          "form.hysteriaSettings",
+                                          "Hysteria Settings"
+                                        )
+                                      : t("form.rawSettings", "Raw Settings")}
+                                </FormLabel>
+                                <FormDescription>
+                                  {network === "kcp"
+                                    ? "KcpObject advanced fields. Form values above are merged first, this JSON can override or add rare fields."
+                                    : network === "hysteria"
+                                      ? "HysteriaObject for streamSettings.hysteriaSettings."
+                                      : "RawObject for streamSettings.rawSettings."}
+                                </FormDescription>
+                                <FormControl>
+                                  <JsonObjectEditor
+                                    onChange={field.onChange}
+                                    value={field.value}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ) : null}
+
+                        {supportsStreamSettings &&
+                        (security === "tls" ||
+                          (security === "reality" && type === "outbound")) ? (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <FormField
+                              control={form.control}
+                              name="sni"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>{t("form.sni", "SNI")}</FormLabel>
+                                  <FormControl>
+                                    <EnhancedInput
+                                      onValueChange={field.onChange}
+                                      placeholder="example.com"
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            {security === "tls" ||
+                            (security === "reality" && type === "outbound") ? (
+                              <FormField
+                                control={form.control}
+                                name="fingerprint"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>
+                                      {t("form.fingerprint", "Fingerprint")}
+                                    </FormLabel>
+                                    <FormControl>
+                                      <EnhancedInput
+                                        onValueChange={field.onChange}
+                                        placeholder="chrome"
+                                        value={field.value || ""}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            ) : null}
+                            {security === "tls" ? (
+                              <SwitchField
+                                control={form.control}
+                                label={t(
+                                  "form.allowInsecure",
+                                  "Allow Insecure"
+                                )}
+                                name="allow_insecure"
+                              />
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        {supportsStreamSettings && security === "reality" ? (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="flex justify-end gap-2 md:col-span-2">
+                              {type === "inbound" ? (
+                                <Button
+                                  onClick={() => {
+                                    const pair = generateRealityKeyPair();
+                                    form.setValue(
+                                      "reality_private_key",
+                                      pair.privateKey
+                                    );
+                                    form.setValue(
+                                      "reality_public_key",
+                                      pair.publicKey
+                                    );
+                                  }}
+                                  size="sm"
+                                  type="button"
+                                  variant="outline"
+                                >
+                                  {t("form.generateRealityKey", "Generate Key")}
+                                </Button>
+                              ) : null}
+                              <Button
+                                onClick={() => {
+                                  const next = generateRealityShortId();
+                                  if (type === "outbound") {
+                                    form.setValue("reality_short_id", next);
+                                  } else {
+                                    const current =
+                                      form.getValues("reality_short_ids") || "";
+                                    form.setValue(
+                                      "reality_short_ids",
+                                      current ? `${current}, ${next}` : next
+                                    );
+                                  }
+                                }}
+                                size="sm"
+                                type="button"
+                                variant="outline"
+                              >
+                                {t("form.generateShortId", "Generate Short ID")}
+                              </Button>
+                            </div>
+                            {type === "inbound" ? (
+                              <>
+                                <SwitchField
+                                  control={form.control}
+                                  label="Show"
+                                  name="reality_show"
+                                />
+                                <InputField
+                                  control={form.control}
+                                  description="必填。REALITY 服务端目标站点，当前 Xray 字段是 target；例如 ebay.com:443。缺少时会被 xray-core 当成客户端 REALITY 配置解析。"
+                                  label="Target"
+                                  name="reality_target"
+                                  placeholder="example.com:443"
+                                />
+                                <InputField
+                                  control={form.control}
+                                  description="必填。REALITY 服务端允许的 SNI 列表，多个值用英文逗号分隔。"
+                                  label="Server Names"
+                                  name="reality_server_names"
+                                  placeholder="example.com, www.example.com"
+                                />
+                                <InputField
+                                  control={form.control}
+                                  label="XVer"
+                                  name="reality_xver"
+                                  type="number"
+                                />
+                                <InputField
+                                  control={form.control}
+                                  label={t("form.realityShortIds", "Short IDs")}
+                                  name="reality_short_ids"
+                                  placeholder="comma separated"
+                                />
+                                <InputField
+                                  control={form.control}
+                                  label={t(
+                                    "form.realityPrivateKey",
+                                    "Private Key"
+                                  )}
+                                  name="reality_private_key"
+                                />
+                                <InputField
+                                  control={form.control}
+                                  label="Min Client Ver"
+                                  name="reality_min_client_ver"
+                                />
+                                <InputField
+                                  control={form.control}
+                                  label="Max Client Ver"
+                                  name="reality_max_client_ver"
+                                />
+                                <InputField
+                                  control={form.control}
+                                  label="Max Time Diff"
+                                  name="reality_max_time_diff"
+                                  type="number"
+                                />
+                              </>
+                            ) : (
+                              <>
+                                <InputField
+                                  control={form.control}
+                                  description={t(
+                                    "form.realityPublicKeyDescription",
+                                    "Reality client uses password for the server public key."
+                                  )}
+                                  label="Public Key / Password"
+                                  name="reality_public_key"
+                                />
+                                <InputField
+                                  control={form.control}
+                                  label="Short ID"
+                                  name="reality_short_id"
+                                />
+                                <InputField
+                                  control={form.control}
+                                  label="Spider X"
+                                  name="reality_spider_x"
+                                  placeholder="/"
+                                />
+                              </>
+                            )}
+                          </div>
+                        ) : null}
+
+                        {supportsStreamSettings ? (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <FormField
+                              control={form.control}
+                              name="sockopt_json"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    {t("form.sockopt", "Sockopt")}
+                                  </FormLabel>
+                                  <FormDescription>
+                                    SockoptObject JSON, e.g.{" "}
+                                    {
+                                      '{"mark":255,"tproxy":"tproxy","dialerProxy":"proxy"}'
+                                    }
+                                  </FormDescription>
+                                  <FormControl>
+                                    <JsonObjectEditor
+                                      onChange={field.onChange}
+                                      value={field.value}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="finalmask_json"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    {t("form.finalmask", "Final Mask")}
+                                  </FormLabel>
+                                  <FormDescription>
+                                    FinalMaskObject JSON with tcp/udp/quicParams
+                                    fields.
+                                  </FormDescription>
+                                  <FormControl>
+                                    <JsonObjectEditor
+                                      onChange={field.onChange}
+                                      value={field.value}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        ) : null}
+
+                        {type === "inbound" ? (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <SwitchField
+                              control={form.control}
+                              label={t("form.sniffing", "Sniffing")}
+                              name="sniffing"
+                            />
+                            <SwitchField
+                              control={form.control}
+                              label={t(
+                                "form.sniffingMetadataOnly",
+                                "Metadata Only"
+                              )}
+                              name="sniffing_metadata_only"
+                            />
+                            <SwitchField
+                              control={form.control}
+                              label={t("form.sniffingRouteOnly", "Route Only")}
+                              name="sniffing_route_only"
+                            />
+                            <FormField
+                              control={form.control}
+                              name="dest_override"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    {t("form.destOverride", "Dest Override")}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <EnhancedInput
+                                      onValueChange={field.onChange}
+                                      placeholder="http, tls, quic"
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="sniffing_domains_excluded"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    {t(
+                                      "form.sniffingDomainsExcluded",
+                                      "Domains Excluded"
+                                    )}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <EnhancedInput
+                                      onValueChange={field.onChange}
+                                      placeholder="example.com, geosite:cn"
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        ) : null}
+
+                        {type === "outbound" && protocol === "freedom" ? (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                              <FormField
+                                control={form.control}
+                                name="domain_strategy"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>
+                                      {t(
+                                        "form.domainStrategy",
+                                        "Domain Strategy"
+                                      )}
+                                    </FormLabel>
+                                    <FormControl>
+                                      <EnhancedInput
+                                        onValueChange={field.onChange}
+                                        placeholder="AsIs / UseIP / UseIPv4 / UseIPv6"
+                                        value={field.value || ""}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="redirect"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>
+                                      {t("form.redirect", "Redirect")}
+                                    </FormLabel>
+                                    <FormControl>
+                                      <EnhancedInput
+                                        onValueChange={field.onChange}
+                                        placeholder="127.0.0.1:3366"
+                                        value={field.value || ""}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <InputField
+                                control={form.control}
+                                label="User Level"
+                                name="user_level"
+                                type="number"
+                              />
+                              <InputField
+                                control={form.control}
+                                label="Proxy Protocol"
+                                name="proxy_protocol"
+                                type="number"
+                              />
+                            </div>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                              <JsonObjectField
+                                control={form.control}
+                                description='Freedom fragment object: {"packets":"tlshello","length":"100-200","interval":"10-20"}'
+                                label="Fragment"
+                                name="fragment_json"
+                              />
+                              <JsonArrayObjectField
+                                addLabel="添加噪声"
+                                columns={FREEDOM_NOISE_COLUMNS}
+                                control={form.control}
+                                description="Freedom noises 列表。"
+                                label="Noises"
+                                name="noises_json"
+                              />
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {type === "outbound" && protocol === "blackhole" ? (
+                          <FormField
+                            control={form.control}
+                            name="response_type"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {t("form.responseType", "Response Type")}
+                                </FormLabel>
+                                <FormControl>
+                                  <EnhancedInput
+                                    onValueChange={field.onChange}
+                                    placeholder="http"
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ) : null}
+
+                        <ProtocolSettingsFields
+                          control={form.control}
+                          protocol={protocol}
+                          type={type}
+                        />
+
                         <FormField
                           control={form.control}
-                          name="tag"
+                          name="settings_json"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t("form.tag", "Tag")}</FormLabel>
+                              <FormLabel>
+                                {t("form.settingsJson", "Settings JSON")}
+                              </FormLabel>
+                              <FormDescription>
+                                {t(
+                                  "form.settingsJsonDesc",
+                                  "Protocol-specific Xray settings. These fields are kept as JSON so advanced protocol details are not lost."
+                                )}
+                              </FormDescription>
                               <FormControl>
-                                <EnhancedInput
-                                  onValueChange={field.onChange}
-                                  placeholder="proxy-in"
+                                <JsonObjectEditor
+                                  addLabel="添加覆盖字段"
+                                  emptyText="没有高级覆盖字段。"
+                                  onChange={field.onChange}
+                                  value={field.value}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <FormField
+                            control={form.control}
+                            name="tag"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t("form.tag", "Tag")}</FormLabel>
+                                <FormControl>
+                                  <EnhancedInput
+                                    onValueChange={field.onChange}
+                                    placeholder="dns"
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="client_ip"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {t("form.clientIp", "Client IP")}
+                                </FormLabel>
+                                <FormControl>
+                                  <EnhancedInput
+                                    onValueChange={field.onChange}
+                                    placeholder="1.2.3.4"
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <FormField
+                          control={form.control}
+                          name="servers"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                {t("form.dnsServers", "DNS Servers")}
+                              </FormLabel>
+                              <FormDescription>
+                                {t(
+                                  "form.dnsServersDesc",
+                                  "One server per line. Plain strings are supported, e.g. 1.1.1.1, https://dns.google/dns-query."
+                                )}
+                              </FormDescription>
+                              <FormControl>
+                                <Textarea
+                                  className="min-h-28"
+                                  onChange={field.onChange}
                                   value={field.value || ""}
                                 />
                               </FormControl>
@@ -1561,19 +3196,75 @@ export default function XrayTemplateForm({
                             </FormItem>
                           )}
                         />
-                        {type === "inbound" ? (
+                        <JsonArrayObjectField
+                          addLabel="添加 DNS 对象"
+                          columns={DNS_SERVER_OBJECT_COLUMNS}
+                          control={form.control}
+                          description={t(
+                            "form.dnsServerObjectsDesc",
+                            "需要 domains、expectedIPs、skipFallback 等条件时，用表单新增一个 DNS Server Object。"
+                          )}
+                          label={t(
+                            "form.dnsServerObjects",
+                            "DNS Server Objects"
+                          )}
+                          name="dns_servers_json"
+                        />
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                           <FormField
                             control={form.control}
-                            name="port"
+                            name="query_strategy"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t("form.port", "Port")}</FormLabel>
+                                <FormLabel>
+                                  {t("form.queryStrategy", "Query Strategy")}
+                                </FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {QUERY_STRATEGIES.map((item) => (
+                                      <SelectItem key={item} value={item}>
+                                        {item}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <SwitchField
+                            control={form.control}
+                            label={t("form.disableCache", "Disable Cache")}
+                            name="disable_cache"
+                          />
+                          <SwitchField
+                            control={form.control}
+                            label={t("form.serveStale", "Serve Stale")}
+                            name="serve_stale"
+                          />
+                          <FormField
+                            control={form.control}
+                            name="serve_expired_ttl"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {t(
+                                    "form.serveExpiredTtl",
+                                    "Serve Expired TTL"
+                                  )}
+                                </FormLabel>
                                 <FormControl>
                                   <EnhancedInput
-                                    max={65_535}
-                                    min={1}
+                                    min={0}
                                     onValueChange={field.onChange}
-                                    placeholder="443"
                                     type="number"
                                     value={field.value}
                                   />
@@ -1582,963 +3273,72 @@ export default function XrayTemplateForm({
                               </FormItem>
                             )}
                           />
-                        ) : null}
-                        {type === "inbound" ? (
-                          <FormField
-                            control={form.control}
-                            name="listen"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>
-                                  {t("form.listen", "Listen")}
-                                </FormLabel>
-                                <FormControl>
-                                  <EnhancedInput
-                                    onValueChange={field.onChange}
-                                    placeholder="0.0.0.0"
-                                    value={field.value || ""}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        ) : null}
-                        {supportsStreamSettings ? (
-                          <>
-                            <FormField
-                              control={form.control}
-                              name="network"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>
-                                    {t("form.network", "Network")}
-                                  </FormLabel>
-                                  <Select
-                                    onValueChange={field.onChange}
-                                    value={field.value}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {networkOptions.map((item) => (
-                                        <SelectItem key={item} value={item}>
-                                          {item}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="security"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>
-                                    {t("form.security", "Security")}
-                                  </FormLabel>
-                                  <Select
-                                    onValueChange={field.onChange}
-                                    value={field.value}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {securityOptions.map((item) => (
-                                        <SelectItem key={item} value={item}>
-                                          {item}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </>
-                        ) : null}
-                      </div>
-
-                      {supportsStreamSettings &&
-                      ["ws", "xhttp", "httpupgrade"].includes(network || "") ? (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <FormField
-                            control={form.control}
-                            name="host"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t("form.host", "Host")}</FormLabel>
-                                <FormControl>
-                                  <EnhancedInput
-                                    onValueChange={field.onChange}
-                                    placeholder="example.com"
-                                    value={field.value || ""}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="path"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t("form.path", "Path")}</FormLabel>
-                                <FormControl>
-                                  <EnhancedInput
-                                    onValueChange={field.onChange}
-                                    placeholder="/ray"
-                                    value={field.value || ""}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      ) : null}
-
-                      {supportsStreamSettings && network === "xhttp" ? (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <InputField
-                            control={form.control}
-                            label={t("form.xhttpMode", "XHTTP Mode")}
-                            name="xhttp_mode"
-                            placeholder="auto / packet-up / stream-up / stream-one"
-                          />
-                          <JsonField
-                            control={form.control}
-                            description='XHTTP extra object, e.g. {"xmux":{"maxConnections":1}}'
-                            label={t("form.xhttpExtra", "XHTTP Extra")}
-                            name="xhttp_extra_json"
-                          />
-                        </div>
-                      ) : null}
-
-                      {supportsStreamSettings && network === "grpc" ? (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <InputField
-                            control={form.control}
-                            label={t("form.serviceName", "Service Name")}
-                            name="service_name"
-                          />
-                          <InputField
-                            control={form.control}
-                            label={t("form.grpcAuthority", "Authority")}
-                            name="grpc_authority"
-                          />
                           <SwitchField
-                            control={form.control}
-                            label={t("form.grpcMultiMode", "Multi Mode")}
-                            name="grpc_multi_mode"
-                          />
-                          <InputField
-                            control={form.control}
-                            label={t("form.grpcIdleTimeout", "Idle Timeout")}
-                            name="grpc_idle_timeout"
-                            type="number"
-                          />
-                          <InputField
                             control={form.control}
                             label={t(
-                              "form.grpcHealthCheckTimeout",
-                              "Health Check Timeout"
+                              "form.disableFallback",
+                              "Disable Fallback"
                             )}
-                            name="grpc_health_check_timeout"
-                            type="number"
-                          />
-                        </div>
-                      ) : null}
-
-                      {supportsStreamSettings && network === "kcp" ? (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                          <InputField
-                            control={form.control}
-                            label="MTU"
-                            name="kcp_mtu"
-                            type="number"
-                          />
-                          <InputField
-                            control={form.control}
-                            label="TTI"
-                            name="kcp_tti"
-                            type="number"
-                          />
-                          <InputField
-                            control={form.control}
-                            label="Uplink Capacity"
-                            name="kcp_uplink_capacity"
-                            type="number"
-                          />
-                          <InputField
-                            control={form.control}
-                            label="Downlink Capacity"
-                            name="kcp_downlink_capacity"
-                            type="number"
+                            name="disable_fallback"
                           />
                           <SwitchField
                             control={form.control}
-                            label="Congestion"
-                            name="kcp_congestion"
-                          />
-                          <InputField
-                            control={form.control}
-                            label="Header Type"
-                            name="kcp_header_type"
-                            placeholder="none / srtp / utp / wechat-video"
-                          />
-                        </div>
-                      ) : null}
-
-                      {supportsStreamSettings &&
-                      ["raw", "tcp", "kcp", "hysteria"].includes(
-                        network || ""
-                      ) ? (
-                        <FormField
-                          control={form.control}
-                          name={
-                            network === "kcp"
-                              ? "kcp_settings_json"
-                              : network === "hysteria"
-                                ? "hysteria_settings_json"
-                                : "raw_settings_json"
-                          }
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {network === "kcp"
-                                  ? t("form.kcpSettings", "KCP Settings")
-                                  : network === "hysteria"
-                                    ? t(
-                                        "form.hysteriaSettings",
-                                        "Hysteria Settings"
-                                      )
-                                    : t("form.rawSettings", "Raw Settings")}
-                              </FormLabel>
-                              <FormDescription>
-                                {network === "kcp"
-                                  ? "KcpObject advanced fields. Form values above are merged first, this JSON can override or add rare fields."
-                                  : network === "hysteria"
-                                    ? "HysteriaObject for streamSettings.hysteriaSettings."
-                                    : "RawObject for streamSettings.rawSettings."}
-                              </FormDescription>
-                              <FormControl>
-                                <JsonTextarea
-                                  onChange={field.onChange}
-                                  value={field.value}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ) : null}
-
-                      {supportsStreamSettings &&
-                      (security === "tls" ||
-                        (security === "reality" && type === "outbound")) ? (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <FormField
-                            control={form.control}
-                            name="sni"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t("form.sni", "SNI")}</FormLabel>
-                                <FormControl>
-                                  <EnhancedInput
-                                    onValueChange={field.onChange}
-                                    placeholder="example.com"
-                                    value={field.value || ""}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
+                            label={t(
+                              "form.disableFallbackIfMatch",
+                              "Disable Fallback If Match"
                             )}
+                            name="disable_fallback_if_match"
                           />
-                          {security === "tls" ||
-                          (security === "reality" && type === "outbound") ? (
-                            <FormField
-                              control={form.control}
-                              name="fingerprint"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>
-                                    {t("form.fingerprint", "Fingerprint")}
-                                  </FormLabel>
-                                  <FormControl>
-                                    <EnhancedInput
-                                      onValueChange={field.onChange}
-                                      placeholder="chrome"
-                                      value={field.value || ""}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          ) : null}
-                          {security === "tls" ? (
-                            <SwitchField
-                              control={form.control}
-                              label={t("form.allowInsecure", "Allow Insecure")}
-                              name="allow_insecure"
-                            />
-                          ) : null}
+                          <SwitchField
+                            control={form.control}
+                            label={t(
+                              "form.enableParallelQuery",
+                              "Enable Parallel Query"
+                            )}
+                            name="enable_parallel_query"
+                          />
+                          <SwitchField
+                            control={form.control}
+                            label={t("form.useSystemHosts", "Use System Hosts")}
+                            name="use_system_hosts"
+                          />
                         </div>
-                      ) : null}
+                        <JsonObjectField
+                          addLabel="添加 Hosts 映射"
+                          control={form.control}
+                          description="Hosts 键值映射。值可以是文本，或选择 JSON 后填写数组。"
+                          label={t("form.hostsJson", "Hosts JSON")}
+                          name="hosts_json"
+                        />
+                      </>
+                    )}
+                  </TabsContent>
 
-                      {supportsStreamSettings && security === "reality" ? (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <div className="flex justify-end gap-2 md:col-span-2">
-                            {type === "inbound" ? (
-                              <Button
-                                onClick={() => {
-                                  const pair = generateRealityKeyPair();
-                                  form.setValue(
-                                    "reality_private_key",
-                                    pair.privateKey
-                                  );
-                                  form.setValue(
-                                    "reality_public_key",
-                                    pair.publicKey
-                                  );
-                                }}
-                                size="sm"
-                                type="button"
-                                variant="outline"
-                              >
-                                {t("form.generateRealityKey", "Generate Key")}
-                              </Button>
-                            ) : null}
-                            <Button
-                              onClick={() => {
-                                const next = generateRealityShortId();
-                                if (type === "outbound") {
-                                  form.setValue("reality_short_id", next);
-                                } else {
-                                  const current =
-                                    form.getValues("reality_short_ids") || "";
-                                  form.setValue(
-                                    "reality_short_ids",
-                                    current ? `${current}, ${next}` : next
-                                  );
-                                }
+                  <TabsContent className="space-y-3 pt-4" value="advanced">
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={syncAdvancedJson}
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        {t("form.syncJson", "Sync from form")}
+                      </Button>
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="advanced_json"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {t("form.advancedJson", "Advanced JSON")}
+                          </FormLabel>
+                          <FormControl>
+                            <JsonTextarea
+                              onChange={(value) => {
+                                setAdvancedTouched(true);
+                                field.onChange(value);
                               }}
-                              size="sm"
-                              type="button"
-                              variant="outline"
-                            >
-                              {t("form.generateShortId", "Generate Short ID")}
-                            </Button>
-                          </div>
-                          {type === "inbound" ? (
-                            <>
-                              <SwitchField
-                                control={form.control}
-                                label="Show"
-                                name="reality_show"
-                              />
-                              <InputField
-                                control={form.control}
-                                description="必填。REALITY 服务端目标站点，当前 Xray 字段是 target；例如 ebay.com:443。缺少时会被 xray-core 当成客户端 REALITY 配置解析。"
-                                label="Target"
-                                name="reality_target"
-                                placeholder="example.com:443"
-                              />
-                              <InputField
-                                control={form.control}
-                                description="必填。REALITY 服务端允许的 SNI 列表，多个值用英文逗号分隔。"
-                                label="Server Names"
-                                name="reality_server_names"
-                                placeholder="example.com, www.example.com"
-                              />
-                              <InputField
-                                control={form.control}
-                                label="XVer"
-                                name="reality_xver"
-                                type="number"
-                              />
-                              <InputField
-                                control={form.control}
-                                label={t("form.realityShortIds", "Short IDs")}
-                                name="reality_short_ids"
-                                placeholder="comma separated"
-                              />
-                              <InputField
-                                control={form.control}
-                                label={t(
-                                  "form.realityPrivateKey",
-                                  "Private Key"
-                                )}
-                                name="reality_private_key"
-                              />
-                              <InputField
-                                control={form.control}
-                                label="Min Client Ver"
-                                name="reality_min_client_ver"
-                              />
-                              <InputField
-                                control={form.control}
-                                label="Max Client Ver"
-                                name="reality_max_client_ver"
-                              />
-                              <InputField
-                                control={form.control}
-                                label="Max Time Diff"
-                                name="reality_max_time_diff"
-                                type="number"
-                              />
-                            </>
-                          ) : (
-                            <>
-                              <InputField
-                                control={form.control}
-                                description={t(
-                                  "form.realityPublicKeyDescription",
-                                  "Reality client uses password for the server public key."
-                                )}
-                                label="Public Key / Password"
-                                name="reality_public_key"
-                              />
-                              <InputField
-                                control={form.control}
-                                label="Short ID"
-                                name="reality_short_id"
-                              />
-                              <InputField
-                                control={form.control}
-                                label="Spider X"
-                                name="reality_spider_x"
-                                placeholder="/"
-                              />
-                            </>
-                          )}
-                        </div>
-                      ) : null}
-
-                      {supportsStreamSettings ? (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <FormField
-                            control={form.control}
-                            name="sockopt_json"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>
-                                  {t("form.sockopt", "Sockopt")}
-                                </FormLabel>
-                                <FormDescription>
-                                  SockoptObject JSON, e.g.{" "}
-                                  {
-                                    '{"mark":255,"tproxy":"tproxy","dialerProxy":"proxy"}'
-                                  }
-                                </FormDescription>
-                                <FormControl>
-                                  <JsonTextarea
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="finalmask_json"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>
-                                  {t("form.finalmask", "Final Mask")}
-                                </FormLabel>
-                                <FormDescription>
-                                  FinalMaskObject JSON with tcp/udp/quicParams
-                                  fields.
-                                </FormDescription>
-                                <FormControl>
-                                  <JsonTextarea
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      ) : null}
-
-                      {type === "inbound" ? (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <SwitchField
-                            control={form.control}
-                            label={t("form.sniffing", "Sniffing")}
-                            name="sniffing"
-                          />
-                          <SwitchField
-                            control={form.control}
-                            label={t(
-                              "form.sniffingMetadataOnly",
-                              "Metadata Only"
-                            )}
-                            name="sniffing_metadata_only"
-                          />
-                          <SwitchField
-                            control={form.control}
-                            label={t("form.sniffingRouteOnly", "Route Only")}
-                            name="sniffing_route_only"
-                          />
-                          <FormField
-                            control={form.control}
-                            name="dest_override"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>
-                                  {t("form.destOverride", "Dest Override")}
-                                </FormLabel>
-                                <FormControl>
-                                  <EnhancedInput
-                                    onValueChange={field.onChange}
-                                    placeholder="http, tls, quic"
-                                    value={field.value || ""}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="sniffing_domains_excluded"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>
-                                  {t(
-                                    "form.sniffingDomainsExcluded",
-                                    "Domains Excluded"
-                                  )}
-                                </FormLabel>
-                                <FormControl>
-                                  <EnhancedInput
-                                    onValueChange={field.onChange}
-                                    placeholder="example.com, geosite:cn"
-                                    value={field.value || ""}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      ) : null}
-
-                      {type === "outbound" && protocol === "freedom" ? (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <FormField
-                              control={form.control}
-                              name="domain_strategy"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>
-                                    {t(
-                                      "form.domainStrategy",
-                                      "Domain Strategy"
-                                    )}
-                                  </FormLabel>
-                                  <FormControl>
-                                    <EnhancedInput
-                                      onValueChange={field.onChange}
-                                      placeholder="AsIs / UseIP / UseIPv4 / UseIPv6"
-                                      value={field.value || ""}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="redirect"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>
-                                    {t("form.redirect", "Redirect")}
-                                  </FormLabel>
-                                  <FormControl>
-                                    <EnhancedInput
-                                      onValueChange={field.onChange}
-                                      placeholder="127.0.0.1:3366"
-                                      value={field.value || ""}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <InputField
-                              control={form.control}
-                              label="User Level"
-                              name="user_level"
-                              type="number"
-                            />
-                            <InputField
-                              control={form.control}
-                              label="Proxy Protocol"
-                              name="proxy_protocol"
-                              type="number"
-                            />
-                          </div>
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <JsonField
-                              control={form.control}
-                              description='Freedom fragment object: {"packets":"tlshello","length":"100-200","interval":"10-20"}'
-                              label="Fragment"
-                              name="fragment_json"
-                            />
-                            <JsonField
-                              control={form.control}
-                              description='Freedom noises array: [{"type":"base64","packet":"...","delay":"10-16"}]'
-                              label="Noises"
-                              name="noises_json"
-                            />
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {type === "outbound" && protocol === "blackhole" ? (
-                        <FormField
-                          control={form.control}
-                          name="response_type"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {t("form.responseType", "Response Type")}
-                              </FormLabel>
-                              <FormControl>
-                                <EnhancedInput
-                                  onValueChange={field.onChange}
-                                  placeholder="http"
-                                  value={field.value || ""}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ) : null}
-
-                      <ProtocolSettingsFields
-                        control={form.control}
-                        protocol={protocol}
-                        type={type}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="settings_json"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              {t("form.settingsJson", "Settings JSON")}
-                            </FormLabel>
-                            <FormDescription>
-                              {t(
-                                "form.settingsJsonDesc",
-                                "Protocol-specific Xray settings. These fields are kept as JSON so advanced protocol details are not lost."
-                              )}
-                            </FormDescription>
-                            <FormControl>
-                              <JsonTextarea
-                                onChange={field.onChange}
-                                value={field.value}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField
-                          control={form.control}
-                          name="tag"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t("form.tag", "Tag")}</FormLabel>
-                              <FormControl>
-                                <EnhancedInput
-                                  onValueChange={field.onChange}
-                                  placeholder="dns"
-                                  value={field.value || ""}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="client_ip"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {t("form.clientIp", "Client IP")}
-                              </FormLabel>
-                              <FormControl>
-                                <EnhancedInput
-                                  onValueChange={field.onChange}
-                                  placeholder="1.2.3.4"
-                                  value={field.value || ""}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="servers"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              {t("form.dnsServers", "DNS Servers")}
-                            </FormLabel>
-                            <FormDescription>
-                              {t(
-                                "form.dnsServersDesc",
-                                "One server per line. Plain strings are supported, e.g. 1.1.1.1, https://dns.google/dns-query."
-                              )}
-                            </FormDescription>
-                            <FormControl>
-                              <Textarea
-                                className="min-h-28"
-                                onChange={field.onChange}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="dns_servers_json"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              {t("form.dnsServerObjects", "DNS Server Objects")}
-                            </FormLabel>
-                            <FormDescription>
-                              {t(
-                                "form.dnsServerObjectsDesc",
-                                "JSON array of DnsServerObject, e.g. address/domains/expectedIPs/skipFallback/queryStrategy."
-                              )}
-                            </FormDescription>
-                            <FormControl>
-                              <JsonTextarea
-                                onChange={field.onChange}
-                                placeholder='[{"address":"https://dns.google/dns-query","domains":["geosite:geolocation-!cn"],"skipFallback":true}]'
-                                value={field.value}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField
-                          control={form.control}
-                          name="query_strategy"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {t("form.queryStrategy", "Query Strategy")}
-                              </FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {QUERY_STRATEGIES.map((item) => (
-                                    <SelectItem key={item} value={item}>
-                                      {item}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <SwitchField
-                          control={form.control}
-                          label={t("form.disableCache", "Disable Cache")}
-                          name="disable_cache"
-                        />
-                        <SwitchField
-                          control={form.control}
-                          label={t("form.serveStale", "Serve Stale")}
-                          name="serve_stale"
-                        />
-                        <FormField
-                          control={form.control}
-                          name="serve_expired_ttl"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {t("form.serveExpiredTtl", "Serve Expired TTL")}
-                              </FormLabel>
-                              <FormControl>
-                                <EnhancedInput
-                                  min={0}
-                                  onValueChange={field.onChange}
-                                  type="number"
-                                  value={field.value}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <SwitchField
-                          control={form.control}
-                          label={t("form.disableFallback", "Disable Fallback")}
-                          name="disable_fallback"
-                        />
-                        <SwitchField
-                          control={form.control}
-                          label={t(
-                            "form.disableFallbackIfMatch",
-                            "Disable Fallback If Match"
-                          )}
-                          name="disable_fallback_if_match"
-                        />
-                        <SwitchField
-                          control={form.control}
-                          label={t(
-                            "form.enableParallelQuery",
-                            "Enable Parallel Query"
-                          )}
-                          name="enable_parallel_query"
-                        />
-                        <SwitchField
-                          control={form.control}
-                          label={t("form.useSystemHosts", "Use System Hosts")}
-                          name="use_system_hosts"
-                        />
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="hosts_json"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              {t("form.hostsJson", "Hosts JSON")}
-                            </FormLabel>
-                            <FormControl>
-                              <JsonTextarea
-                                onChange={field.onChange}
-                                value={field.value}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  )}
-                </TabsContent>
-
-                <TabsContent className="space-y-3 pt-4" value="advanced">
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={syncAdvancedJson}
-                      size="sm"
-                      type="button"
-                      variant="outline"
-                    >
-                      {t("form.syncJson", "Sync from form")}
-                    </Button>
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name="advanced_json"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {t("form.advancedJson", "Advanced JSON")}
-                        </FormLabel>
-                        <FormControl>
-                          <JsonTextarea
-                            onChange={(value) => {
-                              setAdvancedTouched(true);
-                              field.onChange(value);
-                            }}
-                            value={field.value}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-                <TabsContent className="space-y-4 pt-4" value="template">
-                  <FormField
-                    control={form.control}
-                    name="config_template"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {t("form.configTemplate", "Config Template")}
-                        </FormLabel>
-                        <FormDescription>
-                          {t(
-                            "form.configTemplateDesc",
-                            "Optional Go template for the final Xray JSON. Context supports Server/server, Vars/vars and Ref/ref."
-                          )}
-                        </FormDescription>
-                        <FormControl>
-                          <Textarea
-                            className="min-h-52 font-mono text-xs"
-                            onChange={field.onChange}
-                            placeholder='{"tag":"{{ .Vars.tag }}","port":{{ .Vars.port }}}'
-                            value={field.value || ""}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="variables_schema_json"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {t("form.variablesSchema", "Variables Schema")}
-                          </FormLabel>
-                          <FormControl>
-                            <JsonTextarea
-                              onChange={field.onChange}
                               value={field.value}
                             />
                           </FormControl>
@@ -2546,57 +3346,65 @@ export default function XrayTemplateForm({
                         </FormItem>
                       )}
                     />
+                  </TabsContent>
+                  <TabsContent className="space-y-4 pt-4" value="template">
                     <FormField
                       control={form.control}
-                      name="default_variables_json"
+                      name="config_template"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            {t("form.defaultVariables", "Default Variables")}
+                            {t("form.configTemplate", "Config Template")}
                           </FormLabel>
+                          <FormDescription>
+                            {t(
+                              "form.configTemplateDesc",
+                              "Optional Go template for the final Xray JSON. Context supports Server/server, Vars/vars and Ref/ref."
+                            )}
+                          </FormDescription>
                           <FormControl>
-                            <JsonTextarea
+                            <Textarea
+                              className="min-h-52 font-mono text-xs"
                               onChange={field.onChange}
-                              value={field.value}
+                              placeholder='{"tag":"{{ .Vars.tag }}","port":{{ .Vars.port }}}'
+                              value={field.value || ""}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-                </TabsContent>
-                <TabsContent className="space-y-4 pt-4" value="subscription">
-                  <FormField
-                    control={form.control}
-                    name="subscription_meta_json"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {t("form.subscriptionMeta", "Subscription Meta")}
-                        </FormLabel>
-                        <FormDescription>
-                          {t(
-                            "form.subscriptionMetaDesc",
-                            "Inbound templates can map rendered variables into subscription Proxy fields such as type, port, security, transport and sni."
-                          )}
-                        </FormDescription>
-                        <FormControl>
-                          <JsonTextarea
-                            onChange={field.onChange}
-                            placeholder='{"type":"vless","port":"{{ .Vars.port }}","security":"tls"}'
-                            value={field.value}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-              </Tabs>
-            </form>
-          </Form>
-        </ScrollArea>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <VariableSchemaField
+                        control={form.control}
+                        name="variables_schema_json"
+                      />
+                      <JsonObjectField
+                        addLabel="添加默认变量"
+                        control={form.control}
+                        description="这些值会作为绑定服务器时的默认变量。"
+                        label={t("form.defaultVariables", "Default Variables")}
+                        name="default_variables_json"
+                      />
+                    </div>
+                  </TabsContent>
+                  <TabsContent className="space-y-4 pt-4" value="subscription">
+                    <JsonObjectField
+                      addLabel="添加订阅字段"
+                      control={form.control}
+                      description={t(
+                        "form.subscriptionMetaDesc",
+                        "Inbound 模板可把渲染变量映射到订阅 Proxy 字段，例如 type、port、security、transport、sni。"
+                      )}
+                      label={t("form.subscriptionMeta", "Subscription Meta")}
+                      name="subscription_meta_json"
+                    />
+                  </TabsContent>
+                </Tabs>
+              </form>
+            </Form>
+          </ScrollArea>
+        </div>
 
         <SheetFooter className="flex-row justify-end gap-2 pt-3">
           <Button

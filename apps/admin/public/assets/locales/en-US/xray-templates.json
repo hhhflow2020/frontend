@@ -11,6 +11,9 @@
     "enabled": "Enabled",
     "disabled": "Disabled"
   },
+  "summary": {
+    "status": "Status"
+  },
   "action": {
     "create": "Create",
     "edit": "Edit",
@@ -31,6 +34,18 @@
   "filter": {
     "type": "Type",
     "enabled": "Enabled"
+  },
+  "defaultDescriptions": {
+    "blackhole": "Default blackhole outbound.",
+    "dns": "Default DNS template.",
+    "freedom": "Default freedom outbound.",
+    "geodata": "Xray geodata template for geoip.dat and geosite.dat auto-update metadata.",
+    "hysteria2": "Hysteria2 inbound. xray-agent injects real users into settings.users.",
+    "routing": "Default routing template.",
+    "safetyRouting": "Default safety routing template.",
+    "vlessReality": "VLESS Reality inbound. Replace the Reality key pair and camouflage target before production.",
+    "vlessRealityGrpc": "VLESS Reality gRPC inbound. Replace the Reality key pair and camouflage target before production.",
+    "vlessRealityXhttp": "VLESS Reality XHTTP inbound. XMUX maxConnections is fixed to 1 so clients reuse one TCP connection."
   },
   "message": {
     "created": "Created",
@@ -88,6 +103,7 @@
     "destOverride": "Dest Override",
     "sniffingDomainsExcluded": "Domains Excluded",
     "domainStrategy": "Domain Strategy",
+    "routingPresets": "Routing Presets",
     "routingRules": "Routing Rules",
     "routingRulesDesc": "JSON array of RuleObject. Use inboundTag/outboundTag with template aliases.",
     "routingBalancers": "Balancers",

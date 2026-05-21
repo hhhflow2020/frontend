@@ -19,16 +19,18 @@ import {
 import { Textarea } from "@workspace/ui/components/textarea";
 import { EnhancedInput } from "@workspace/ui/composed/enhanced-input";
 import { Icon } from "@workspace/ui/composed/icon";
+import { cn } from "@workspace/ui/lib/utils";
 import {
   bindServerXrayTemplates,
   filterXrayTemplateList,
   previewServerXrayConfig,
   queryServerXrayTemplateList,
 } from "@workspace/ui/services/admin/server";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { formatJson, safeJsonParse, type XrayTemplateType } from "./config";
+import { JsonObjectEditor, parseJsonObjectText } from "./json-form-controls";
 
 type BindingRow = {
   template_id: number;
@@ -61,6 +63,114 @@ type RenderedTemplate = {
   raw?: string;
   error?: string;
 };
+
+type PreviewIssue = {
+  message: string;
+};
+
+type BindTab = XrayTemplateType | "preview" | "variables";
+
+const TYPE_LABELS: Record<XrayTemplateType, string> = {
+  inbound: "Inbound",
+  outbound: "Outbound",
+  dns: "DNS",
+  routing: "Routing",
+  geodata: "Geodata",
+};
+
+const TYPE_ORDER: XrayTemplateType[] = [
+  "inbound",
+  "outbound",
+  "dns",
+  "routing",
+  "geodata",
+];
+
+const TYPE_ACCENTS: Record<XrayTemplateType, string> = {
+  inbound: "border-blue-200 bg-blue-50 text-blue-700",
+  outbound: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  dns: "border-cyan-200 bg-cyan-50 text-cyan-700",
+  routing: "border-amber-200 bg-amber-50 text-amber-700",
+  geodata: "border-violet-200 bg-violet-50 text-violet-700",
+};
+
+type BindingStatusKey =
+  | "effective"
+  | "draft"
+  | "pending"
+  | "applying"
+  | "failed"
+  | "invalid"
+  | "offline"
+  | "disabled"
+  | "unknown";
+
+type BindingStatusView = {
+  key: BindingStatusKey;
+  label: string;
+  description: string;
+};
+
+const BINDING_STATUS_STYLES: Record<
+  BindingStatusKey,
+  { badge: string; card: string; dot: string }
+> = {
+  effective: {
+    badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    card: "border-emerald-200 bg-emerald-50/45",
+    dot: "bg-emerald-500",
+  },
+  draft: {
+    badge: "border-amber-200 bg-amber-50 text-amber-700",
+    card: "border-amber-200 bg-amber-50/40",
+    dot: "bg-amber-500",
+  },
+  pending: {
+    badge: "border-blue-200 bg-blue-50 text-blue-700",
+    card: "border-blue-200 bg-blue-50/40",
+    dot: "bg-blue-500",
+  },
+  applying: {
+    badge: "border-violet-200 bg-violet-50 text-violet-700",
+    card: "border-violet-200 bg-violet-50/40",
+    dot: "bg-violet-500",
+  },
+  failed: {
+    badge: "border-red-200 bg-red-50 text-red-700",
+    card: "border-red-200 bg-red-50/45",
+    dot: "bg-red-500",
+  },
+  invalid: {
+    badge: "border-orange-200 bg-orange-50 text-orange-700",
+    card: "border-orange-200 bg-orange-50/45",
+    dot: "bg-orange-500",
+  },
+  offline: {
+    badge: "border-slate-200 bg-slate-50 text-slate-600",
+    card: "border-slate-200 bg-slate-50/60",
+    dot: "bg-slate-400",
+  },
+  disabled: {
+    badge: "border-muted bg-muted/60 text-muted-foreground",
+    card: "border-muted bg-muted/30",
+    dot: "bg-muted-foreground/50",
+  },
+  unknown: {
+    badge: "border-muted bg-background text-muted-foreground",
+    card: "border-muted bg-background",
+    dot: "bg-muted-foreground/60",
+  },
+};
+
+function isReferenceSafeAlias(value: string) {
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(value);
+}
+
+function referenceExample(type: XrayTemplateType, alias: string) {
+  if (!alias) return `{{ .Ref.${type}.main.tag }}`;
+  if (isReferenceSafeAlias(alias)) return `{{ .Ref.${type}.${alias}.tag }}`;
+  return `{{ (index .Ref.${type} "${alias}").tag }}`;
+}
 
 function stringifyHintValue(value: unknown) {
   if (value === undefined || value === null || value === "") return "";
@@ -98,51 +208,13 @@ function collectVariableHints(template: API.XrayTemplate): VariableHint[] {
   });
 }
 
-function renderVariableHints(template: API.XrayTemplate) {
-  const hints = collectVariableHints(template);
-  if (!hints.length) {
-    return (
-      <p className="text-muted-foreground text-xs">
-        未定义变量结构。变量 JSON 应填写一个对象，模板渲染时可通过 Vars/vars
-        读取。
-      </p>
-    );
-  }
-
-  return (
-    <div className="space-y-1 rounded border bg-muted/30 p-2 text-xs">
-      <div className="font-medium">变量说明</div>
-      {hints.map((hint) => (
-        <div className="grid gap-1 md:grid-cols-[160px_1fr]" key={hint.key}>
-          <div className="font-mono">
-            {hint.key}
-            {hint.required ? (
-              <span className="text-destructive"> *</span>
-            ) : null}
-          </div>
-          <div className="text-muted-foreground">
-            {[hint.title, hint.type ? `type: ${hint.type}` : ""]
-              .filter(Boolean)
-              .join(" · ")}
-            {hint.description ? ` · ${hint.description}` : ""}
-            {stringifyHintValue(hint.defaultValue)
-              ? ` · 默认值: ${stringifyHintValue(hint.defaultValue)}`
-              : ""}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function renderSubscriptionHints(template: API.XrayTemplate) {
   const meta = (template.subscription_meta || {}) as Record<string, any>;
   const keys = Object.keys(meta);
   return (
     <div className="space-y-1 text-muted-foreground text-xs">
       <p>
-        订阅变量 JSON
-        只用于订阅渲染，可填写每个服务器不同的订阅参数，例如显示名称、
+        订阅变量只用于订阅渲染，可填写每个服务器不同的订阅参数，例如显示名称、
         host、port、sni、transport 或 path。
       </p>
       {keys.length ? (
@@ -205,10 +277,404 @@ function mergeRoutingObjects(items: Record<string, any>[]) {
   const merged: Record<string, any> = {};
   for (const item of items) {
     Object.assign(merged, item);
-    merged.rules = [...(merged.rules || []), ...(item.rules || [])];
-    merged.balancers = [...(merged.balancers || []), ...(item.balancers || [])];
+    merged.rules = appendUniqueObjects(merged.rules, item.rules);
+    merged.balancers = appendUniqueObjects(merged.balancers, item.balancers);
   }
   return merged;
+}
+
+function appendUniqueObjects(current?: unknown, next?: unknown) {
+  const result: unknown[] = [];
+  const seen = new Set<string>();
+  for (const item of [...toArray(current), ...toArray(next)]) {
+    const key = stableJsonKey(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+  return result;
+}
+
+function toArray(value?: unknown) {
+  if (Array.isArray(value)) return value;
+  return value == null ? [] : [value];
+}
+
+function stableJsonKey(value: unknown): string {
+  return JSON.stringify(sortJsonValue(value));
+}
+
+function sortJsonValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(sortJsonValue);
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => [key, sortJsonValue(entry)])
+    );
+  }
+  return value;
+}
+
+function templateTag(template: API.XrayTemplate) {
+  const config = (template.config || {}) as Record<string, any>;
+  const defaults = (template.default_variables || {}) as Record<string, any>;
+  const tag = config.tag || defaults.tag;
+  return typeof tag === "string" && tag.trim() ? tag.trim() : "";
+}
+
+function slugAlias(value: string) {
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  if (/^[0-9]/.test(slug)) return `t_${slug}`;
+  return slug || "template";
+}
+
+function defaultAlias(template: API.XrayTemplate) {
+  return templateTag(template) || slugAlias(template.name || template.type);
+}
+
+function uniqueAlias(
+  template: API.XrayTemplate,
+  bindings: BindingRow[],
+  alias = defaultAlias(template)
+) {
+  const used = new Set(
+    bindings
+      .filter((item) => item.template_id !== template.id)
+      .map((item) => item.alias)
+  );
+  let next = alias;
+  let index = 2;
+  while (used.has(next)) {
+    next = `${alias}_${index}`;
+    index += 1;
+  }
+  return next;
+}
+
+function createBinding(
+  template: API.XrayTemplate,
+  bindings: BindingRow[],
+  patch: Partial<BindingRow> = {}
+): BindingRow {
+  return {
+    template_id: template.id,
+    sort: bindings.length + 1,
+    enabled: true,
+    alias: uniqueAlias(template, bindings),
+    variables_json: formatJson(template.default_variables || {}),
+    subscription_enabled: true,
+    subscription_name: "",
+    subscription_variables_json: "{}",
+    ...patch,
+  };
+}
+
+function serverBindingToRow(item: API.ServerXrayTemplate): BindingRow {
+  return {
+    template_id: item.template_id,
+    sort: item.sort,
+    enabled: item.enabled,
+    alias: item.alias || item.template?.name || "",
+    variables_json: formatJson(item.variables || {}),
+    subscription_enabled: item.subscription_enabled ?? true,
+    subscription_name: item.subscription_name || "",
+    subscription_variables_json: formatJson(item.subscription_variables || {}),
+  };
+}
+
+function bindingRowsSignature(rows: BindingRow[]) {
+  return stableJsonKey(
+    rows
+      .slice()
+      .sort((left, right) => {
+        if (left.sort !== right.sort) return left.sort - right.sort;
+        return left.template_id - right.template_id;
+      })
+      .map((item) => ({
+        template_id: item.template_id,
+        sort: Number(item.sort || 0),
+        enabled: item.enabled !== false,
+        alias: item.alias.trim(),
+        variables: parseJsonObjectText(item.variables_json || "{}"),
+        subscription_enabled: item.subscription_enabled !== false,
+        subscription_name: item.subscription_name.trim(),
+        subscription_variables: parseJsonObjectText(
+          item.subscription_variables_json || "{}"
+        ),
+      }))
+  );
+}
+
+function shortHash(value?: string) {
+  if (!value) return "";
+  return value.length > 10 ? value.slice(0, 10) : value;
+}
+
+function isServerOnline(status?: Partial<API.ServerStatus>) {
+  return Boolean(status?.status && status.status !== "offline");
+}
+
+function isFailedStatus(value?: string) {
+  return Boolean(value && value !== "ok" && value !== "pending");
+}
+
+function deriveConfigStatus({
+  desiredError,
+  desiredHash,
+  hasDraftChanges,
+  status,
+}: {
+  desiredError?: string;
+  desiredHash?: string;
+  hasDraftChanges: boolean;
+  status?: Partial<API.ServerStatus>;
+}): BindingStatusView {
+  if (hasDraftChanges) {
+    return {
+      key: "draft",
+      label: "有修改",
+      description: "当前抽屉内有未保存的绑定修改，保存后才会下发到节点。",
+    };
+  }
+  if (desiredError) {
+    return {
+      key: "invalid",
+      label: "配置异常",
+      description: desiredError,
+    };
+  }
+  if (!isServerOnline(status)) {
+    return {
+      key: "offline",
+      label: "节点离线",
+      description: "节点未在线上报，暂时无法确认配置是否已经应用。",
+    };
+  }
+
+  const applyStatus = status?.config_apply_status || "";
+  const syncStatus = status?.config_sync_status || "";
+  const error = status?.last_apply_error || status?.last_config_error || "";
+  if (error || isFailedStatus(applyStatus) || isFailedStatus(syncStatus)) {
+    return {
+      key: "failed",
+      label: "应用失败",
+      description: error || applyStatus || syncStatus || "节点配置应用失败。",
+    };
+  }
+  if (applyStatus === "pending") {
+    return {
+      key: "applying",
+      label: "应用中",
+      description: "节点已拉取配置，正在校验或重载 Xray。",
+    };
+  }
+  if (
+    desiredHash &&
+    status?.running_config_hash === desiredHash &&
+    applyStatus === "ok" &&
+    syncStatus === "ok"
+  ) {
+    return {
+      key: "effective",
+      label: "已生效",
+      description: "节点运行中的 Xray 配置与当前绑定配置一致。",
+    };
+  }
+  if (desiredHash && status?.running_config_hash !== desiredHash) {
+    return {
+      key: "pending",
+      label: "待生效",
+      description: "绑定已保存，等待节点下一次拉取并应用配置。",
+    };
+  }
+  return {
+    key: "unknown",
+    label: "待确认",
+    description: "暂时无法根据节点上报判断配置状态。",
+  };
+}
+
+function deriveBindingStatus(
+  template: API.XrayTemplate,
+  binding: BindingRow,
+  configStatus: BindingStatusView
+): BindingStatusView {
+  if (binding.enabled === false || template.enabled === false) {
+    return {
+      key: "disabled",
+      label: "未启用",
+      description: "该绑定或模板已停用，不会进入节点运行配置。",
+    };
+  }
+  return configStatus;
+}
+
+function BindingStatusBadge({
+  compact,
+  status,
+}: {
+  compact?: boolean;
+  status: BindingStatusView;
+}) {
+  const style = BINDING_STATUS_STYLES[status.key];
+  return (
+    <Badge
+      className={cn("gap-1.5 whitespace-nowrap border", style.badge)}
+      variant="outline"
+    >
+      <span className={cn("h-1.5 w-1.5 rounded-full", style.dot)} />
+      {compact ? status.label : status.label}
+    </Badge>
+  );
+}
+
+function collectRuleOutboundTags(value: unknown, result = new Set<string>()) {
+  if (!Array.isArray(value)) return result;
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const rule = item as Record<string, any>;
+    if (typeof rule.outboundTag === "string" && rule.outboundTag) {
+      result.add(rule.outboundTag);
+    }
+    collectRuleOutboundTags(rule.rules, result);
+  }
+  return result;
+}
+
+function collectRuleBalancerTags(value: unknown, result = new Set<string>()) {
+  if (!Array.isArray(value)) return result;
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const rule = item as Record<string, any>;
+    if (typeof rule.balancerTag === "string" && rule.balancerTag) {
+      result.add(rule.balancerTag);
+    }
+    collectRuleBalancerTags(rule.rules, result);
+  }
+  return result;
+}
+
+function collectBalancerTags(value: unknown) {
+  const result = new Set<string>();
+  if (!Array.isArray(value)) return result;
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const tag = (item as Record<string, any>).tag;
+    if (typeof tag === "string" && tag) {
+      result.add(tag);
+    }
+  }
+  return result;
+}
+
+function collectRoutingOutboundTags(template: API.XrayTemplate) {
+  if (template.type !== "routing") return new Set<string>();
+  const config = (template.config || {}) as Record<string, any>;
+  return collectRuleOutboundTags(config.rules);
+}
+
+function isTemplateSearchMatch(template: API.XrayTemplate, keyword: string) {
+  if (!keyword) return true;
+  const haystack = [
+    template.name,
+    template.description,
+    template.type,
+    templateTag(template),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(keyword.toLowerCase());
+}
+
+function collectPreviewIssues(preview: ReturnType<typeof groupPreview>) {
+  const issues: PreviewIssue[] = [];
+  const outboundTags = new Set(
+    (preview.outbounds || [])
+      .map((item) => (item as Record<string, any>)?.tag)
+      .filter((tag): tag is string => typeof tag === "string" && !!tag)
+  );
+  const routing = preview.routing as Record<string, any> | undefined;
+  const balancerTags = collectBalancerTags(routing?.balancers);
+  for (const tag of collectRuleOutboundTags(routing?.rules)) {
+    if (!outboundTags.has(tag)) {
+      issues.push({
+        message: `路由引用的 outboundTag "${tag}" 尚未绑定对应出站模板。`,
+      });
+    }
+  }
+  for (const tag of collectRuleBalancerTags(routing?.rules)) {
+    if (!balancerTags.has(tag)) {
+      issues.push({
+        message: `路由引用的 balancerTag "${tag}" 尚未定义对应负载均衡器。`,
+      });
+    }
+  }
+  return issues;
+}
+
+function collectBindingIssues(
+  bindings: BindingRow[],
+  templates: API.XrayTemplate[]
+) {
+  const issues: PreviewIssue[] = [];
+  const seen = new Map<string, string>();
+  for (const binding of bindings.filter((item) => item.enabled !== false)) {
+    const template = templates.find((item) => item.id === binding.template_id);
+    if (!template) continue;
+    const alias = binding.alias.trim();
+    if (!alias) {
+      issues.push({ message: `${template.name} 缺少别名。` });
+      continue;
+    }
+    const variablesIssue = validateBindingJsonObject(
+      binding.variables_json,
+      `${template.name} 变量 JSON`
+    );
+    if (variablesIssue) {
+      issues.push({ message: variablesIssue });
+      continue;
+    }
+    const subscriptionVariablesIssue = validateBindingJsonObject(
+      binding.subscription_variables_json,
+      `${template.name} 订阅变量`
+    );
+    if (subscriptionVariablesIssue) {
+      issues.push({ message: subscriptionVariablesIssue });
+      continue;
+    }
+    const key = `${template.type}.${alias}`;
+    const existing = seen.get(key);
+    if (existing) {
+      issues.push({
+        message: `${template.type} 模板别名 "${alias}" 重复：${existing} / ${template.name}。`,
+      });
+      continue;
+    }
+    seen.set(key, template.name);
+  }
+  return issues;
+}
+
+function validateBindingJsonObject(value: string, label: string) {
+  const text = value.trim();
+  if (!text) return "";
+  try {
+    const parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return `${label} 必须是 JSON 对象。`;
+    }
+  } catch {
+    return `${label} 不是合法 JSON。`;
+  }
+  return "";
 }
 
 function mergeGeodataObjects(items: Record<string, any>[]) {
@@ -358,6 +824,11 @@ export default function ServerXrayTemplateBindForm({
   const [innerOpen, setInnerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [bindings, setBindings] = useState<BindingRow[]>([]);
+  const [activeTab, setActiveTab] = useState<BindTab>("inbound");
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const lastLoadedSavedSignatureRef = useRef("");
+  const wasOpenRef = useRef(false);
   const open = controlledOpen ?? innerOpen;
   const setOpen = (value: boolean) => {
     onOpenChange?.(value);
@@ -386,36 +857,118 @@ export default function ServerXrayTemplateBindForm({
       const { data } = await queryServerXrayTemplateList({
         server_id: server.id,
       });
-      return data.data?.list || [];
+      return data.data;
     },
+    refetchInterval: open ? 5000 : false,
   });
   const serverBindings = useMemo(
-    () => serverBindingData || [],
+    () => serverBindingData?.list || [],
     [serverBindingData]
+  );
+  const savedBindingRows = useMemo(
+    () => serverBindings.map(serverBindingToRow),
+    [serverBindings]
+  );
+  const serverStatus = serverBindingData?.status || server.status;
+  const desiredConfigHash = serverBindingData?.desired_config_hash || "";
+  const desiredConfigError = serverBindingData?.desired_config_error || "";
+  const savedBindingSignature = useMemo(
+    () => bindingRowsSignature(savedBindingRows),
+    [savedBindingRows]
+  );
+  const draftBindingSignature = useMemo(
+    () => bindingRowsSignature(bindings),
+    [bindings]
   );
 
   useEffect(() => {
-    if (!open) return;
-    setBindings(
-      serverBindings.map((item) => ({
-        template_id: item.template_id,
-        sort: item.sort,
-        enabled: item.enabled,
-        alias: item.alias || item.template?.name || "",
-        variables_json: formatJson(item.variables || {}),
-        subscription_enabled: item.subscription_enabled ?? true,
-        subscription_name: item.subscription_name || "",
-        subscription_variables_json: formatJson(
-          item.subscription_variables || {}
-        ),
-      }))
-    );
-  }, [open, serverBindings]);
+    if (!open) {
+      wasOpenRef.current = false;
+      lastLoadedSavedSignatureRef.current = "";
+      return;
+    }
+    if (!serverBindingData) return;
+    setBindings((current) => {
+      const currentSignature = bindingRowsSignature(current);
+      const shouldHydrate =
+        !(wasOpenRef.current && lastLoadedSavedSignatureRef.current) ||
+        currentSignature === lastLoadedSavedSignatureRef.current ||
+        currentSignature === savedBindingSignature;
+      wasOpenRef.current = true;
+      if (!shouldHydrate) {
+        return current;
+      }
+      lastLoadedSavedSignatureRef.current = savedBindingSignature;
+      return savedBindingRows;
+    });
+  }, [open, savedBindingRows, savedBindingSignature, serverBindingData]);
+
+  const hasDraftChanges = useMemo(
+    () =>
+      Boolean(serverBindingData) &&
+      open &&
+      draftBindingSignature !== savedBindingSignature,
+    [draftBindingSignature, open, savedBindingSignature, serverBindingData]
+  );
+  const configStatus = useMemo(
+    () =>
+      deriveConfigStatus({
+        desiredError: desiredConfigError,
+        desiredHash: desiredConfigHash,
+        hasDraftChanges,
+        status: serverStatus,
+      }),
+    [desiredConfigError, desiredConfigHash, hasDraftChanges, serverStatus]
+  );
 
   const preview = useMemo(
     () => groupPreview(bindings, templates),
     [bindings, templates]
   );
+  const previewIssues = useMemo(
+    () => [
+      ...collectBindingIssues(bindings, templates),
+      ...collectPreviewIssues(preview),
+    ],
+    [bindings, preview, templates]
+  );
+  const selectedBindings = useMemo(
+    () =>
+      bindings
+        .slice()
+        .sort((a, b) => a.sort - b.sort)
+        .map((binding) => ({
+          binding,
+          template: templates.find(
+            (template) => template.id === binding.template_id
+          ),
+        }))
+        .filter((item) => item.template) as {
+        binding: BindingRow;
+        template: API.XrayTemplate;
+      }[],
+    [bindings, templates]
+  );
+  const selectedByType = useMemo(() => {
+    const result = {} as Record<XrayTemplateType, number>;
+    for (const type of TYPE_ORDER) {
+      result[type] = 0;
+    }
+    for (const item of selectedBindings) {
+      result[item.template.type] += 1;
+    }
+    return result;
+  }, [selectedBindings]);
+  const templatesByType = useMemo(() => {
+    const result = {} as Record<XrayTemplateType, number>;
+    for (const type of TYPE_ORDER) {
+      result[type] = 0;
+    }
+    for (const template of templates) {
+      result[template.type] += 1;
+    }
+    return result;
+  }, [templates]);
 
   const previewPayload = useMemo<API.PreviewServerXrayConfigRequest>(
     () => ({
@@ -441,8 +994,12 @@ export default function ServerXrayTemplateBindForm({
     [bindings, server.id]
   );
 
-  const { data: backendPreview } = useQuery({
-    enabled: open,
+  const {
+    data: backendPreview,
+    error: backendPreviewError,
+    isFetching: previewFetching,
+  } = useQuery({
+    enabled: open && previewIssues.length === 0,
     queryKey: ["server-xray-template-preview", previewPayload],
     queryFn: async () => {
       const { data } = await previewServerXrayConfig(previewPayload);
@@ -462,24 +1019,48 @@ export default function ServerXrayTemplateBindForm({
     setBindings((current) => {
       const existing = current.find((item) => item.template_id === template.id);
       if (!existing) {
-        return [
-          ...current,
-          {
-            template_id: template.id,
-            sort: current.length + 1,
-            enabled: true,
-            alias: template.name,
-            variables_json: formatJson(template.default_variables || {}),
-            subscription_enabled: true,
-            subscription_name: "",
-            subscription_variables_json: "{}",
-            ...patch,
-          },
-        ];
+        return [...current, createBinding(template, current, patch)];
       }
       return current.map((item) =>
         item.template_id === template.id ? { ...item, ...patch } : item
       );
+    });
+  }
+
+  function enableBinding(template: API.XrayTemplate) {
+    setBindings((current) => {
+      const existing = current.find((item) => item.template_id === template.id);
+      if (existing) {
+        return current.map((item) =>
+          item.template_id === template.id ? { ...item, enabled: true } : item
+        );
+      }
+      const next = [...current];
+      const requiredOutboundTags = collectRoutingOutboundTags(template);
+      for (const tag of requiredOutboundTags) {
+        const hasOutbound = next.some((binding) => {
+          const boundTemplate = templates.find(
+            (item) => item.id === binding.template_id
+          );
+          return (
+            boundTemplate?.type === "outbound" &&
+            binding.enabled !== false &&
+            (templateTag(boundTemplate) || binding.alias) === tag
+          );
+        });
+        if (hasOutbound) continue;
+        const dependency = templates.find(
+          (item) => item.type === "outbound" && templateTag(item) === tag
+        );
+        if (dependency) {
+          next.push(createBinding(dependency, next, { enabled: true }));
+        }
+      }
+      next.push(createBinding(template, next, { enabled: true }));
+      return next.map((item, index) => ({
+        ...item,
+        sort: item.sort || index + 1,
+      }));
     });
   }
 
@@ -490,6 +1071,18 @@ export default function ServerXrayTemplateBindForm({
   }
 
   async function save() {
+    if (previewIssues.length) {
+      toast.error(previewIssues[0]?.message || "Xray 模板绑定配置不完整");
+      return;
+    }
+    if (backendPreviewError) {
+      toast.error(
+        backendPreviewError instanceof Error
+          ? backendPreviewError.message
+          : "Xray 模板预览校验失败"
+      );
+      return;
+    }
     setSaving(true);
     try {
       await bindServerXrayTemplates({
@@ -513,45 +1106,418 @@ export default function ServerXrayTemplateBindForm({
       });
       toast.success(t("message.bound", "Saved"));
       await refetch();
-      setOpen(false);
     } finally {
       setSaving(false);
     }
   }
 
-  function renderTemplateList(type: XrayTemplateType) {
-    const list = templates.filter((item) => item.type === type);
-    if (!list.length) {
+  function updateBindingVariables(
+    template: API.XrayTemplate,
+    binding: BindingRow | undefined,
+    patch: Record<string, any>
+  ) {
+    const current = parseJsonObjectText(binding?.variables_json || "{}");
+    updateBinding(template, {
+      variables_json: formatJson({ ...current, ...patch }),
+    });
+  }
+
+  function removeBindingVariable(
+    template: API.XrayTemplate,
+    binding: BindingRow | undefined,
+    key: string
+  ) {
+    const current = parseJsonObjectText(binding?.variables_json || "{}");
+    delete current[key];
+    updateBinding(template, { variables_json: formatJson(current) });
+  }
+
+  function renderBindingVariablesEditor(
+    template: API.XrayTemplate,
+    binding: BindingRow | undefined
+  ) {
+    const hints = collectVariableHints(template);
+    const variables = parseJsonObjectText(binding?.variables_json || "{}");
+    if (!hints.length) {
       return (
-        <div className="rounded border border-dashed p-6 text-center text-muted-foreground text-sm">
-          {t("bind.empty", "No templates")}
+        <JsonObjectEditor
+          addLabel="添加节点变量"
+          emptyText="该模板没有定义变量结构，可按需新增键值。"
+          onChange={(value) =>
+            updateBinding(template, { variables_json: value || "{}" })
+          }
+          value={binding?.variables_json || "{}"}
+        />
+      );
+    }
+
+    const hintKeys = new Set(hints.map((hint) => hint.key));
+    const knownValues = Object.fromEntries(
+      Object.entries(variables).filter(([key]) => hintKeys.has(key))
+    );
+    const extraValues = Object.fromEntries(
+      Object.entries(variables).filter(([key]) => !hintKeys.has(key))
+    );
+
+    function commitExtraVariables(value: string) {
+      updateBinding(template, {
+        variables_json: formatJson({
+          ...knownValues,
+          ...parseJsonObjectText(value),
+        }),
+      });
+    }
+
+    return (
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {hints.map((hint) => {
+            const currentValue = variables[hint.key];
+            const value =
+              currentValue === undefined || currentValue === null
+                ? ""
+                : String(currentValue);
+            const placeholder = stringifyHintValue(hint.defaultValue);
+
+            if (hint.type === "boolean") {
+              return (
+                <div
+                  className="flex items-center justify-between rounded-md border bg-background px-3 py-2"
+                  key={hint.key}
+                >
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm">
+                      {hint.title || hint.key}
+                      {hint.required ? (
+                        <span className="text-destructive"> *</span>
+                      ) : null}
+                    </div>
+                    <div className="truncate text-muted-foreground text-xs">
+                      {hint.description || hint.key}
+                    </div>
+                  </div>
+                  <Switch
+                    checked={!!currentValue}
+                    onCheckedChange={(checked) =>
+                      updateBindingVariables(template, binding, {
+                        [hint.key]: checked,
+                      })
+                    }
+                  />
+                </div>
+              );
+            }
+
+            if (hint.type === "array" || hint.type === "object") {
+              return (
+                <div className="space-y-1.5" key={hint.key}>
+                  <div className="text-muted-foreground text-xs">
+                    {hint.title || hint.key}
+                    {hint.required ? (
+                      <span className="text-destructive"> *</span>
+                    ) : null}
+                  </div>
+                  <Textarea
+                    className="min-h-20 font-mono text-xs"
+                    onChange={(event) => {
+                      const text = event.target.value.trim();
+                      if (!text) {
+                        removeBindingVariable(template, binding, hint.key);
+                        return;
+                      }
+                      try {
+                        updateBindingVariables(template, binding, {
+                          [hint.key]: JSON.parse(text),
+                        });
+                      } catch {
+                        updateBindingVariables(template, binding, {
+                          [hint.key]: text,
+                        });
+                      }
+                    }}
+                    placeholder={placeholder || "JSON"}
+                    value={
+                      currentValue === undefined
+                        ? ""
+                        : JSON.stringify(currentValue, null, 2)
+                    }
+                  />
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-1.5" key={hint.key}>
+                <div className="text-muted-foreground text-xs">
+                  {hint.title || hint.key}
+                  {hint.required ? (
+                    <span className="text-destructive"> *</span>
+                  ) : null}
+                </div>
+                <EnhancedInput
+                  onValueChange={(nextValue) => {
+                    if (!nextValue) {
+                      removeBindingVariable(template, binding, hint.key);
+                      return;
+                    }
+                    updateBindingVariables(template, binding, {
+                      [hint.key]:
+                        hint.type === "number" ? Number(nextValue) : nextValue,
+                    });
+                  }}
+                  placeholder={placeholder}
+                  type={hint.type === "number" ? "number" : "text"}
+                  value={value}
+                />
+                {hint.description ? (
+                  <div className="text-muted-foreground text-xs">
+                    {hint.description}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+        <div className="space-y-1.5">
+          <div className="text-muted-foreground text-xs">其他变量</div>
+          <JsonObjectEditor
+            addLabel="添加其他变量"
+            emptyText="没有额外变量。"
+            onChange={commitExtraVariables}
+            value={formatJson(extraValues)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  function renderSubscriptionVariablesEditor(
+    template: API.XrayTemplate,
+    binding: BindingRow | undefined
+  ) {
+    const meta = (template.subscription_meta || {}) as Record<string, any>;
+    const metaKeys = Object.keys(meta);
+    const values = parseJsonObjectText(
+      binding?.subscription_variables_json || "{}"
+    );
+    if (!metaKeys.length) {
+      return (
+        <JsonObjectEditor
+          addLabel="添加订阅变量"
+          emptyText="该模板没有订阅元数据，可按需新增变量。"
+          onChange={(value) =>
+            updateBinding(template, {
+              subscription_variables_json: value || "{}",
+            })
+          }
+          value={binding?.subscription_variables_json || "{}"}
+        />
+      );
+    }
+
+    const metaKeySet = new Set(metaKeys);
+    const knownValues = Object.fromEntries(
+      Object.entries(values).filter(([key]) => metaKeySet.has(key))
+    );
+    const extraValues = Object.fromEntries(
+      Object.entries(values).filter(([key]) => !metaKeySet.has(key))
+    );
+
+    function commitKnown(key: string, value: string) {
+      const next = { ...values };
+      if (value) {
+        next[key] = value;
+      } else {
+        delete next[key];
+      }
+      updateBinding(template, {
+        subscription_variables_json: formatJson(next),
+      });
+    }
+
+    function commitExtra(value: string) {
+      updateBinding(template, {
+        subscription_variables_json: formatJson({
+          ...knownValues,
+          ...parseJsonObjectText(value),
+        }),
+      });
+    }
+
+    return (
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {metaKeys.map((key) => (
+            <div className="space-y-1.5" key={key}>
+              <div className="text-muted-foreground text-xs">{key}</div>
+              <EnhancedInput
+                onValueChange={(value) => commitKnown(key, value)}
+                placeholder={String(meta[key] ?? "")}
+                value={String(values[key] ?? "")}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="space-y-1.5">
+          <div className="text-muted-foreground text-xs">其他订阅变量</div>
+          <JsonObjectEditor
+            addLabel="添加订阅变量"
+            emptyText="没有额外订阅变量。"
+            onChange={commitExtra}
+            value={formatJson(extraValues)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  function renderSelectedSummary() {
+    if (!selectedBindings.length) {
+      return (
+        <div className="rounded-md border border-dashed p-4 text-muted-foreground text-sm">
+          还没有选择模板。先从右侧选择 inbound，再补齐 outbound、DNS 和路由。
         </div>
       );
     }
     return (
       <div className="space-y-2">
+        {selectedBindings.map(({ binding, template }) => {
+          const status = deriveBindingStatus(template, binding, configStatus);
+          return (
+            <div
+              className={cn(
+                "grid grid-cols-[1fr_auto] items-center gap-2 rounded-md border bg-background px-3 py-2",
+                BINDING_STATUS_STYLES[status.key].card
+              )}
+              key={binding.template_id}
+            >
+              <div className="min-w-0">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Badge
+                    className={TYPE_ACCENTS[template.type]}
+                    variant="outline"
+                  >
+                    {t(`type.${template.type}`, TYPE_LABELS[template.type])}
+                  </Badge>
+                  <span className="truncate font-medium text-sm">
+                    {template.name}
+                  </span>
+                  <BindingStatusBadge compact status={status} />
+                </div>
+                <div className="truncate text-muted-foreground text-xs">
+                  {binding.alias} · #{binding.sort || 0}
+                </div>
+              </div>
+              <Button
+                onClick={() => removeBinding(template.id)}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                {t("action.remove", "移除")}
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  function renderTemplateList(type: XrayTemplateType) {
+    const list = templates
+      .filter((item) => item.type === type)
+      .filter((item) => isTemplateSearchMatch(item, templateSearch))
+      .filter((item) => !showSelectedOnly || Boolean(getBinding(item.id)))
+      .sort((left, right) => {
+        const leftSelected = getBinding(left.id) ? 0 : 1;
+        const rightSelected = getBinding(right.id) ? 0 : 1;
+        if (leftSelected !== rightSelected) return leftSelected - rightSelected;
+        return left.name.localeCompare(right.name);
+      });
+    const typeLabel = t(`type.${type}`, TYPE_LABELS[type]);
+    const typeCount = templatesByType[type] || 0;
+    const selectedCount = selectedByType[type] || 0;
+
+    const toolbar = (
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto_auto]">
+        <EnhancedInput
+          onValueChange={setTemplateSearch}
+          placeholder={`搜索 ${typeLabel}`}
+          value={templateSearch}
+        />
+        <Badge className="justify-center px-3" variant="outline">
+          {selectedCount}/{typeCount}
+        </Badge>
+        <Button
+          onClick={() => setShowSelectedOnly((value) => !value)}
+          type="button"
+          variant={showSelectedOnly ? "default" : "outline"}
+        >
+          {showSelectedOnly ? "全部模板" : "仅看已选"}
+        </Button>
+      </div>
+    );
+
+    if (!list.length) {
+      return (
+        <div className="space-y-3">
+          {toolbar}
+          <div className="rounded-md border border-dashed p-8 text-center text-muted-foreground text-sm">
+            没有匹配的 {typeLabel} 模板。
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {toolbar}
         {list.map((template) => {
           const binding = getBinding(template.id);
           const selected = Boolean(binding);
+          const bindingStatus = binding
+            ? deriveBindingStatus(template, binding, configStatus)
+            : undefined;
+          const requiredOutboundTags = collectRoutingOutboundTags(template);
           return (
-            <div className="space-y-3 rounded border p-3" key={template.id}>
+            <div
+              className={cn(
+                "space-y-3 rounded-md border bg-background p-3 transition-colors",
+                selected && bindingStatus
+                  ? BINDING_STATUS_STYLES[bindingStatus.key].card
+                  : ""
+              )}
+              key={template.id}
+            >
               <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <span className="truncate font-medium">
                       {template.name}
                     </span>
-                    <Badge variant={template.enabled ? "secondary" : "outline"}>
-                      {template.enabled
-                        ? t("state.enabled", "Enabled")
-                        : t("state.disabled", "Disabled")}
+                    <Badge
+                      className={TYPE_ACCENTS[template.type]}
+                      variant="outline"
+                    >
+                      {typeLabel}
                     </Badge>
+                    <Badge variant={template.enabled ? "secondary" : "outline"}>
+                      {template.enabled ? "启用" : "停用"}
+                    </Badge>
+                    {bindingStatus ? (
+                      <BindingStatusBadge compact status={bindingStatus} />
+                    ) : null}
                   </div>
                   <p className="truncate text-muted-foreground text-xs">
                     {template.description || template.config?.tag || "—"}
                   </p>
+                  {requiredOutboundTags.size ? (
+                    <p className="text-muted-foreground text-xs">
+                      依赖出站：{[...requiredOutboundTags].join(", ")}
+                    </p>
+                  ) : null}
                 </div>
-                <div className="w-24 space-y-1">
+                <div className="w-20 space-y-1">
                   <EnhancedInput
                     disabled={!selected}
                     min={0}
@@ -563,7 +1529,7 @@ export default function ServerXrayTemplateBindForm({
                     value={binding?.sort ?? 0}
                   />
                   <p className="text-center text-muted-foreground text-xs">
-                    排序
+                    顺序
                   </p>
                 </div>
                 <Switch
@@ -573,14 +1539,17 @@ export default function ServerXrayTemplateBindForm({
                       removeBinding(template.id);
                       return;
                     }
-                    updateBinding(template, { enabled: true });
+                    enableBinding(template);
                   }}
                 />
               </div>
               {selected ? (
-                <div className="space-y-3">
+                <div className="space-y-4 rounded-md border bg-background/80 p-3">
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
+                      <div className="text-muted-foreground text-xs">
+                        绑定别名
+                      </div>
                       <EnhancedInput
                         onValueChange={(value) =>
                           updateBinding(template, { alias: value })
@@ -589,13 +1558,19 @@ export default function ServerXrayTemplateBindForm({
                         value={binding?.alias || ""}
                       />
                       <p className="text-muted-foreground text-xs">
-                        {t(
-                          "bind.aliasDesc",
-                          "别名用于其他模板通过 Ref/ref 引用，例如 {{ .Ref.inbound.main.tag }}。"
-                        )}
+                        引用示例：{" "}
+                        <span className="font-mono">
+                          {referenceExample(
+                            template.type,
+                            binding?.alias || ""
+                          )}
+                        </span>
                       </p>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
+                      <div className="text-muted-foreground text-xs">
+                        订阅展示名
+                      </div>
                       <EnhancedInput
                         onValueChange={(value) =>
                           updateBinding(template, { subscription_name: value })
@@ -607,41 +1582,23 @@ export default function ServerXrayTemplateBindForm({
                         value={binding?.subscription_name || ""}
                       />
                       <p className="text-muted-foreground text-xs">
-                        {t(
-                          "bind.subscriptionNameDesc",
-                          "可选的订阅节点名称 Go 模板。上下文支持 Server/server、Vars/vars 和 Ref/ref。"
-                        )}
+                        可选 Go 模板。留空时使用服务器名和绑定别名。
                       </p>
                     </div>
                   </div>
-                  {renderVariableHints(template)}
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div className="space-y-1">
-                      <Textarea
-                        className="min-h-28 font-mono text-xs"
-                        onChange={(event) =>
-                          updateBinding(template, {
-                            variables_json: event.target.value,
-                          })
-                        }
-                        placeholder={t("bind.variables", "Variables JSON")}
-                        value={binding?.variables_json || "{}"}
-                      />
-                      <p className="text-muted-foreground text-xs">
-                        {t(
-                          "bind.variablesDesc",
-                          "变量 JSON 必须是对象。它会覆盖模板默认变量，并可差异化覆盖常用配置字段，如 port、tag、listen、transport、security、sni、host、path、service_name。"
-                        )}
-                      </p>
-                    </div>
+                  <div className="space-y-3">
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between rounded border px-3 py-2">
-                        <span className="text-sm">
-                          {t(
-                            "bind.subscriptionEnabled",
-                            "Include in subscription"
-                          )}
-                        </span>
+                      <div>
+                        <div className="font-medium text-sm">节点变量</div>
+                        <p className="text-muted-foreground text-xs">
+                          覆盖端口、tag、SNI、path 等每台服务器不同的值。
+                        </p>
+                      </div>
+                      {renderBindingVariablesEditor(template, binding)}
+                    </div>
+                    <div className="space-y-2 rounded-md border bg-muted/20 p-3">
+                      <div className="flex items-center justify-between rounded-md border bg-background px-3 py-2">
+                        <span className="text-sm">加入订阅</span>
                         <Switch
                           checked={binding?.subscription_enabled !== false}
                           onCheckedChange={(checked) =>
@@ -652,19 +1609,7 @@ export default function ServerXrayTemplateBindForm({
                         />
                       </div>
                       {renderSubscriptionHints(template)}
-                      <Textarea
-                        className="min-h-20 font-mono text-xs"
-                        onChange={(event) =>
-                          updateBinding(template, {
-                            subscription_variables_json: event.target.value,
-                          })
-                        }
-                        placeholder={t(
-                          "bind.subscriptionVariables",
-                          "Subscription variables JSON"
-                        )}
-                        value={binding?.subscription_variables_json || "{}"}
-                      />
+                      {renderSubscriptionVariablesEditor(template, binding)}
                     </div>
                   </div>
                 </div>
@@ -679,70 +1624,189 @@ export default function ServerXrayTemplateBindForm({
   return (
     <Sheet onOpenChange={setOpen} open={open}>
       {trigger ? <SheetTrigger asChild>{trigger}</SheetTrigger> : null}
-      <SheetContent className="w-[760px] max-w-full md:max-w-4xl">
+      <SheetContent className="w-[min(1180px,calc(100vw-24px))] max-w-full md:max-w-6xl">
         <SheetHeader>
-          <SheetTitle>
-            {t("bind.title", "Bind Xray Templates")} · {server.name}
+          <SheetTitle className="flex items-center gap-2">
+            {t("bind.title", "绑定 Xray 模板")} · {server.name}
+            <Badge variant="secondary">{selectedBindings.length} 个模板</Badge>
+            <Badge variant={previewIssues.length ? "outline" : "secondary"}>
+              {previewIssues.length
+                ? "需要处理"
+                : backendPreviewError
+                  ? "预览失败"
+                  : "配置可预览"}
+            </Badge>
+            <BindingStatusBadge status={configStatus} />
           </SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-4 overflow-y-auto px-6 pt-4">
-          <Tabs defaultValue="inbound">
-            <TabsList className="grid w-full grid-cols-7">
-              <TabsTrigger value="inbound">
-                {t("type.inbound", "Inbound")}
-              </TabsTrigger>
-              <TabsTrigger value="outbound">
-                {t("type.outbound", "Outbound")}
-              </TabsTrigger>
-              <TabsTrigger value="dns">{t("type.dns", "DNS")}</TabsTrigger>
-              <TabsTrigger value="routing">
-                {t("type.routing", "Routing")}
-              </TabsTrigger>
-              <TabsTrigger value="geodata">
-                {t("type.geodata", "Geodata")}
-              </TabsTrigger>
-              <TabsTrigger value="preview">
-                {t("bind.preview", "Preview")}
-              </TabsTrigger>
-              <TabsTrigger value="variables">
-                {t("bind.variablesPreview", "Variables")}
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent className="pt-4" value="inbound">
-              {renderTemplateList("inbound")}
-            </TabsContent>
-            <TabsContent className="pt-4" value="outbound">
-              {renderTemplateList("outbound")}
-            </TabsContent>
-            <TabsContent className="pt-4" value="dns">
-              {renderTemplateList("dns")}
-            </TabsContent>
-            <TabsContent className="pt-4" value="routing">
-              {renderTemplateList("routing")}
-            </TabsContent>
-            <TabsContent className="pt-4" value="geodata">
-              {renderTemplateList("geodata")}
-            </TabsContent>
-            <TabsContent className="pt-4" value="preview">
-              <Textarea
-                className="min-h-[420px] font-mono text-xs"
-                readOnly
-                value={JSON.stringify(
-                  cleanXrayConfig(backendPreview || preview),
-                  null,
-                  2
-                )}
-              />
-            </TabsContent>
-            <TabsContent className="pt-4" value="variables">
-              <Textarea
-                className="min-h-[420px] font-mono text-xs"
-                readOnly
-                value={JSON.stringify(variablePreview(backendPreview), null, 2)}
-              />
-            </TabsContent>
-          </Tabs>
+        <div className="grid max-h-[calc(100dvh-132px)] grid-cols-1 gap-4 overflow-hidden px-6 pt-4 lg:grid-cols-[310px_minmax(0,1fr)]">
+          <aside className="min-h-0 space-y-4 overflow-y-auto rounded-md border bg-muted/20 p-3">
+            <div
+              className={cn(
+                "space-y-3 rounded-md border bg-background p-3",
+                BINDING_STATUS_STYLES[configStatus.key].card
+              )}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-medium text-sm">节点配置状态</div>
+                  <div className="line-clamp-2 text-muted-foreground text-xs">
+                    {configStatus.description}
+                  </div>
+                </div>
+                <BindingStatusBadge compact status={configStatus} />
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-md border bg-background/70 px-2 py-1.5">
+                  <div className="text-muted-foreground">期望</div>
+                  <div className="font-medium font-mono">
+                    {shortHash(desiredConfigHash) || "-"}
+                  </div>
+                </div>
+                <div className="rounded-md border bg-background/70 px-2 py-1.5">
+                  <div className="text-muted-foreground">运行</div>
+                  <div className="font-medium font-mono">
+                    {shortHash(
+                      serverStatus?.running_config_hash ||
+                        serverStatus?.config_version
+                    ) || "-"}
+                  </div>
+                </div>
+                {serverStatus?.pending_config_hash ? (
+                  <div className="col-span-2 rounded-md border bg-background/70 px-2 py-1.5">
+                    <div className="text-muted-foreground">待应用</div>
+                    <div className="font-medium font-mono">
+                      {shortHash(serverStatus.pending_config_hash)}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-medium text-sm">
+                    {t("bind.selectedTemplates", "已绑定流水线")}
+                  </div>
+                  <div className="text-muted-foreground text-xs">
+                    按顺序渲染，路由可引用前面的模板。
+                  </div>
+                </div>
+                <Badge variant="secondary">{selectedBindings.length}</Badge>
+              </div>
+              {renderSelectedSummary()}
+            </div>
+
+            <div className="space-y-2 rounded-md border bg-background p-3">
+              <div className="font-medium text-sm">模板覆盖</div>
+              <div className="grid grid-cols-2 gap-2">
+                {TYPE_ORDER.map((item) => (
+                  <div
+                    className="rounded-md border bg-muted/20 px-2 py-1.5"
+                    key={item}
+                  >
+                    <div className="text-muted-foreground text-xs">
+                      {t(`type.${item}`, TYPE_LABELS[item])}
+                    </div>
+                    <div className="font-medium text-sm tabular-nums">
+                      {selectedByType[item] || 0}/{templatesByType[item] || 0}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {previewIssues.length ? (
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 text-sm">
+                {previewIssues[0]?.message}
+              </div>
+            ) : null}
+            {!previewIssues.length && backendPreviewError ? (
+              <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-destructive text-sm">
+                {backendPreviewError instanceof Error
+                  ? backendPreviewError.message
+                  : "Xray 模板预览校验失败"}
+              </div>
+            ) : null}
+            {previewIssues.length || backendPreviewError ? null : (
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-800 text-sm">
+                配置已通过本地校验，保存前会继续以服务端预览结果为准。
+              </div>
+            )}
+          </aside>
+
+          <div className="min-h-0 min-w-0 overflow-y-auto rounded-md border bg-background p-4">
+            <Tabs
+              onValueChange={(value) => setActiveTab(value as BindTab)}
+              value={activeTab}
+            >
+              <TabsList className="grid w-full grid-cols-7">
+                <TabsTrigger value="inbound">
+                  {t("type.inbound", "Inbound")}
+                </TabsTrigger>
+                <TabsTrigger value="outbound">
+                  {t("type.outbound", "Outbound")}
+                </TabsTrigger>
+                <TabsTrigger value="dns">{t("type.dns", "DNS")}</TabsTrigger>
+                <TabsTrigger value="routing">
+                  {t("type.routing", "Routing")}
+                </TabsTrigger>
+                <TabsTrigger value="geodata">
+                  {t("type.geodata", "Geodata")}
+                </TabsTrigger>
+                <TabsTrigger value="preview">
+                  {t("bind.preview", "Preview")}
+                </TabsTrigger>
+                <TabsTrigger value="variables">
+                  {t("bind.variablesPreview", "Variables")}
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent className="pt-4" value="inbound">
+                {renderTemplateList("inbound")}
+              </TabsContent>
+              <TabsContent className="pt-4" value="outbound">
+                {renderTemplateList("outbound")}
+              </TabsContent>
+              <TabsContent className="pt-4" value="dns">
+                {renderTemplateList("dns")}
+              </TabsContent>
+              <TabsContent className="pt-4" value="routing">
+                {renderTemplateList("routing")}
+              </TabsContent>
+              <TabsContent className="pt-4" value="geodata">
+                {renderTemplateList("geodata")}
+              </TabsContent>
+              <TabsContent className="pt-4" value="preview">
+                <Textarea
+                  className="min-h-[520px] font-mono text-xs"
+                  readOnly
+                  value={JSON.stringify(
+                    cleanXrayConfig(backendPreview || preview),
+                    null,
+                    2
+                  )}
+                />
+              </TabsContent>
+              <TabsContent className="pt-4" value="variables">
+                {previewFetching ? (
+                  <div className="mb-2 text-muted-foreground text-xs">
+                    {t("state.loading", "Loading")}...
+                  </div>
+                ) : null}
+                <Textarea
+                  className="min-h-[520px] font-mono text-xs"
+                  readOnly
+                  value={JSON.stringify(
+                    variablePreview(backendPreview),
+                    null,
+                    2
+                  )}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
 
         <SheetFooter className="flex-row justify-end gap-2 pt-3">
@@ -753,7 +1817,7 @@ export default function ServerXrayTemplateBindForm({
           >
             {t("action.cancel", "Cancel")}
           </Button>
-          <Button disabled={saving} onClick={save}>
+          <Button disabled={saving || previewFetching} onClick={save}>
             {saving ? (
               <Icon className="mr-2 animate-spin" icon="mdi:loading" />
             ) : null}

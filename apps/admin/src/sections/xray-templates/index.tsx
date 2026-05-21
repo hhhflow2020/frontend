@@ -47,10 +47,47 @@ function ConfigSummary({ config }: { config?: Record<string, any> }) {
   );
 }
 
+const DEFAULT_DESCRIPTION_KEYS: Record<string, string> = {
+  "Default VLESS Reality inbound. Replace the Reality key pair and camouflage target before production.":
+    "vlessReality",
+  "VLESS Reality 入站模板，生产环境请替换密钥和伪装目标。": "vlessReality",
+  "Default VLESS Reality gRPC inbound. Replace the Reality key pair and camouflage target before production.":
+    "vlessRealityGrpc",
+  "VLESS Reality gRPC 入站模板，生产环境请替换密钥和伪装目标。":
+    "vlessRealityGrpc",
+  "Default VLESS Reality XHTTP inbound. XHTTP extra sets XMUX maxConnections to 1 so clients reuse one TCP connection for transport.":
+    "vlessRealityXhttp",
+  "VLESS Reality XHTTP 入站模板，XHTTP extra 已限制 XMUX maxConnections 为 1，客户端仅复用一条 TCP 连接。":
+    "vlessRealityXhttp",
+  "Default Hysteria2 inbound. xray-agent injects real users into settings.users with auth, level and email.":
+    "hysteria2",
+  "Hysteria2 入站模板，xray-agent 会将真实用户注入 settings.users。":
+    "hysteria2",
+  "Default DNS template.": "dns",
+  "DNS 模板。": "dns",
+  "Default blackhole outbound.": "blackhole",
+  "阻断出站模板。": "blackhole",
+  "Default freedom outbound.": "freedom",
+  "直连出站模板。": "freedom",
+  "Default safety routing template.": "safetyRouting",
+  "安全路由模板。": "safetyRouting",
+  "Default routing template.": "routing",
+  "路由模板。": "routing",
+  "Default Xray geodata auto update template. Xray writes into its asset directory, so geoip.dat and geosite.dat must already exist in the image or host asset path.":
+    "geodata",
+  "Xray 地理数据模板，用于声明 geoip.dat 与 geosite.dat 的自动更新信息。":
+    "geodata",
+};
+
 export default function XrayTemplates() {
   const { t } = useTranslation("xray-templates");
   const [loading, setLoading] = useState(false);
   const ref = useRef<ProTableActions>(null);
+  const getDescription = (description?: string) => {
+    if (!description) return "—";
+    const key = DEFAULT_DESCRIPTION_KEYS[description];
+    return key ? t(`defaultDescriptions.${key}`, description) : description;
+  };
 
   return (
     <ProTable<
@@ -147,7 +184,11 @@ export default function XrayTemplates() {
         {
           accessorKey: "description",
           header: t("column.description", "Description"),
-          cell: ({ row }) => row.original.description || "—",
+          cell: ({ row }) => (
+            <div className="max-w-[360px] whitespace-normal break-words text-muted-foreground text-sm leading-5">
+              {getDescription(row.original.description)}
+            </div>
+          ),
         },
         {
           accessorKey: "config",
