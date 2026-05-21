@@ -161,11 +161,7 @@ function UnifiedStatusCell({
   const syncStatus = status.config_sync_status || "unknown";
   const ok = applyStatus === "ok" && syncStatus === "ok";
   const pending = applyStatus === "pending";
-  const error =
-    status.last_apply_error ||
-    status.last_config_error ||
-    status.xray_stats_error ||
-    "";
+  const error = status.last_apply_error || status.last_config_error || "";
 
   return (
     <div className="flex w-fit min-w-[150px] flex-col gap-1.5 rounded-xl border border-border/40 bg-muted/10 p-2.5 text-[11px] leading-tight">
