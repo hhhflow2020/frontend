@@ -122,7 +122,11 @@ function MultilineCsvTextarea({
           setFocused(false);
           commit();
         }}
-        onChange={(event) => setDraft(event.target.value)}
+        onChange={(event) => {
+          const next = event.target.value;
+          setDraft(next);
+          commit(next);
+        }}
         onFocus={() => setFocused(true)}
         placeholder={placeholder}
         value={draft}

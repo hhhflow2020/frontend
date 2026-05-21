@@ -272,6 +272,10 @@ function UnifiedStatusCell({
 
 function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
   const { t } = useTranslation("servers");
+  const statsError =
+    status.status !== "offline" && status.xray_running
+      ? status.xray_stats_error
+      : "";
 
   return (
     <div className="flex w-fit min-w-[176px] flex-col gap-1.5 rounded-xl border border-border/40 bg-muted/10 p-2.5 text-[11px] leading-tight">
@@ -307,12 +311,12 @@ function NetworkSpeedCell({ status }: { status: Partial<API.ServerStatus> }) {
           </span>
         </span>
       </div>
-      {status.xray_stats_error ? (
+      {statsError ? (
         <div
           className="max-w-36 truncate text-muted-foreground"
-          title={status.xray_stats_error}
+          title={statsError}
         >
-          {t("stats", "Stats")}: {status.xray_stats_error}
+          {t("stats", "Stats")}: {statsError}
         </div>
       ) : null}
     </div>
