@@ -8,10 +8,24 @@ import { useTranslation } from "react-i18next";
 import { useGlobalStore } from "@/stores/global";
 import EmailAuthForm from "./email/auth-form";
 
+const LEGACY_DEFAULT_SITE_DESC =
+  "PPanel is a pure, professional, and perfect open-source proxy panel tool, designed to be your ideal choice for learning and practical use.";
+
 export default function Auth() {
   const { t } = useTranslation("auth");
   const { common, user } = useGlobalStore();
   const { site } = common;
+  const siteDescription =
+    site.site_desc === LEGACY_DEFAULT_SITE_DESC
+      ? t(
+          "heroDescription",
+          "A focused workspace for users, products, nodes, orders, and daily operations."
+        )
+      : site.site_desc ||
+        t(
+          "heroDescription",
+          "A focused workspace for users, products, nodes, orders, and daily operations."
+        );
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -49,11 +63,7 @@ export default function Auth() {
               {t("heroTitle", "Manage everything from one quiet place.")}
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground leading-8 lg:mx-0">
-              {site.site_desc ||
-                t(
-                  "heroDescription",
-                  "A focused workspace for users, products, nodes, orders, and daily operations."
-                )}
+              {siteDescription}
             </p>
           </section>
 

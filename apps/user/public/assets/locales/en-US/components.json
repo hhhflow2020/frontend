@@ -2,16 +2,16 @@
   "empty": {
     "title": "Empty",
     "tips": {
-      "0": "Imagine this space filled with exciting content! For now, you'll have to use your imagination...",
-      "1": "This area mysteriously disappeared, but we're summoning it back!",
-      "2": "Oh no, nothing happened... Feel free to fill in the blank!",
-      "3": "It's like discovering an empty stage at a concert... Why not go up and perform?",
-      "4": "You've found a blank canvas! How about building a house?",
-      "5": "This area is currently empty, but creativity starts here!",
-      "6": "Nothing here... but don't worry, it's just the beginning!",
-      "7": "This place was supposed to have a big surprise, but the surprise slipped away!",
-      "8": "There's nothing here for now, like an empty snack cabinet.",
-      "9": "This empty space is waiting for its protagonist to take the stage!"
+      "0": "No data yet.",
+      "1": "There is nothing to display right now.",
+      "2": "No matching results were found.",
+      "3": "No records have been created yet.",
+      "4": "No items are available.",
+      "5": "Content will appear here after it is created.",
+      "6": "This list is empty.",
+      "7": "No new content yet.",
+      "8": "No related information is available.",
+      "9": "Data will appear here when it is ready."
     }
   },
   "areaCode": {

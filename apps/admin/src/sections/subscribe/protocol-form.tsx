@@ -95,6 +95,43 @@ const createClientFormSchema = (t: any) =>
 
 type ClientFormData = z.infer<ReturnType<typeof createClientFormSchema>>;
 
+const DEFAULT_DESCRIPTION_KEYS: Record<string, string> = {
+  "Default URI subscription template for generic clients.": "defaultUri",
+  "通用 URI 订阅模板。": "defaultUri",
+  "Shadowrocket URI subscription template.": "shadowrocket",
+  "Shadowrocket URI 订阅模板。": "shadowrocket",
+  "Clash and Mihomo YAML subscription template.": "clash",
+  "Clash/Mihomo YAML 订阅模板。": "clash",
+  "sing-box 1.12 JSON subscription template.": "singBox112",
+  "sing-box 1.12 JSON 订阅模板。": "singBox112",
+  "Surge managed configuration template.": "surge",
+  "Surge 托管配置模板。": "surge",
+  "Stash YAML subscription template.": "stash",
+  "Stash YAML 订阅模板。": "stash",
+  "Surfboard configuration template.": "surfboard",
+  "Surfboard 配置模板。": "surfboard",
+  "Loon configuration template.": "loon",
+  "Loon 配置模板。": "loon",
+  "Quantumult configuration template.": "quantumult",
+  "Quantumult 配置模板。": "quantumult",
+  "Quantumult X configuration template.": "quantumultX",
+  "Quantumult X 配置模板。": "quantumultX",
+  "Egern YAML subscription template.": "egern",
+  "Egern YAML 订阅模板。": "egern",
+  "Hiddify JSON subscription template.": "hiddify",
+  "Hiddify JSON 订阅模板。": "hiddify",
+  "sing-box 1.11 JSON subscription template.": "singBox111",
+  "sing-box 1.11 JSON 订阅模板。": "singBox111",
+  "Xray-core client config with one local SOCKS inbound per node and one-to-one routing.":
+    "xrayCore",
+  "Xray-core 客户端 JSON 模板，为每个节点生成本地 SOCKS 入站与一对一路由。":
+    "xrayCore",
+  "Surge config that connects to local xray-core SOCKS inbounds while reusing the built-in Surge rules and policy groups.":
+    "surgeXrayCore",
+  "Surge 配置模板，连接本地 xray-core SOCKS 入站并复用 Surge 规则与策略组。":
+    "surgeXrayCore",
+};
+
 export function ProtocolForm() {
   const { t } = useTranslation("subscribe");
   const [loading, setLoading] = useState(false);
@@ -104,6 +141,11 @@ export function ProtocolForm() {
   const tableRef = useRef<ProTableActions>(null);
 
   const clientFormSchema = createClientFormSchema(t);
+  const getDescription = (description?: string) => {
+    if (!description) return "—";
+    const key = DEFAULT_DESCRIPTION_KEYS[description];
+    return key ? t(`defaultDescriptions.${key}`, description) : description;
+  };
 
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
@@ -242,20 +284,23 @@ export function ProtocolForm() {
     {
       accessorKey: "description",
       header: t("table.columns.description", "Description"),
-      cell: ({ row }) => (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
-              <div className="max-w-[200px] truncate text-muted-foreground text-sm">
-                {row.original.description}
-              </div>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <p>{row.original.description}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      ),
+      cell: ({ row }) => {
+        const description = getDescription(row.original.description);
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="max-w-[320px] whitespace-normal break-words text-left text-muted-foreground text-sm leading-5">
+                  {description}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>{description}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
     },
   ];
 

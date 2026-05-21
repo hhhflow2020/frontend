@@ -102,10 +102,10 @@ function UserStatusCell({
   const enabled = Boolean(user.enable);
   const Icon = deleted ? Trash2 : enabled ? CheckCircle2 : PauseCircle;
   const label = deleted
-    ? t("deleted", "Deleted")
+    ? t("deleted", "已删除")
     : enabled
-      ? t("enabled", "Enabled")
-      : t("disabled", "Disabled");
+      ? t("enabled", "已启用")
+      : t("disabled", "已停用");
 
   return (
     <div className="flex items-center gap-3">

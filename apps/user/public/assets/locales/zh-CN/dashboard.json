@@ -13,6 +13,9 @@
   "expireAt": "到期时间",
   "expirationDays": "过期天数",
   "expired": "已过期",
+  "afterPurchase": "购买后",
+  "emptyDescription": "准备好后选择一个套餐。你的有效订阅、流量用量、重置日期和客户端导入链接都会显示在这里。",
+  "emptyTitle": "暂无订阅",
   "filterAll": "全部",
   "filterUsable": "可用",
   "filterValid": "有效",
@@ -47,5 +50,6 @@
   "unsubscribe": "取消订阅",
   "used": "已使用",
   "usedTraffic": "已用流量",
+  "viewDocuments": "查看文档",
   "quickImport": "快速导入客户端"
 }

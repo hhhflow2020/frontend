@@ -41,6 +41,23 @@
     "wildcardResolution": "Wildcard Resolution",
     "wildcardResolutionDescription": "Enable wildcard domain resolution for subscriptions"
   },
+  "defaultDescriptions": {
+    "clash": "Clash and Mihomo YAML subscription template.",
+    "defaultUri": "Default URI subscription template for generic clients.",
+    "egern": "Egern YAML subscription template.",
+    "hiddify": "Hiddify JSON subscription template.",
+    "loon": "Loon configuration template.",
+    "quantumult": "Quantumult configuration template.",
+    "quantumultX": "Quantumult X configuration template.",
+    "shadowrocket": "Shadowrocket URI subscription template.",
+    "singBox111": "sing-box 1.11 JSON subscription template.",
+    "singBox112": "sing-box 1.12 JSON subscription template.",
+    "stash": "Stash YAML subscription template.",
+    "surfboard": "Surfboard configuration template.",
+    "surge": "Surge managed configuration template.",
+    "surgeXrayCore": "Surge config that connects to local xray-core SOCKS inbounds while reusing the built-in Surge rules and policy groups.",
+    "xrayCore": "Xray-core client config with one local SOCKS inbound per node and one-to-one routing."
+  },
   "form": {
     "addTitle": "Add Client",
     "descriptions": {

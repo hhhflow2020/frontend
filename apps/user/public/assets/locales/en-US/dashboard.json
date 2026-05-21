@@ -13,6 +13,9 @@
   "expireAt": "Expires At",
   "expirationDays": "Expiration Days",
   "expired": "Expired",
+  "afterPurchase": "After purchase",
+  "emptyDescription": "Choose a plan when you are ready. Your active subscriptions, traffic usage, reset date, and client import links will appear here.",
+  "emptyTitle": "No subscriptions yet",
   "filterAll": "All",
   "filterUsable": "Usable",
   "filterValid": "Valid",
@@ -47,5 +50,6 @@
   "unsubscribe": "Unsubscribe",
   "used": "Used",
   "usedTraffic": "Used Traffic",
+  "viewDocuments": "View Documents",
   "quickImport": "Quick Import to Client"
 }

@@ -5,6 +5,9 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useGlobalStore } from "@/stores/global";
 
+const LEGACY_DEFAULT_SITE_DESC =
+  "PPanel is a pure, professional, and perfect open-source proxy panel tool, designed to be your ideal choice for learning and practical use.";
+
 export default function Main() {
   const { common, user } = useGlobalStore();
   const navigate = useNavigate();
@@ -13,12 +16,14 @@ export default function Main() {
   const showLanding = import.meta.env.VITE_SHOW_LANDING_PAGE !== "false";
   const site = common.site;
   const siteName = site.site_name || "PPanel";
+  const fallbackDescription = t(
+    "apple_like_description",
+    "A quiet, reliable network experience for work, travel, and everyday browsing."
+  );
   const siteDescription =
-    site.site_desc ||
-    t(
-      "apple_like_description",
-      "A quiet, reliable network experience for work, travel, and everyday browsing."
-    );
+    site.site_desc === LEGACY_DEFAULT_SITE_DESC
+      ? fallbackDescription
+      : site.site_desc || fallbackDescription;
 
   useEffect(() => {
     if (user) {

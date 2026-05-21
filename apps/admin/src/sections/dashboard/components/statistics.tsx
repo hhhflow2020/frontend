@@ -442,7 +442,7 @@ function RealtimeOverview({
         minute: "2-digit",
         second: "2-digit",
       })
-    : "--";
+    : t("waitingRealtime", "Waiting for realtime data");
   const onlineSeries = ensureValueSeries(
     onlineRange === "1d"
       ? realtime?.online_user_series?.last_day

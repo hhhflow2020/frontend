@@ -41,6 +41,23 @@
     "wildcardResolution": "泛域名解析",
     "wildcardResolutionDescription": "为订阅启用泛域名解析"
   },
+  "defaultDescriptions": {
+    "clash": "Clash/Mihomo YAML 订阅模板。",
+    "defaultUri": "通用 URI 订阅模板。",
+    "egern": "Egern YAML 订阅模板。",
+    "hiddify": "Hiddify JSON 订阅模板。",
+    "loon": "Loon 配置模板。",
+    "quantumult": "Quantumult 配置模板。",
+    "quantumultX": "Quantumult X 配置模板。",
+    "shadowrocket": "Shadowrocket URI 订阅模板。",
+    "singBox111": "sing-box 1.11 JSON 订阅模板。",
+    "singBox112": "sing-box 1.12 JSON 订阅模板。",
+    "stash": "Stash YAML 订阅模板。",
+    "surfboard": "Surfboard 配置模板。",
+    "surge": "Surge 托管配置模板。",
+    "surgeXrayCore": "Surge 配置模板，连接本地 xray-core SOCKS 入站并复用 Surge 规则与策略组。",
+    "xrayCore": "Xray-core 客户端 JSON 模板，为每个节点生成本地 SOCKS 入站与一对一路由。"
+  },
   "form": {
     "addTitle": "添加客户端",
     "descriptions": {

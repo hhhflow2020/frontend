@@ -54,7 +54,6 @@ import { toast } from "sonner";
 import { Display } from "@/components/display";
 import { useGlobalStore } from "@/stores/global";
 import { getPlatform } from "@/utils/common";
-import Subscribe from "../../subscribe";
 import Renewal from "../../subscribe/renewal";
 import ResetTraffic from "../../subscribe/reset-traffic";
 import Unsubscribe from "../../subscribe/unsubscribe";
@@ -928,15 +927,74 @@ export default function Content() {
           )}
         </>
       ) : (
-        <>
-          <h2 className="mb-4 flex items-center gap-2 font-bold text-foreground text-xl tracking-tight">
-            <span className="flex size-8 items-center justify-center rounded-xl border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5 text-primary shadow-xs">
-              <Icon className="size-4" icon="uil:shop" />
-            </span>
-            {t("purchaseSubscription", "Purchase Subscription")}
-          </h2>
-          <Subscribe />
-        </>
+        <div className="overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-card/95 via-card/80 to-muted/20 p-6 shadow-md backdrop-blur-xl md:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1fr_280px] lg:items-center">
+            <div className="min-w-0 space-y-5">
+              <div className="flex items-center gap-3">
+                <span className="flex size-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary shadow-xs">
+                  <Icon className="size-5" icon="uil:servers" />
+                </span>
+                <div className="min-w-0">
+                  <div className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                    {t("subscriptionOverview", "Subscription overview")}
+                  </div>
+                  <h2 className="font-bold text-2xl text-foreground tracking-tight">
+                    {t("emptyTitle", "No subscriptions yet")}
+                  </h2>
+                </div>
+              </div>
+              <p className="max-w-2xl text-muted-foreground text-sm leading-6">
+                {t(
+                  "emptyDescription",
+                  "Choose a plan when you are ready. Your active subscriptions, traffic usage, reset date, and client import links will appear here."
+                )}
+              </p>
+              <div className="flex flex-wrap gap-2.5">
+                <Button
+                  asChild
+                  className="h-10 rounded-full bg-gradient-to-r from-primary to-indigo-600 px-5 font-semibold text-white shadow-md transition-all duration-300 hover:from-primary/95 hover:to-indigo-500 hover:shadow-lg hover:shadow-primary/20 active:scale-95"
+                >
+                  <Link to="/subscribe">
+                    <Icon className="mr-1.5 size-4" icon="uil:shop" />
+                    {t("purchaseSubscription", "Purchase Subscription")}
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  className="h-10 rounded-full border-border/50 bg-background/70 px-5 font-semibold shadow-xs backdrop-blur transition-all hover:bg-background active:scale-95"
+                  variant="outline"
+                >
+                  <Link to="/document">
+                    <Icon className="mr-1.5 size-4" icon="uil:file-alt" />
+                    {t("viewDocuments", "View Documents")}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            <div className="grid gap-2 rounded-2xl border border-border/40 bg-background/60 p-4 text-sm shadow-xs">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">
+                  {t("activeSubscriptions", "Active")}
+                </span>
+                <span className="font-bold">0</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">
+                  {t("usedTraffic", "Used Traffic")}
+                </span>
+                <span className="font-bold">0 B</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">
+                  {t("quickImport", "Quick Import to Client")}
+                </span>
+                <span className="font-bold text-muted-foreground">
+                  {t("afterPurchase", "After purchase")}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

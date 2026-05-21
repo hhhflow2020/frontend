@@ -18,8 +18,12 @@ import {
 import { Icon } from "@workspace/ui/composed/icon";
 import { cn } from "@workspace/ui/lib/utils";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useGlobalStore } from "@/stores/global";
 import { type NavItem, useNavs } from "./navs";
+
+const LEGACY_DEFAULT_SITE_DESC =
+  "PPanel is a pure, professional, and perfect open-source proxy panel tool, designed to be your ideal choice for learning and practical use.";
 
 function hasChildren(obj: any): obj is { items: any[] } {
   return (
@@ -32,6 +36,7 @@ export function SidebarLeft({
 }: React.ComponentProps<typeof Sidebar>) {
   const { common } = useGlobalStore();
   const { site } = common;
+  const { t } = useTranslation("components");
   const navs = useNavs();
   const pathname = useLocation({ select: (location) => location.pathname });
   const { state, isMobile } = useSidebar();
@@ -67,6 +72,13 @@ export function SidebarLeft({
   const isGroupActive = (nav: NavItem) =>
     (hasChildren(nav) && nav.items?.some((i: any) => isActiveUrl(i.url))) ||
     ("url" in nav && nav.url ? isActiveUrl(nav.url as string) : false);
+  const siteDesc =
+    site.site_desc === LEGACY_DEFAULT_SITE_DESC
+      ? t(
+          "site.defaultDescription",
+          "专业、纯净的代理面板工具，适合学习与实践。"
+        )
+      : site.site_desc;
 
   React.useEffect(() => {
     setOpenGroups((prev) => {
@@ -166,7 +178,7 @@ export function SidebarLeft({
                     {site.site_name}
                   </span>
                   <span className="truncate text-xs opacity-70">
-                    {site.site_desc}
+                    {siteDesc}
                   </span>
                 </div>
               </Link>
