@@ -236,18 +236,43 @@ const ROUTING_RULE_COLUMNS: JsonArrayColumn[] = [
     label: "入站 Tag",
     type: "csv",
     placeholder: "{{ .Ref.inbound.main.tag }}",
+    multiline: true,
   },
   { key: "outboundTag", label: "出站 Tag", placeholder: "direct" },
   { key: "balancerTag", label: "负载均衡 Tag", placeholder: "auto" },
-  { key: "domain", label: "域名规则", type: "csv", placeholder: "geosite:cn" },
-  { key: "ip", label: "IP 规则", type: "csv", placeholder: "geoip:private" },
-  { key: "protocol", label: "协议", type: "csv", placeholder: "bittorrent" },
+  {
+    key: "domain",
+    label: "域名规则",
+    type: "csv",
+    placeholder: "geosite:cn\ndomain:example.com",
+    multiline: true,
+  },
+  {
+    key: "ip",
+    label: "IP 规则",
+    type: "csv",
+    placeholder: "geoip:private\n192.168.0.0/16",
+    multiline: true,
+  },
+  {
+    key: "protocol",
+    label: "协议",
+    type: "csv",
+    placeholder: "bittorrent",
+    multiline: true,
+  },
   { key: "port", label: "端口", placeholder: "25,465,587" },
 ];
 
 const ROUTING_BALANCER_COLUMNS: JsonArrayColumn[] = [
   { key: "tag", label: "Tag", placeholder: "auto" },
-  { key: "selector", label: "Selector", type: "csv", placeholder: "proxy" },
+  {
+    key: "selector",
+    label: "Selector",
+    type: "csv",
+    placeholder: "proxy\nfallback",
+    multiline: true,
+  },
   { key: "strategy", label: "策略", placeholder: "leastPing" },
 ];
 
@@ -256,6 +281,7 @@ const GEODATA_ASSET_COLUMNS: JsonArrayColumn[] = [
     key: "url",
     label: "下载地址",
     placeholder: "https://example.com/geoip.dat",
+    span: "full",
   },
   { key: "file", label: "文件名", placeholder: "geoip.dat" },
 ];
@@ -265,13 +291,21 @@ const DNS_SERVER_OBJECT_COLUMNS: JsonArrayColumn[] = [
     key: "address",
     label: "地址",
     placeholder: "https://dns.google/dns-query",
+    span: "full",
   },
-  { key: "domains", label: "匹配域名", type: "csv", placeholder: "geosite:cn" },
+  {
+    key: "domains",
+    label: "匹配域名",
+    type: "csv",
+    placeholder: "geosite:cn\ndomain:example.com",
+    multiline: true,
+  },
   {
     key: "expectedIPs",
     label: "期望 IP",
     type: "csv",
-    placeholder: "geoip:cn",
+    placeholder: "geoip:cn\n1.1.1.1",
+    multiline: true,
   },
   {
     key: "queryStrategy",
@@ -329,7 +363,8 @@ const WG_PEER_COLUMNS: JsonArrayColumn[] = [
     key: "allowedIPs",
     label: "Allowed IPs",
     type: "csv",
-    placeholder: "0.0.0.0/0, ::/0",
+    placeholder: "0.0.0.0/0\n::/0",
+    multiline: true,
   },
   { key: "keepAlive", label: "Keep Alive", type: "number" },
 ];
@@ -346,9 +381,16 @@ const DNS_OUT_RULE_COLUMNS: JsonArrayColumn[] = [
     key: "domain",
     label: "域名",
     type: "csv",
-    placeholder: "domain:example.com",
+    placeholder: "domain:example.com\ngeosite:cn",
+    multiline: true,
   },
-  { key: "ip", label: "IP", type: "csv", placeholder: "geoip:cn" },
+  {
+    key: "ip",
+    label: "IP",
+    type: "csv",
+    placeholder: "geoip:cn\n1.1.1.1",
+    multiline: true,
+  },
   { key: "qtype", label: "QType", type: "number" },
 ];
 
@@ -2263,7 +2305,7 @@ export default function XrayTemplateForm({
                             </FormItem>
                           )}
                         />
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-4">
                           <JsonArrayObjectField
                             addLabel="添加路由规则"
                             columns={ROUTING_RULE_COLUMNS}

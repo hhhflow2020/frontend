@@ -18,6 +18,8 @@ export type JsonArrayColumn = {
   type?: "text" | "number" | "boolean" | "csv" | "select";
   options?: string[];
   placeholder?: string;
+  multiline?: boolean;
+  span?: "normal" | "full";
 };
 
 type JsonValueType = "string" | "number" | "boolean" | "json";
@@ -69,13 +71,23 @@ function hasInvalidJson(
 
 function csvToArray(value: string) {
   return value
-    .split(",")
+    .split(/[\n,]+/)
     .map((item) => item.trim())
     .filter(Boolean);
 }
 
 function arrayToCsv(value: unknown) {
   return Array.isArray(value) ? value.join(", ") : String(value ?? "");
+}
+
+function arrayToLines(value: unknown) {
+  return Array.isArray(value) ? value.join("\n") : String(value ?? "");
+}
+
+function columnClassName(column: JsonArrayColumn) {
+  return column.span === "full" || column.multiline
+    ? "space-y-1 md:col-span-2"
+    : "space-y-1";
 }
 
 function inferValueType(value: unknown): JsonValueType {
@@ -325,7 +337,9 @@ export function JsonArrayObjectEditor({
                 if (column.type === "boolean") {
                   return (
                     <div
-                      className="flex items-center justify-between rounded-md border px-3 py-2"
+                      className={`flex items-center justify-between rounded-md border px-3 py-2 ${
+                        column.span === "full" ? "md:col-span-2" : ""
+                      }`}
                       key={column.key}
                     >
                       <span className="text-sm">{column.label}</span>
@@ -340,7 +354,7 @@ export function JsonArrayObjectEditor({
                 }
                 if (column.type === "select") {
                   return (
-                    <div className="space-y-1" key={column.key}>
+                    <div className={columnClassName(column)} key={column.key}>
                       <div className="text-muted-foreground text-xs">
                         {column.label}
                       </div>
@@ -365,35 +379,58 @@ export function JsonArrayObjectEditor({
                   );
                 }
                 return (
-                  <div className="space-y-1" key={column.key}>
+                  <div className={columnClassName(column)} key={column.key}>
                     <div className="text-muted-foreground text-xs">
                       {column.label}
                     </div>
-                    <EnhancedInput
-                      onValueChange={(text) => {
-                        if (column.type === "number") {
-                          const numberValue = Number(text);
+                    {column.multiline ? (
+                      <Textarea
+                        className="min-h-24 resize-y font-mono text-xs leading-5"
+                        onChange={(event) =>
                           updateItem(
                             index,
                             column.key,
-                            Number.isNaN(numberValue) ? undefined : numberValue
-                          );
-                          return;
+                            column.type === "csv"
+                              ? csvToArray(event.target.value)
+                              : event.target.value
+                          )
                         }
-                        updateItem(
-                          index,
-                          column.key,
-                          column.type === "csv" ? csvToArray(text) : text
-                        );
-                      }}
-                      placeholder={column.placeholder}
-                      type={column.type === "number" ? "number" : "text"}
-                      value={
-                        column.type === "csv"
-                          ? arrayToCsv(rawValue)
-                          : String(rawValue ?? "")
-                      }
-                    />
+                        placeholder={column.placeholder}
+                        value={
+                          column.type === "csv"
+                            ? arrayToLines(rawValue)
+                            : String(rawValue ?? "")
+                        }
+                      />
+                    ) : (
+                      <EnhancedInput
+                        onValueChange={(text) => {
+                          if (column.type === "number") {
+                            const numberValue = Number(text);
+                            updateItem(
+                              index,
+                              column.key,
+                              Number.isNaN(numberValue)
+                                ? undefined
+                                : numberValue
+                            );
+                            return;
+                          }
+                          updateItem(
+                            index,
+                            column.key,
+                            column.type === "csv" ? csvToArray(text) : text
+                          );
+                        }}
+                        placeholder={column.placeholder}
+                        type={column.type === "number" ? "number" : "text"}
+                        value={
+                          column.type === "csv"
+                            ? arrayToCsv(rawValue)
+                            : String(rawValue ?? "")
+                        }
+                      />
+                    )}
                   </div>
                 );
               })}
