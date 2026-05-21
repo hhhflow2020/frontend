@@ -827,8 +827,7 @@ export default function ServerXrayTemplateBindForm({
   const [activeTab, setActiveTab] = useState<BindTab>("inbound");
   const [templateSearch, setTemplateSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
-  const lastLoadedSavedSignatureRef = useRef("");
-  const wasOpenRef = useRef(false);
+  const hasManualDraftRef = useRef(false);
   const open = controlledOpen ?? innerOpen;
   const setOpen = (value: boolean) => {
     onOpenChange?.(value);
@@ -883,25 +882,13 @@ export default function ServerXrayTemplateBindForm({
 
   useEffect(() => {
     if (!open) {
-      wasOpenRef.current = false;
-      lastLoadedSavedSignatureRef.current = "";
+      hasManualDraftRef.current = false;
       return;
     }
     if (!serverBindingData) return;
-    setBindings((current) => {
-      const currentSignature = bindingRowsSignature(current);
-      const shouldHydrate =
-        !(wasOpenRef.current && lastLoadedSavedSignatureRef.current) ||
-        currentSignature === lastLoadedSavedSignatureRef.current ||
-        currentSignature === savedBindingSignature;
-      wasOpenRef.current = true;
-      if (!shouldHydrate) {
-        return current;
-      }
-      lastLoadedSavedSignatureRef.current = savedBindingSignature;
-      return savedBindingRows;
-    });
-  }, [open, savedBindingRows, savedBindingSignature, serverBindingData]);
+    if (hasManualDraftRef.current) return;
+    setBindings(savedBindingRows);
+  }, [open, savedBindingRows, serverBindingData]);
 
   const hasDraftChanges = useMemo(
     () =>
@@ -1016,6 +1003,7 @@ export default function ServerXrayTemplateBindForm({
     template: API.XrayTemplate,
     patch: Partial<BindingRow>
   ) {
+    hasManualDraftRef.current = true;
     setBindings((current) => {
       const existing = current.find((item) => item.template_id === template.id);
       if (!existing) {
@@ -1028,6 +1016,7 @@ export default function ServerXrayTemplateBindForm({
   }
 
   function enableBinding(template: API.XrayTemplate) {
+    hasManualDraftRef.current = true;
     setBindings((current) => {
       const existing = current.find((item) => item.template_id === template.id);
       if (existing) {
@@ -1065,6 +1054,7 @@ export default function ServerXrayTemplateBindForm({
   }
 
   function removeBinding(templateId: number) {
+    hasManualDraftRef.current = true;
     setBindings((current) =>
       current.filter((item) => item.template_id !== templateId)
     );
@@ -1105,7 +1095,9 @@ export default function ServerXrayTemplateBindForm({
           })),
       });
       toast.success(t("message.bound", "Saved"));
-      await refetch();
+      hasManualDraftRef.current = false;
+      const refreshed = await refetch();
+      setBindings((refreshed.data?.list || []).map(serverBindingToRow));
     } finally {
       setSaving(false);
     }
