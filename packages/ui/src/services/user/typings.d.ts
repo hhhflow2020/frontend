@@ -474,6 +474,8 @@ declare namespace API {
     monthly_consumption_limit: number;
     monthly_order_limit_enabled: boolean;
     monthly_order_limit: number;
+    subscription_expiry_limit_enabled: boolean;
+    subscription_expiry_grace_days: number;
   };
 
   type MembershipCardResponse = {

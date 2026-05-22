@@ -41,6 +41,7 @@ export default function Purchase({
     coupon: "",
   });
   const [loading, startTransition] = useTransition();
+  const [preOrderError, setPreOrderError] = useState(false);
   const lastSuccessOrderRef = useRef<any>(null);
 
   const { data: order } = useQuery({
@@ -62,8 +63,10 @@ export default function Purchase({
         if (result) {
           lastSuccessOrderRef.current = result;
         }
+        setPreOrderError(false);
         return result;
       } catch (error) {
+        setPreOrderError(true);
         if (lastSuccessOrderRef.current) {
           return lastSuccessOrderRef.current;
         }
@@ -163,10 +166,18 @@ export default function Purchase({
                 }}
                 value={params.payment as number}
               />
+              {preOrderError ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 text-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+                  {t(
+                    "membership.expiryPolicyBlocked",
+                    "This duration cannot be purchased with the current membership expiry. Reduce the duration or renew your membership card first."
+                  )}
+                </div>
+              ) : null}
             </div>
             <Button
               className="hover:-translate-y-0.5 fixed bottom-0 left-0 h-14 w-full text-lg shadow-lg transition-all hover:shadow-xl md:relative md:mt-auto md:rounded-2xl"
-              disabled={loading}
+              disabled={loading || preOrderError}
               onClick={handleSubmit}
             >
               {loading && <LoaderCircle className="mr-2 animate-spin" />}

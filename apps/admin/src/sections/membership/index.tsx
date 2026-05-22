@@ -58,6 +58,8 @@ const defaultForm: API.UpdateMembershipPlanRequest = {
     monthly_consumption_limit: 0,
     monthly_order_limit_enabled: false,
     monthly_order_limit: 0,
+    subscription_expiry_limit_enabled: false,
+    subscription_expiry_grace_days: 0,
   },
 };
 
@@ -92,6 +94,10 @@ export default function Membership() {
         monthly_order_limit_enabled:
           data.policy?.monthly_order_limit_enabled ?? false,
         monthly_order_limit: data.policy?.monthly_order_limit || 0,
+        subscription_expiry_limit_enabled:
+          data.policy?.subscription_expiry_limit_enabled ?? false,
+        subscription_expiry_grace_days:
+          data.policy?.subscription_expiry_grace_days || 0,
       },
     });
   }, [data]);
@@ -143,6 +149,12 @@ export default function Membership() {
               form.policy?.monthly_order_limit_enabled ?? false,
             monthly_order_limit: Math.max(
               Number(form.policy?.monthly_order_limit) || 0,
+              0
+            ),
+            subscription_expiry_limit_enabled:
+              form.policy?.subscription_expiry_limit_enabled ?? false,
+            subscription_expiry_grace_days: Math.max(
+              Number(form.policy?.subscription_expiry_grace_days) || 0,
               0
             ),
           },
@@ -386,6 +398,57 @@ export default function Membership() {
                       value={form.policy?.monthly_order_limit || 0}
                     />
                   </div>
+
+                  <div className="space-y-3 rounded-lg border p-4 md:col-span-2">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <Label>
+                          {t(
+                            "policy.subscriptionExpiry",
+                            "Subscription Expiry Guard"
+                          )}
+                        </Label>
+                        <p className="text-muted-foreground text-xs">
+                          {t(
+                            "policy.subscriptionExpiryHint",
+                            "Block subscription purchases or renewals when the resulting expiry is beyond the membership expiry plus the allowed days."
+                          )}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={form.policy?.subscription_expiry_limit_enabled}
+                        onCheckedChange={(checked) =>
+                          updatePolicy(
+                            "subscription_expiry_limit_enabled",
+                            checked
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-2 md:max-w-xs">
+                      <Label htmlFor="membership-subscription-expiry-grace">
+                        {t(
+                          "policy.subscriptionExpiryGraceDays",
+                          "Allowed extra days"
+                        )}
+                      </Label>
+                      <Input
+                        disabled={
+                          !form.policy?.subscription_expiry_limit_enabled
+                        }
+                        id="membership-subscription-expiry-grace"
+                        min={0}
+                        onChange={(event) =>
+                          updatePolicy(
+                            "subscription_expiry_grace_days",
+                            Number(event.target.value) || 0
+                          )
+                        }
+                        type="number"
+                        value={form.policy?.subscription_expiry_grace_days || 0}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -474,8 +537,16 @@ export default function Membership() {
                       {form.policy.monthly_order_limit}
                     </span>
                   ) : null}
+                  {form.policy?.subscription_expiry_limit_enabled ? (
+                    <span className="block">
+                      {t("policy.subscriptionExpiry", "Subscription Expiry")}: +
+                      {form.policy.subscription_expiry_grace_days || 0}{" "}
+                      {t("days", "days")}
+                    </span>
+                  ) : null}
                   {form.policy?.monthly_consumption_limit_enabled ||
-                  form.policy?.monthly_order_limit_enabled
+                  form.policy?.monthly_order_limit_enabled ||
+                  form.policy?.subscription_expiry_limit_enabled
                     ? null
                     : t("noPolicies", "No policy enabled")}
                 </span>

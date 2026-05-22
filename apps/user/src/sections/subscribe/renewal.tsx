@@ -46,6 +46,7 @@ export default function Renewal({
     user_subscribe_id: id,
   });
   const [loading, startTransition] = useTransition();
+  const [preOrderError, setPreOrderError] = useState(false);
   const lastSuccessOrderRef = useRef<any>(null);
 
   const { data: order } = useQuery({
@@ -67,8 +68,10 @@ export default function Renewal({
         if (result) {
           lastSuccessOrderRef.current = result;
         }
+        setPreOrderError(false);
         return result;
       } catch (_error) {
+        setPreOrderError(true);
         if (lastSuccessOrderRef.current) {
           return lastSuccessOrderRef.current;
         }
@@ -173,10 +176,18 @@ export default function Renewal({
                 }}
                 value={params.payment as number}
               />
+              {preOrderError ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 text-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+                  {t(
+                    "membership.expiryPolicyBlocked",
+                    "This renewal duration exceeds the membership expiry limit. Reduce the duration or renew your membership card first."
+                  )}
+                </div>
+              ) : null}
             </div>
             <Button
               className="sticky bottom-0 left-0 w-full md:relative md:mt-6"
-              disabled={loading}
+              disabled={loading || preOrderError}
               onClick={handleSubmit}
             >
               {loading && <LoaderCircle className="mr-2 animate-spin" />}

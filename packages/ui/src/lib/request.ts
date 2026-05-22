@@ -148,6 +148,10 @@ function handleError(response: {
       "components:error.60007",
       "Insufficient inventory, please try again later or contact the administrator."
     ),
+    60009: t(
+      "components:error.60009",
+      "This purchase exceeds your membership policy limit. Adjust the duration or renew your membership card first."
+    ),
     70001: t(
       "components:error.70001",
       "Incorrect verification code, please re-enter."
