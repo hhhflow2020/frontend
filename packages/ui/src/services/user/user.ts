@@ -258,6 +258,74 @@ export async function queryUserSubscribe(options?: { [key: string]: any }) {
   );
 }
 
+/** Query User Subscribe Presets GET /v1/public/user/subscribe_preset/list */
+export async function queryUserSubscribePresetList(
+  params: API.QueryUserSubscribePresetListParams,
+  options?: { [key: string]: any }
+) {
+  return request<
+    API.Response & { data?: API.QueryUserSubscribePresetListResponse }
+  >("/v1/public/user/subscribe_preset/list", {
+    method: "GET",
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
+}
+
+/** Create User Subscribe Preset POST /v1/public/user/subscribe_preset */
+export async function createUserSubscribePreset(
+  body: API.CreateUserSubscribePresetRequest,
+  options?: { [key: string]: any }
+) {
+  return request<
+    API.Response & { data?: API.CreateUserSubscribePresetResponse }
+  >("/v1/public/user/subscribe_preset", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** Update User Subscribe Preset PUT /v1/public/user/subscribe_preset */
+export async function updateUserSubscribePreset(
+  body: API.UpdateUserSubscribePresetRequest,
+  options?: { [key: string]: any }
+) {
+  return request<
+    API.Response & { data?: API.CreateUserSubscribePresetResponse }
+  >("/v1/public/user/subscribe_preset", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** Delete User Subscribe Preset DELETE /v1/public/user/subscribe_preset */
+export async function deleteUserSubscribePreset(
+  body: API.DeleteUserSubscribePresetRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.Response & { data?: any }>(
+    "/v1/public/user/subscribe_preset",
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
 /** Get Subscribe Log GET /v1/public/user/subscribe_log */
 export async function getSubscribeLog(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)

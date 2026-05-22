@@ -843,6 +843,18 @@ declare namespace API {
     list: UserSubscribeInfo[];
   };
 
+  type QueryUserSubscribePresetListParams = {
+    user_subscribe_id: number;
+  };
+
+  type QueryUserSubscribePresetListRequest = {
+    user_subscribe_id: number;
+  };
+
+  type QueryUserSubscribePresetListResponse = {
+    list: UserSubscribePreset[];
+  };
+
   type QueryWithdrawalLogListRequest = {
     page: number;
     size: number;
@@ -865,6 +877,27 @@ declare namespace API {
 
   type RechargeOrderResponse = {
     order_no: string;
+  };
+
+  type CreateUserSubscribePresetRequest = {
+    user_subscribe_id: number;
+    name: string;
+    items: UserSubscribePresetItem[];
+  };
+
+  type CreateUserSubscribePresetResponse = {
+    preset: UserSubscribePreset;
+  };
+
+  type UpdateUserSubscribePresetRequest = {
+    id: number;
+    name: string;
+    items: UserSubscribePresetItem[];
+    enabled?: boolean;
+  };
+
+  type DeleteUserSubscribePresetRequest = {
+    id: number;
   };
 
   type RegisterConfig = {
@@ -1255,6 +1288,8 @@ declare namespace API {
     updated_at: number;
     is_try_out: boolean;
     nodes: UserSubscribeNodeInfo[];
+    profiles: UserSubscribeProfile[];
+    presets: UserSubscribePreset[];
   };
 
   type UserSubscribeLog = {
@@ -1275,12 +1310,46 @@ declare namespace API {
     name: string;
     uuid: string;
     protocol: string;
+    inbound_alias: string;
+    profile_key: string;
+    profile_name: string;
+    item_key: string;
+    server_id: number;
+    server_name: string;
     port: number;
     address: string;
     tags: string[];
     country: string;
     city: string;
     created_at: number;
+  };
+
+  type UserSubscribeProfile = {
+    key: string;
+    name: string;
+    protocol: string;
+    transport: string;
+    security: string;
+    node_count: number;
+    sort: number;
+  };
+
+  type UserSubscribePresetItem = {
+    node_id: number;
+    inbound_alias: string;
+  };
+
+  type UserSubscribePreset = {
+    id: number;
+    user_subscribe_id: number;
+    name: string;
+    preset_key: string;
+    mode: string;
+    profile_key: string;
+    items: UserSubscribePresetItem[];
+    enabled: boolean;
+    created_at: number;
+    updated_at: number;
   };
 
   type VerifyCodeConfig = {

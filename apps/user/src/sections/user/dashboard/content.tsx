@@ -17,6 +17,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
+import { Checkbox } from "@workspace/ui/components/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,11 +33,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
+import { Input } from "@workspace/ui/components/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@workspace/ui/components/popover";
+import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import {
   Select,
   SelectContent,
@@ -36,13 +47,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
-import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { Icon } from "@workspace/ui/composed/icon";
 import { cn } from "@workspace/ui/lib/utils";
-import { getClient, getStat } from "@workspace/ui/services/common/common";
+import { queryUserSubscribeNodeList } from "@workspace/ui/services/user/subscribe";
 import {
+  createUserSubscribePreset,
+  deleteUserSubscribePreset,
   queryUserSubscribe,
   resetUserSubscribeToken,
+  updateUserSubscribePreset,
 } from "@workspace/ui/services/user/user";
 import { differenceInDays, formatDate } from "@workspace/ui/utils/formatting";
 import { QRCodeCanvas } from "qrcode.react";
@@ -52,61 +65,37 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Display } from "@/components/display";
 import { useGlobalStore } from "@/stores/global";
-import { getPlatform } from "@/utils/common";
 import Renewal from "../../subscribe/renewal";
 import ResetTraffic from "../../subscribe/reset-traffic";
 import Unsubscribe from "../../subscribe/unsubscribe";
-
-const platforms: (keyof API.DownloadLink)[] = [
-  "windows",
-  "mac",
-  "linux",
-  "ios",
-  "android",
-  "harmony",
-];
-
-const getAppGradient = (name: string) => {
-  const n = name.toLowerCase();
-  if (n.includes("shadowrocket"))
-    return "from-purple-500 via-indigo-500 to-blue-600 shadow-purple-500/25";
-  if (n.includes("clash"))
-    return "from-blue-500 via-cyan-500 to-sky-600 shadow-blue-500/25";
-  if (n.includes("singbox") || n.includes("sing-box"))
-    return "from-orange-500 via-amber-500 to-yellow-600 shadow-orange-500/25";
-  if (n.includes("surge"))
-    return "from-pink-500 via-rose-500 to-red-600 shadow-pink-500/25";
-  if (n.includes("v2ray") || n.includes("v2fly"))
-    return "from-teal-500 via-emerald-500 to-green-600 shadow-teal-500/25";
-  if (n.includes("trojan"))
-    return "from-violet-500 via-purple-500 to-fuchsia-600 shadow-violet-500/25";
-  return "from-slate-500 via-neutral-600 to-zinc-700 shadow-slate-500/25";
-};
 
 interface SubscriptionCardProps {
   item: any;
   index: number;
   refetch: () => any;
+  refetchScopes: () => any;
   statusWatermarks: Record<number, string>;
   t: any;
-  platform: any;
-  applications: any[];
-  protocol: string;
   getUserSubscribe: any;
   common: any;
+  scopeInfo?: API.UserSubscribeInfo;
 }
+
+type ScopeSelection =
+  | { mode: "all" }
+  | { mode: "profile"; key: string }
+  | { mode: "preset"; key: string };
 
 function SubscriptionCard({
   item,
   index,
   refetch,
+  refetchScopes,
   statusWatermarks,
   t,
-  platform,
-  applications,
-  protocol,
   getUserSubscribe,
   common,
+  scopeInfo,
 }: Readonly<SubscriptionCardProps>) {
   const isActuallyExpired = item.status === 3 && item.expire_time !== 0;
   const shouldShowWatermark =
@@ -116,6 +105,127 @@ function SubscriptionCard({
   const [resetTokenLinks, setResetTokenLinks] = useState<string[]>([]);
   const hasResetTokenResult = resetTokenLinks.length > 0;
   const resetTokenPrimaryLink = resetTokenLinks[0] || "";
+  const [scope, setScope] = useState<ScopeSelection>({ mode: "all" });
+  const [customOpen, setCustomOpen] = useState(false);
+  const [presetName, setPresetName] = useState("");
+  const [editingPresetId, setEditingPresetId] = useState<number | null>(null);
+  const [selectedItemKeys, setSelectedItemKeys] = useState<Set<string>>(
+    () => new Set()
+  );
+  const nodes = scopeInfo?.nodes || [];
+  const profiles = scopeInfo?.profiles || [];
+  const presets = (scopeInfo?.presets || []).filter((preset) => preset.enabled);
+  const selectedScopeParams =
+    scope.mode === "profile"
+      ? { profile: scope.key }
+      : scope.mode === "preset"
+        ? { preset: scope.key }
+        : undefined;
+  const subscribeUrls =
+    getUserSubscribe(item.short, item.token, selectedScopeParams) || [];
+  const currentScopeLabel =
+    scope.mode === "profile"
+      ? profiles.find((profile) => profile.key === scope.key)?.name || scope.key
+      : scope.mode === "preset"
+        ? presets.find((preset) => preset.preset_key === scope.key)?.name ||
+          scope.key
+        : t("scopeAll", "All available");
+  const nodesByServer = React.useMemo(() => {
+    const groups = new Map<string, API.UserSubscribeNodeInfo[]>();
+    nodes.forEach((node) => {
+      const serverName =
+        node.server_name ||
+        [node.country, node.city].filter(Boolean).join(" ") ||
+        t("unknown", "Unknown");
+      const key = `${node.server_id || 0}:${serverName}`;
+      groups.set(key, [...(groups.get(key) || []), node]);
+    });
+    return Array.from(groups.entries()).map(([key, value]) => ({
+      key,
+      name: key.split(":").slice(1).join(":"),
+      nodes: value,
+    }));
+  }, [nodes, t]);
+
+  React.useEffect(() => {
+    if (
+      scope.mode === "preset" &&
+      !presets.some((preset) => preset.preset_key === scope.key)
+    ) {
+      setScope({ mode: "all" });
+    }
+    if (
+      scope.mode === "profile" &&
+      !profiles.some((profile) => profile.key === scope.key)
+    ) {
+      setScope({ mode: "all" });
+    }
+  }, [presets, profiles, scope]);
+
+  const openCustomPreset = () => {
+    const editingPreset =
+      scope.mode === "preset"
+        ? presets.find((preset) => preset.preset_key === scope.key)
+        : undefined;
+    const baseKeys = editingPreset
+      ? editingPreset.items.map(
+          (presetItem) => `${presetItem.node_id}:${presetItem.inbound_alias}`
+        )
+      : scope.mode === "profile"
+        ? nodes
+            .filter((node) => node.profile_key === scope.key)
+            .map((node) => node.item_key || `${node.id}:${node.inbound_alias}`)
+        : nodes.map(
+            (node) => node.item_key || `${node.id}:${node.inbound_alias}`
+          );
+    setEditingPresetId(editingPreset?.id || null);
+    setPresetName(editingPreset?.name || "");
+    setSelectedItemKeys(new Set(baseKeys));
+    setCustomOpen(true);
+  };
+
+  const saveCustomPreset = async () => {
+    const items = nodes
+      .filter((node) =>
+        selectedItemKeys.has(
+          node.item_key || `${node.id}:${node.inbound_alias}`
+        )
+      )
+      .map((node) => ({
+        node_id: node.id,
+        inbound_alias: node.inbound_alias,
+      }));
+    if (!presetName.trim()) {
+      toast.error(t("presetNameRequired", "Please enter a preset name."));
+      return;
+    }
+    if (!items.length) {
+      toast.error(
+        t("presetItemRequired", "Please select at least one subscription item.")
+      );
+      return;
+    }
+    const { data } = editingPresetId
+      ? await updateUserSubscribePreset({
+          id: editingPresetId,
+          name: presetName.trim(),
+          items,
+        })
+      : await createUserSubscribePreset({
+          user_subscribe_id: item.id,
+          name: presetName.trim(),
+          items,
+        });
+    const preset = data.data?.preset;
+    if (preset?.preset_key) {
+      setScope({ mode: "preset", key: preset.preset_key });
+    }
+    setCustomOpen(false);
+    setEditingPresetId(null);
+    setPresetName("");
+    await refetchScopes();
+    toast.success(t("presetSaved", "Subscription preset saved."));
+  };
 
   // Calculate usage percentage
   const percent = item.traffic
@@ -357,7 +467,7 @@ function SubscriptionCard({
                                   getUserSubscribe(
                                     next.short,
                                     next.token,
-                                    protocol
+                                    selectedScopeParams
                                   ) || []
                                 );
                                 toast.success(
@@ -589,153 +699,270 @@ function SubscriptionCard({
           )}
         </div>
 
-        {/* Accordion-Free Actions Panel: Direct Copier and One-Click Client Grid */}
+        {/* Subscription Scope and Link */}
         <div className="space-y-3 border-slate-100 border-t pt-3.5 dark:border-border/20">
-          {getUserSubscribe(item.short, item.token, protocol)?.map(
-            (url: string, idx: number) => (
-              <div className="space-y-3" key={url}>
-                {/* Link Copier Row */}
-                <div className="flex items-center gap-2">
-                  <CopyToClipboard
-                    onCopy={(_, result) => {
-                      if (result) {
-                        toast.success(t("copySuccess", "Copy Success"));
-                      }
-                    }}
-                    text={url}
-                  >
-                    <Button className="h-8 flex-1 rounded-xl bg-gradient-to-r from-primary to-indigo-600 font-bold text-[13px] text-white shadow-xs transition-all hover:brightness-105 active:scale-95">
-                      <Icon className="mr-1.5 size-4" icon="uil:copy" />
-                      {t("copySubscriptionLink", "Copy Subscription Link")}{" "}
-                      {idx > 0 ? `#${idx + 1}` : ""}
-                    </Button>
-                  </CopyToClipboard>
-
-                  {/* Scan QR Code via Popover */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        className="size-8 rounded-xl border border-blue-100 bg-blue-50/70 p-0 text-blue-500 shadow-xs hover:bg-blue-100/80 dark:border-blue-500/20 dark:bg-blue-500/5 dark:hover:bg-blue-500/10"
-                        variant="outline"
-                      >
-                        <Icon className="size-4" icon="uil:qrcode-scan" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="flex w-44 flex-col items-center gap-2 rounded-2xl border-slate-200 bg-popover/95 p-3 shadow-xl backdrop-blur-xl dark:border-border/30">
-                      <span className="text-center font-black text-[9px] text-blue-500 uppercase tracking-widest">
-                        {t("scanToSubscribe", "Scan to Subscribe")}
-                      </span>
-                      <div className="relative flex size-28 items-center justify-center rounded-xl border border-blue-100 bg-white p-2 shadow-inner">
-                        <QRCodeCanvas
-                          bgColor="transparent"
-                          fgColor="rgb(59, 130, 246)"
-                          size={96}
-                          value={url}
-                        />
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Micro capsule grid of client imports */}
-                <div className="space-y-1.5">
-                  <div className="font-semibold text-[11px] text-slate-500 uppercase tracking-wider dark:text-muted-foreground/85">
-                    {t("quickImport", "Quick Import to Client")}
-                  </div>
-                  <div className="grid grid-cols-2 xs:grid-cols-3 gap-1.5 sm:grid-cols-2 xl:grid-cols-2">
-                    {applications
-                      ?.filter(
-                        (application) =>
-                          application.enabled !== false &&
-                          (application.scheme ||
-                            application.download_link?.[platform])
-                      )
-                      .map((application) => {
-                        const downloadUrl =
-                          application.download_link?.[platform];
-
-                        const handleCopy = (_: string, result: boolean) => {
-                          if (result) {
-                            toast.success(
-                              `${application.name} ${t(
-                                "copySuccess",
-                                "Copy Success"
-                              )}`
-                            );
-                          }
-                        };
-
-                        const appGradient = getAppGradient(application.name);
-
-                        return (
-                          <CopyToClipboard
-                            key={application.name}
-                            onCopy={handleCopy}
-                            text={url}
-                          >
-                            <div className="group hover:-translate-y-0.5 flex h-8 cursor-pointer items-center justify-between gap-1.5 rounded-xl border border-slate-100 bg-slate-50/60 px-2.5 py-1 shadow-xs transition-all duration-200 hover:border-slate-200 hover:bg-slate-100/80 dark:border-border/30 dark:bg-background/40 dark:hover:border-border/60 dark:hover:bg-background">
-                              <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                                {application.icon ? (
-                                  <div className="relative flex size-6 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white p-0.5 shadow-xs dark:border-border/20 dark:bg-white/95">
-                                    <img
-                                      alt={application.name}
-                                      className="object-contain"
-                                      height={18}
-                                      src={application.icon}
-                                      width={18}
-                                    />
-                                  </div>
-                                ) : (
-                                  <div
-                                    className={cn(
-                                      "flex size-6 shrink-0 items-center justify-center rounded-md text-center text-white shadow-xs",
-                                      appGradient
-                                    )}
-                                  >
-                                    <span className="font-black text-[7px] uppercase leading-none tracking-tight">
-                                      {application.name.substring(0, 3)}
-                                    </span>
-                                  </div>
-                                )}
-                                <span className="truncate font-bold text-[11px] text-foreground/80 tracking-tight">
-                                  {application.name}
-                                </span>
-                              </div>
-
-                              <div className="flex shrink-0 items-center gap-0.5 opacity-40 transition-opacity group-hover:opacity-100">
-                                {downloadUrl && (
-                                  <a
-                                    className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted"
-                                    href={downloadUrl}
-                                    onClick={(e) => e.stopPropagation()}
-                                    rel="noopener noreferrer"
-                                    target="_blank"
-                                    title={t("download", "Download")}
-                                  >
-                                    <Icon
-                                      className="size-3"
-                                      icon="uil:download"
-                                    />
-                                  </a>
-                                )}
-                                <span
-                                  className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted"
-                                  title={t("copy", "Copy")}
-                                >
-                                  <Icon className="size-3" icon="uil:copy" />
-                                </span>
-                              </div>
-                            </div>
-                          </CopyToClipboard>
-                        );
-                      })}
-                  </div>
-                </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="font-bold text-foreground text-sm">
+                {t("subscriptionScope", "Subscription scope")}
               </div>
-            )
-          )}
+              <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                {currentScopeLabel} ·{" "}
+                {scope.mode === "all"
+                  ? t("scopeNodeCount", "{{count}} items", {
+                      count: nodes.length,
+                    })
+                  : scope.mode === "profile"
+                    ? t("scopeFiltered", "Filtered")
+                    : t("scopePreset", "Preset")}
+              </div>
+            </div>
+            <Button
+              className="h-8 rounded-xl px-3 text-xs"
+              onClick={openCustomPreset}
+              size="sm"
+              variant="outline"
+            >
+              <Icon className="mr-1 size-3.5" icon="uil:sliders-v-alt" />
+              {t("customScope", "Custom")}
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              className={cn(
+                "rounded-xl border px-2.5 py-1.5 font-bold text-[11px] transition-all",
+                scope.mode === "all"
+                  ? "border-primary/20 bg-primary text-primary-foreground shadow-sm"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary dark:border-border/40 dark:bg-background"
+              )}
+              onClick={() => setScope({ mode: "all" })}
+              type="button"
+            >
+              {t("scopeAll", "All available")}
+            </button>
+            {profiles.map((profile) => (
+              <button
+                className={cn(
+                  "rounded-xl border px-2.5 py-1.5 font-bold text-[11px] transition-all",
+                  scope.mode === "profile" && scope.key === profile.key
+                    ? "border-cyan-500/20 bg-cyan-500 text-white shadow-sm"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-cyan-400/40 hover:text-cyan-600 dark:border-border/40 dark:bg-background"
+                )}
+                key={profile.key}
+                onClick={() => setScope({ mode: "profile", key: profile.key })}
+                type="button"
+              >
+                {profile.name}
+                <span className="ml-1 opacity-70">{profile.node_count}</span>
+              </button>
+            ))}
+            {presets.map((preset) => (
+              <span
+                className={cn(
+                  "inline-flex items-center overflow-hidden rounded-xl border text-[11px] transition-all",
+                  scope.mode === "preset" && scope.key === preset.preset_key
+                    ? "border-emerald-500/20 bg-emerald-500 text-white shadow-sm"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-emerald-400/40 dark:border-border/40 dark:bg-background"
+                )}
+                key={preset.preset_key}
+              >
+                <button
+                  className="h-8 px-2.5 font-bold"
+                  onClick={() =>
+                    setScope({ mode: "preset", key: preset.preset_key })
+                  }
+                  type="button"
+                >
+                  {preset.name}
+                </button>
+                <button
+                  className="flex h-8 w-7 items-center justify-center border-current/15 border-l opacity-75 transition-opacity hover:opacity-100"
+                  onClick={async () => {
+                    await deleteUserSubscribePreset({ id: preset.id });
+                    if (
+                      scope.mode === "preset" &&
+                      scope.key === preset.preset_key
+                    ) {
+                      setScope({ mode: "all" });
+                    }
+                    await refetchScopes();
+                    toast.success(t("presetDeleted", "Preset deleted."));
+                  }}
+                  title={t("deletePreset", "Delete preset")}
+                  type="button"
+                >
+                  <Icon className="size-3.5" icon="uil:times" />
+                </button>
+              </span>
+            ))}
+          </div>
+
+          {subscribeUrls.map((url: string, idx: number) => (
+            <div className="flex items-center gap-2" key={url}>
+              <CopyToClipboard
+                onCopy={(_, result) => {
+                  if (result) {
+                    toast.success(t("copySuccess", "Copy Success"));
+                  }
+                }}
+                text={url}
+              >
+                <Button className="h-9 flex-1 rounded-xl bg-gradient-to-r from-primary to-cyan-600 font-bold text-[13px] text-white shadow-xs transition-all hover:brightness-105 active:scale-95">
+                  <Icon className="mr-1.5 size-4" icon="uil:copy" />
+                  {t("copySubscriptionLink", "Copy Subscription Link")}{" "}
+                  {idx > 0 ? `#${idx + 1}` : ""}
+                </Button>
+              </CopyToClipboard>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    className="size-9 rounded-xl border border-blue-100 bg-blue-50/70 p-0 text-blue-500 shadow-xs hover:bg-blue-100/80 dark:border-blue-500/20 dark:bg-blue-500/5 dark:hover:bg-blue-500/10"
+                    variant="outline"
+                  >
+                    <Icon className="size-4" icon="uil:qrcode-scan" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="flex w-44 flex-col items-center gap-2 rounded-2xl border-slate-200 bg-popover/95 p-3 shadow-xl backdrop-blur-xl dark:border-border/30">
+                  <span className="text-center font-black text-[9px] text-blue-500 uppercase tracking-widest">
+                    {t("scanToSubscribe", "Scan to Subscribe")}
+                  </span>
+                  <div className="relative flex size-28 items-center justify-center rounded-xl border border-blue-100 bg-white p-2 shadow-inner">
+                    <QRCodeCanvas
+                      bgColor="transparent"
+                      fgColor="rgb(59, 130, 246)"
+                      size={96}
+                      value={url}
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          ))}
         </div>
       </CardContent>
+
+      <Dialog
+        onOpenChange={(open) => {
+          setCustomOpen(open);
+          if (!open) {
+            setEditingPresetId(null);
+          }
+        }}
+        open={customOpen}
+      >
+        <DialogContent className="rounded-3xl sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t("customScopeTitle", "Custom scope")}</DialogTitle>
+            <DialogDescription>
+              {t(
+                "customScopeDescription",
+                "Choose the exact subscription items you want in this link."
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <Input
+              className="h-11 rounded-2xl"
+              onChange={(event) => setPresetName(event.target.value)}
+              placeholder={t("presetNamePlaceholder", "Preset name")}
+              value={presetName}
+            />
+            <ScrollArea className="h-[360px] rounded-2xl border border-border/50 bg-muted/10 p-3">
+              <div className="grid gap-3">
+                {nodesByServer.map((group) => (
+                  <div
+                    className="rounded-2xl border border-border/40 bg-background/80 p-3"
+                    key={group.key}
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div className="min-w-0 font-bold text-sm">
+                        {group.name}
+                      </div>
+                      <button
+                        className="text-primary text-xs"
+                        onClick={() => {
+                          const next = new Set(selectedItemKeys);
+                          const keys = group.nodes.map(
+                            (node) =>
+                              node.item_key ||
+                              `${node.id}:${node.inbound_alias}`
+                          );
+                          const allSelected = keys.every((key) =>
+                            next.has(key)
+                          );
+                          keys.forEach((key) => {
+                            if (allSelected) {
+                              next.delete(key);
+                            } else {
+                              next.add(key);
+                            }
+                          });
+                          setSelectedItemKeys(next);
+                        }}
+                        type="button"
+                      >
+                        {t("toggleServer", "Toggle server")}
+                      </button>
+                    </div>
+                    <div className="grid gap-2">
+                      {group.nodes.map((node) => {
+                        const key =
+                          node.item_key || `${node.id}:${node.inbound_alias}`;
+                        return (
+                          <div
+                            className="flex cursor-pointer items-center gap-3 rounded-xl border border-transparent bg-muted/20 px-3 py-2 transition-colors hover:border-primary/20 hover:bg-primary/5"
+                            key={key}
+                          >
+                            <Checkbox
+                              checked={selectedItemKeys.has(key)}
+                              onCheckedChange={(checked) => {
+                                const next = new Set(selectedItemKeys);
+                                if (checked) {
+                                  next.add(key);
+                                } else {
+                                  next.delete(key);
+                                }
+                                setSelectedItemKeys(next);
+                              }}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-bold text-sm">
+                                {node.name}
+                              </div>
+                              <div className="truncate text-muted-foreground text-xs">
+                                {node.profile_name || node.inbound_alias}
+                              </div>
+                            </div>
+                            <span className="rounded-full bg-background px-2 py-1 font-semibold text-[10px] text-muted-foreground">
+                              {node.protocol || node.profile_key}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+          <DialogFooter>
+            <Button
+              className="rounded-full"
+              onClick={() => setCustomOpen(false)}
+              variant="outline"
+            >
+              {t("cancel", "Cancel")}
+            </Button>
+            <Button className="rounded-full" onClick={saveCustomPreset}>
+              {editingPresetId
+                ? t("updatePreset", "Update preset")
+                : t("savePreset", "Save preset")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -743,8 +970,6 @@ function SubscriptionCard({
 export default function Content() {
   const { t } = useTranslation("dashboard");
   const { common, getUserSubscribe } = useGlobalStore();
-
-  const [protocol, setProtocol] = useState("");
 
   const {
     data: userSubscribe = [],
@@ -757,62 +982,22 @@ export default function Content() {
       return data.data?.list || [];
     },
   });
-  const { data: applications } = useQuery({
-    queryKey: ["getClient"],
+
+  const { data: subscribeScopes = [], refetch: refetchScopes } = useQuery({
+    queryKey: ["queryUserSubscribeNodeList"],
     queryFn: async () => {
-      const { data } = await getClient();
+      const { data } = await queryUserSubscribeNodeList();
       return data.data?.list || [];
     },
   });
 
-  const availablePlatforms = React.useMemo(() => {
-    if (!applications || applications.length === 0) return platforms;
-
-    const platformsSet = new Set<keyof API.DownloadLink>();
-
-    applications.forEach((app) => {
-      if (app.download_link) {
-        platforms.forEach((platform) => {
-          if (app.download_link?.[platform]) {
-            platformsSet.add(platform);
-          }
-        });
-      }
+  const scopeBySubscribeId = React.useMemo(() => {
+    const map = new Map<number, API.UserSubscribeInfo>();
+    subscribeScopes.forEach((scopeInfo) => {
+      map.set(scopeInfo.id, scopeInfo);
     });
-
-    return platforms.filter((platform) => platformsSet.has(platform));
-  }, [applications]);
-
-  const [platform, setPlatform] = useState<keyof API.DownloadLink>(() => {
-    const detectedPlatform =
-      getPlatform() === "macos"
-        ? "mac"
-        : (getPlatform() as keyof API.DownloadLink);
-    return detectedPlatform;
-  });
-
-  React.useEffect(() => {
-    if (
-      availablePlatforms.length > 0 &&
-      !availablePlatforms.includes(platform)
-    ) {
-      const firstAvailablePlatform = availablePlatforms[0];
-      if (firstAvailablePlatform) {
-        setPlatform(firstAvailablePlatform);
-      }
-    }
-  }, [availablePlatforms, platform]);
-
-  const { data } = useQuery({
-    queryKey: ["getStat"],
-    queryFn: async () => {
-      const { data } = await getStat({
-        skipErrorHandler: true,
-      });
-      return data.data;
-    },
-    refetchOnWindowFocus: false,
-  });
+    return map;
+  }, [subscribeScopes]);
 
   const statusWatermarks = {
     2: t("finished", "Finished"),
@@ -908,6 +1093,7 @@ export default function Content() {
                   )}
                   onClick={() => {
                     refetch();
+                    refetchScopes();
                   }}
                   size="icon"
                   variant="outline"
@@ -928,73 +1114,18 @@ export default function Content() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {availablePlatforms.length > 0 && (
-              <Tabs
-                className="w-full max-w-full md:w-auto"
-                onValueChange={(value) =>
-                  setPlatform(value as keyof API.DownloadLink)
-                }
-                value={platform}
-              >
-                <TabsList className="flex rounded-full border border-border/40 bg-muted/60 p-1 backdrop-blur-sm *:flex-auto">
-                  {availablePlatforms.map((item) => (
-                    <TabsTrigger
-                      className="rounded-full px-3 py-1.5 transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm lg:px-4"
-                      key={item}
-                      value={item}
-                    >
-                      <Icon
-                        className="size-4.5"
-                        icon={`${
-                          {
-                            windows: "mdi:microsoft-windows",
-                            mac: "uil:apple",
-                            linux: "uil:linux",
-                            ios: "simple-icons:ios",
-                            android: "uil:android",
-                            harmony: "simple-icons:harmonyos",
-                          }[item]
-                        }`}
-                      />
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            )}
-            {data?.protocol && data?.protocol.length > 1 && (
-              <Tabs
-                className="w-full max-w-full md:w-auto"
-                onValueChange={setProtocol}
-                value={protocol}
-              >
-                <TabsList className="flex rounded-full border border-border/40 bg-muted/60 p-1 backdrop-blur-sm *:flex-auto">
-                  {["all", ...(data?.protocol || [])].map((item) => (
-                    <TabsTrigger
-                      className="rounded-full px-3 py-1.5 font-semibold text-xs uppercase transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm lg:px-4"
-                      key={item}
-                      value={item === "all" ? "" : item}
-                    >
-                      {item}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            )}
-          </div>
           {filteredSubscribe.length > 0 ? (
             <div className="grid w-full grid-cols-1 gap-5 xl:grid-cols-2">
               {filteredSubscribe.map((item, index) => (
                 <SubscriptionCard
-                  applications={applications || []}
                   common={common}
                   getUserSubscribe={getUserSubscribe}
                   index={index}
                   item={item}
                   key={item.id}
-                  platform={platform}
-                  protocol={protocol}
                   refetch={refetch}
+                  refetchScopes={refetchScopes}
+                  scopeInfo={scopeBySubscribeId.get(item.id)}
                   statusWatermarks={statusWatermarks}
                   t={t}
                 />
@@ -1072,7 +1203,7 @@ export default function Content() {
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">
-                  {t("quickImport", "Quick Import to Client")}
+                  {t("subscriptionScope", "Subscription scope")}
                 </span>
                 <span className="font-bold text-muted-foreground">
                   {t("afterPurchase", "After purchase")}

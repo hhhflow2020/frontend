@@ -8,7 +8,17 @@ export interface GlobalStore {
   setCommon: (common: Partial<API.GetGlobalConfigResponse>) => void;
   setUser: (user?: API.User) => void;
   getUserInfo: () => Promise<void>;
-  getUserSubscribe: (short: string, token: string, type?: string) => string[];
+  getUserSubscribe: (
+    short: string,
+    token: string,
+    scope?:
+      | string
+      | {
+          type?: string;
+          profile?: string;
+          preset?: string;
+        }
+  ) => string[];
   getAppSubLink: (url: string, schema?: string) => string;
 }
 
@@ -120,22 +130,38 @@ export const useGlobalStore = create<GlobalStore>((set, get) => ({
       console.debug("Failed to refresh user session:", error?.message || error);
     }
   },
-  getUserSubscribe: (short: string, token: string, type?: string) => {
+  getUserSubscribe: (
+    short: string,
+    token: string,
+    scope?: string | { type?: string; profile?: string; preset?: string }
+  ) => {
     const { pan_domain, subscribe_domain, subscribe_path } =
       get().common.subscribe || {};
     const domains = subscribe_domain
       ? subscribe_domain.split("\n")
       : [extractDomain(window.location.origin, pan_domain)];
 
+    const params = new URLSearchParams({ token });
+    const type = typeof scope === "string" ? scope : scope?.type;
+    if (type) {
+      params.set("type", type);
+    }
+    if (typeof scope !== "string") {
+      if (scope?.profile) {
+        params.set("profile", scope.profile);
+      }
+      if (scope?.preset) {
+        params.set("preset", scope.preset);
+      }
+    }
+
     return domains.map((domain) => {
       if (pan_domain) {
         if (type)
-          return `https://${short}.${type}.${domain}${subscribe_path}?token=${token}&type=${type}`;
-        return `https://${short}.${domain}${subscribe_path}?token=${token}`;
+          return `https://${short}.${type}.${domain}${subscribe_path}?${params.toString()}`;
+        return `https://${short}.${domain}${subscribe_path}?${params.toString()}`;
       }
-      if (type)
-        return `https://${domain}${subscribe_path}?token=${token}&type=${type}`;
-      return `https://${domain}${subscribe_path}?token=${token}`;
+      return `https://${domain}${subscribe_path}?${params.toString()}`;
     });
   },
   getAppSubLink: (url: string, schema?: string) => {
