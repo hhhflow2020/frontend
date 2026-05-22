@@ -49,6 +49,7 @@
     "dialogTitle": "Membership Card",
     "duration": "Duration",
     "expiresAt": "Expires at",
+    "expiryPolicyBlocked": "This duration exceeds your membership expiry limit. Reduce the duration or renew your membership card first.",
     "loading": "Loading",
     "login": "Login to Join",
     "loginToBuy": "Login to Buy",

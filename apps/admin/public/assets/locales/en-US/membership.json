@@ -2,6 +2,7 @@
   "cardDescription": "Description",
   "cardSettings": "Card Settings",
   "cardSettingsDescription": "Only one default membership card is currently sold to users.",
+  "days": "days",
   "description": "Configure the membership card users must hold before purchasing subscription products.",
   "descriptionPlaceholder": "Required before purchasing subscription products.",
   "duration": {
@@ -27,6 +28,9 @@
     "monthlyConsumptionHint": "Counts pending, paid, and completed subscription orders.",
     "monthlyOrders": "Monthly Order Limit",
     "monthlyOrdersHint": "Limits the number of subscription orders a member can create each month.",
+    "subscriptionExpiry": "Subscription Expiry Guard",
+    "subscriptionExpiryGraceDays": "Allowed extra days",
+    "subscriptionExpiryHint": "Block subscription purchases or renewals when the resulting expiry is beyond the membership expiry plus the allowed days.",
     "title": "Abuse Prevention Policies"
   },
   "preview": "Preview",

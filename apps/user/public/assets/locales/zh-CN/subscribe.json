@@ -49,6 +49,7 @@
     "dialogTitle": "会员卡",
     "duration": "有效期",
     "expiresAt": "到期时间",
+    "expiryPolicyBlocked": "当前时长超过会员卡到期限制，请缩短时长或先续费会员卡。",
     "loading": "加载中",
     "login": "登录后开通",
     "loginToBuy": "登录后购买",

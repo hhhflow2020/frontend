@@ -2,6 +2,7 @@
   "cardDescription": "描述",
   "cardSettings": "会员卡设置",
   "cardSettingsDescription": "当前用户端只售卖一个默认会员卡。",
+  "days": "天",
   "description": "配置用户购买订阅商品前必须拥有的会员卡。",
   "descriptionPlaceholder": "购买订阅商品前需要开通会员卡。",
   "duration": {
@@ -27,6 +28,9 @@
     "monthlyConsumptionHint": "统计待支付、已支付和已完成的订阅订单。",
     "monthlyOrders": "每月订单数量上限",
     "monthlyOrdersHint": "限制会员每月可创建的订阅订单数量。",
+    "subscriptionExpiry": "订阅到期保护",
+    "subscriptionExpiryGraceDays": "允许超出天数",
+    "subscriptionExpiryHint": "当购买或续费后的订阅到期时间超过会员卡到期时间加允许天数时，阻止继续购买。",
     "title": "防滥用策略"
   },
   "preview": "预览",

@@ -86,6 +86,7 @@
     "60006": "User quota limit has been reached, unable to continue.",
     "60007": "Insufficient inventory, please try again later or contact the administrator.",
     "60008": "Membership card is required before purchasing subscription products.",
+    "60009": "This purchase exceeds your membership policy limit. Adjust the duration or renew your membership card first.",
     "70001": "Incorrect verification code, please re-enter.",
     "80001": "Task was not successfully queued, please try again later.",
     "90001": "Please disable DEBUG mode and try again.",
