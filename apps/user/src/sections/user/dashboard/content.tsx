@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -87,7 +86,7 @@ const getAppGradient = (name: string) => {
 interface SubscriptionCardProps {
   item: any;
   index: number;
-  refetch: () => void;
+  refetch: () => any;
   statusWatermarks: Record<number, string>;
   t: any;
   platform: any;
@@ -112,6 +111,11 @@ function SubscriptionCard({
   const isActuallyExpired = item.status === 3 && item.expire_time !== 0;
   const shouldShowWatermark =
     item.status === 2 || item.status === 4 || isActuallyExpired;
+  const [resetTokenOpen, setResetTokenOpen] = useState(false);
+  const [resettingToken, setResettingToken] = useState(false);
+  const [resetTokenLinks, setResetTokenLinks] = useState<string[]>([]);
+  const hasResetTokenResult = resetTokenLinks.length > 0;
+  const resetTokenPrimaryLink = resetTokenLinks[0] || "";
 
   // Calculate usage percentage
   const percent = item.traffic
@@ -247,7 +251,16 @@ function SubscriptionCard({
                   align="end"
                   className="w-48 rounded-2xl border-slate-200/80 bg-popover/95 p-1.5 shadow-xl backdrop-blur-xl dark:border-border/30"
                 >
-                  <AlertDialog>
+                  <AlertDialog
+                    onOpenChange={(open) => {
+                      setResetTokenOpen(open);
+                      if (!open) {
+                        setResetTokenLinks([]);
+                        setResettingToken(false);
+                      }
+                    }}
+                    open={resetTokenOpen}
+                  >
                     <AlertDialogTrigger asChild>
                       <DropdownMenuItem
                         className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs"
@@ -257,47 +270,120 @@ function SubscriptionCard({
                           className="size-4 text-muted-foreground"
                           icon="uil:sync"
                         />
-                        <span>
-                          {t("resetSubscription", "Reset Subscription")}
-                        </span>
+                        <span>{t("resetSubscriptionAddress")}</span>
                       </DropdownMenuItem>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-3xl">
+                    <AlertDialogContent className="rounded-3xl sm:max-w-lg">
                       <AlertDialogHeader>
                         <AlertDialogTitle>
-                          {t("prompt", "Prompt")}
+                          {hasResetTokenResult
+                            ? t("resetSubscriptionReady")
+                            : t("resetSubscriptionAddress")}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          {t(
-                            "confirmResetSubscription",
-                            "Are you sure you want to reset your subscription?"
-                          )}
+                          {hasResetTokenResult
+                            ? t("resetSubscriptionReadyDescription")
+                            : t("confirmResetSubscription")}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
+                      {hasResetTokenResult ? (
+                        <div className="grid gap-3">
+                          <div className="rounded-2xl border border-primary/15 bg-primary/5 p-3">
+                            <div className="break-all font-mono text-muted-foreground text-xs leading-relaxed">
+                              {resetTokenPrimaryLink}
+                            </div>
+                            <CopyToClipboard
+                              onCopy={(_, result) => {
+                                if (result) {
+                                  toast.success(
+                                    t("copySuccess", "Copy Success")
+                                  );
+                                }
+                              }}
+                              text={resetTokenPrimaryLink}
+                            >
+                              <Button
+                                className="mt-3 h-9 rounded-full"
+                                size="sm"
+                              >
+                                <Icon
+                                  className="mr-1.5 size-4"
+                                  icon="uil:copy"
+                                />
+                                {t("copyNewSubscriptionAddress")}
+                              </Button>
+                            </CopyToClipboard>
+                          </div>
+                          <div className="flex justify-center rounded-2xl border border-border/50 bg-background p-4">
+                            <QRCodeCanvas
+                              size={148}
+                              value={resetTokenPrimaryLink}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-amber-900 text-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+                          <ul className="grid gap-2">
+                            <li>
+                              {t("resetSubscriptionImpactInvalidatesOld")}
+                            </li>
+                            <li>{t("resetSubscriptionImpactReimport")}</li>
+                            <li>{t("resetSubscriptionImpactKeepsPlan")}</li>
+                          </ul>
+                        </div>
+                      )}
                       <AlertDialogFooter>
                         <AlertDialogCancel className="rounded-full">
-                          {t("cancel", "Cancel")}
+                          {hasResetTokenResult
+                            ? t("confirm", "Confirm")
+                            : t("cancel", "Cancel")}
                         </AlertDialogCancel>
-                        <AlertDialogAction
-                          className="rounded-full"
-                          onClick={async () => {
-                            await resetUserSubscribeToken({
-                              user_subscribe_id: item.id,
-                            });
-                            await refetch();
-                            toast.success(t("resetSuccess", "Reset Success"));
-                          }}
-                        >
-                          {t("confirm", "Confirm")}
-                        </AlertDialogAction>
+                        {!hasResetTokenResult && (
+                          <Button
+                            className="rounded-full"
+                            disabled={resettingToken}
+                            onClick={async () => {
+                              setResettingToken(true);
+                              try {
+                                await resetUserSubscribeToken({
+                                  user_subscribe_id: item.id,
+                                });
+                                const result = await refetch();
+                                const latest = result?.data?.list?.find(
+                                  (sub: any) => sub.id === item.id
+                                );
+                                const next = latest || item;
+                                setResetTokenLinks(
+                                  getUserSubscribe(
+                                    next.short,
+                                    next.token,
+                                    protocol
+                                  ) || []
+                                );
+                                toast.success(
+                                  t("resetSubscriptionAddressSuccess")
+                                );
+                              } finally {
+                                setResettingToken(false);
+                              }
+                            }}
+                          >
+                            {resettingToken && (
+                              <Icon
+                                className="mr-1.5 size-4 animate-spin"
+                                icon="uil:spinner-alt"
+                              />
+                            )}
+                            {t("confirmResetSubscriptionAddress")}
+                          </Button>
+                        )}
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
 
                   {item.subscribe.allow_reset_traffic !== false && (
                     <ResetTraffic
-                      id={item.id}
-                      replacement={item.subscribe.replacement}
+                      subscription={item}
                       trigger={
                         <DropdownMenuItem
                           className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs"

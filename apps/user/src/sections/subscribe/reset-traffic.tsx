@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -20,13 +21,11 @@ import { useGlobalStore } from "@/stores/global";
 import PaymentMethods from "./payment-methods";
 
 interface ResetTrafficProps {
-  id: number;
-  replacement?: number;
+  subscription: API.UserSubscribe;
   trigger?: React.ReactNode;
 }
 export default function ResetTraffic({
-  id,
-  replacement,
+  subscription,
   trigger,
 }: Readonly<ResetTrafficProps>) {
   const { t } = useTranslation("subscribe");
@@ -35,21 +34,34 @@ export default function ResetTraffic({
   const [open, setOpen] = useState<boolean>(false);
   const [params, setParams] = useState<API.ResetTrafficOrderRequest>({
     payment: -1,
-    user_subscribe_id: id,
+    user_subscribe_id: subscription.id,
   });
   const [loading, startTransition] = useTransition();
+  const replacement = subscription.subscribe?.replacement;
+  const usedTraffic = subscription.upload + subscription.download;
+  const remainingTraffic = subscription.traffic
+    ? Math.max(subscription.traffic - usedTraffic, 0)
+    : 0;
+  const isExpired =
+    subscription.status === 3 ||
+    (!!subscription.expire_time &&
+      subscription.expire_time < Date.now() &&
+      subscription.expire_time !== 0);
+  const isFree = (replacement || 0) <= 0;
+  const submitDisabled =
+    loading || isExpired || (!isFree && params.payment < 0);
 
   useEffect(() => {
-    if (id) {
+    if (subscription.id) {
       setParams((prev) => ({
         ...prev,
         quantity: 1,
-        user_subscribe_id: id,
+        user_subscribe_id: subscription.id,
       }));
     }
-  }, [id]);
+  }, [subscription.id]);
 
-  if (!replacement) return;
+  if (replacement === undefined || replacement === null) return null;
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
@@ -61,21 +73,77 @@ export default function ResetTraffic({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="flex h-full flex-col overflow-hidden md:h-auto">
+      <DialogContent className="flex h-full flex-col overflow-hidden md:h-auto md:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("resetTrafficTitle", "Reset Traffic")}</DialogTitle>
-          <DialogDescription>
-            {t("resetTrafficDescription", "Reset your subscription traffic")}
-          </DialogDescription>
+          <DialogDescription>{t("resetTrafficDescription")}</DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col justify-between text-sm">
-          <div className="grid gap-3">
-            <div className="flex justify-between font-semibold">
-              <span>{t("resetPrice", "Reset Price")}</span>
-              <span>
-                <Display type="currency" value={replacement} />
-              </span>
+        <div className="grid gap-4 overflow-y-auto text-sm">
+          <div className="rounded-2xl border border-border/50 bg-muted/20 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <div className="font-semibold text-muted-foreground text-xs">
+                  {t("resetTrafficProduct")}
+                </div>
+                <div className="font-bold text-base">
+                  {subscription.product_name || subscription.subscribe?.name}
+                </div>
+              </div>
+              <div className="rounded-full border bg-background px-3 py-1 font-bold">
+                {isFree ? (
+                  t("freeReset", "Free")
+                ) : (
+                  <Display type="currency" value={replacement} />
+                )}
+              </div>
             </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl bg-background p-3">
+                <div className="text-muted-foreground text-xs">
+                  {t("usedTraffic")}
+                </div>
+                <div className="mt-1 font-bold">
+                  <Display type="traffic" value={usedTraffic} />
+                </div>
+              </div>
+              <div className="rounded-xl bg-background p-3">
+                <div className="text-muted-foreground text-xs">
+                  {t("remainingTraffic")}
+                </div>
+                <div className="mt-1 font-bold">
+                  <Display
+                    type="traffic"
+                    unlimited={!subscription.traffic}
+                    value={remainingTraffic}
+                  />
+                </div>
+              </div>
+              <div className="rounded-xl bg-background p-3">
+                <div className="text-muted-foreground text-xs">
+                  {t("afterReset")}
+                </div>
+                <div className="mt-1 font-bold">
+                  <Display type="traffic" value={0} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4 text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100">
+            <ul className="grid gap-2">
+              <li>{t("resetTrafficImpactClearUsed")}</li>
+              <li>{t("resetTrafficImpactNoExtension")}</li>
+              <li>{t("resetTrafficImpactKeepPlan")}</li>
+            </ul>
+          </div>
+
+          {isExpired ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 font-medium text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+              {t("resetTrafficExpired")}
+            </div>
+          ) : null}
+
+          {!isFree && (
             <PaymentMethods
               onChange={(value) => {
                 setParams({
@@ -85,31 +153,34 @@ export default function ResetTraffic({
               }}
               value={params.payment}
             />
-          </div>
-          <Button
-            className="fixed bottom-0 left-0 w-full rounded-none md:relative md:mt-6"
-            disabled={loading}
-            onClick={async () => {
-              startTransition(async () => {
-                try {
-                  const response = await resetTraffic(params);
-                  const orderNo = response.data.data?.order_no;
-                  if (orderNo) {
-                    getUserInfo();
-                    navigate({
-                      to: "/payment",
-                      search: { order_no: String(orderNo) },
-                    });
+          )}
+
+          <DialogFooter>
+            <Button
+              className="fixed bottom-0 left-0 w-full rounded-none md:relative md:mt-2 md:rounded-full"
+              disabled={submitDisabled}
+              onClick={async () => {
+                startTransition(async () => {
+                  try {
+                    const response = await resetTraffic(params);
+                    const orderNo = response.data.data?.order_no;
+                    if (orderNo) {
+                      getUserInfo();
+                      navigate({
+                        to: "/payment",
+                        search: { order_no: String(orderNo) },
+                      });
+                    }
+                  } catch (_error) {
+                    // The shared request interceptor already shows the user-facing error.
                   }
-                } catch (error) {
-                  console.log(error);
-                }
-              });
-            }}
-          >
-            {loading && <LoaderCircle className="mr-2 animate-spin" />}
-            {t("buyNow", "Buy Now")}
-          </Button>
+                });
+              }}
+            >
+              {loading && <LoaderCircle className="mr-2 animate-spin" />}
+              {isFree ? t("resetForFree") : t("payAndResetTraffic")}
+            </Button>
+          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>
