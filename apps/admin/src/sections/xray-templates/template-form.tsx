@@ -591,19 +591,19 @@ function getActiveJsonFieldRules(values: FormValues, useAdvancedJson: boolean) {
   add(objectJsonField("settings_json", "Settings JSON"));
 
   if (values.protocol === "vless") {
-    add(arrayJsonField("vless_clients_json", "VLESS Clients"));
+    add(arrayJsonField("vless_clients_json", "VLESS Users"));
     add(arrayJsonField("fallbacks_json", "Fallbacks"));
   }
   if (values.protocol === "vmess") {
-    add(arrayJsonField("vmess_clients_json", "VMess Clients"));
+    add(arrayJsonField("vmess_clients_json", "VMess Users"));
     add(objectJsonField("vmess_default_json", "VMess Default"));
   }
   if (values.protocol === "trojan") {
-    add(arrayJsonField("trojan_clients_json", "Trojan Clients"));
+    add(arrayJsonField("trojan_clients_json", "Trojan Users"));
     add(arrayJsonField("fallbacks_json", "Fallbacks"));
   }
   if (values.protocol === "shadowsocks") {
-    add(arrayJsonField("ss_clients_json", "Shadowsocks Clients"));
+    add(arrayJsonField("ss_clients_json", "Shadowsocks Users"));
   }
   if (values.protocol === "socks" || values.protocol === "http") {
     add(arrayJsonField("accounts_json", "Accounts"));
@@ -1190,12 +1190,12 @@ function ProtocolSettingsFields({
             />
           </div>
           <JsonArrayObjectField
-            addLabel="添加客户端"
+            addLabel="添加用户"
             columns={VLESS_CLIENT_COLUMNS}
             control={control}
             defaultItem={{ id: "{{ .Vars.uuid }}", email: "{{ .Vars.email }}" }}
-            description="每一行会生成一个 VLESS 客户端，支持直接使用 Vars 模板变量。"
-            label="VLESS Clients"
+            description="每一行会生成一个 VLESS 用户，支持直接使用 Vars 模板变量。"
+            label="VLESS Users"
             name="vless_clients_json"
           />
           <JsonArrayObjectField
@@ -1213,7 +1213,7 @@ function ProtocolSettingsFields({
       return (
         <div className="space-y-4">
           <JsonArrayObjectField
-            addLabel="添加客户端"
+            addLabel="添加用户"
             columns={VMESS_CLIENT_COLUMNS}
             control={control}
             defaultItem={{
@@ -1221,8 +1221,8 @@ function ProtocolSettingsFields({
               email: "{{ .Vars.email }}",
               id: "{{ .Vars.uuid }}",
             }}
-            description="每一行会生成一个 VMess 客户端。"
-            label="VMess Clients"
+            description="每一行会生成一个 VMess 用户。"
+            label="VMess Users"
             name="vmess_clients_json"
           />
           <JsonObjectField
@@ -1238,15 +1238,15 @@ function ProtocolSettingsFields({
       return (
         <div className="space-y-4">
           <JsonArrayObjectField
-            addLabel="添加客户端"
+            addLabel="添加用户"
             columns={TROJAN_CLIENT_COLUMNS}
             control={control}
             defaultItem={{
               email: "{{ .Vars.email }}",
               password: "{{ .Vars.password }}",
             }}
-            description="每一行会生成一个 Trojan 客户端。"
-            label="Trojan Clients"
+            description="每一行会生成一个 Trojan 用户。"
+            label="Trojan Users"
             name="trojan_clients_json"
           />
           <JsonArrayObjectField
@@ -1291,11 +1291,11 @@ function ProtocolSettingsFields({
             />
           </div>
           <JsonArrayObjectField
-            addLabel="添加客户端"
+            addLabel="添加用户"
             columns={SHADOWSOCKS_CLIENT_COLUMNS}
             control={control}
-            description="多用户 Shadowsocks 客户端；单用户场景可只填写上方密码。"
-            label="Clients"
+            description="多用户 Shadowsocks 用户；单用户场景可只填写上方密码。"
+            label="Users"
             name="ss_clients_json"
           />
         </div>

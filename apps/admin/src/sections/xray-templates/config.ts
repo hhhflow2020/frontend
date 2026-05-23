@@ -191,10 +191,10 @@ function settingsExtra(
 ) {
   if (type === "inbound") {
     if (["vless", "trojan"].includes(protocol)) {
-      return omitKeys(settings, ["clients", "decryption", "fallbacks"]);
+      return omitKeys(settings, ["users", "decryption", "fallbacks"]);
     }
     if (protocol === "vmess") {
-      return omitKeys(settings, ["clients", "default"]);
+      return omitKeys(settings, ["users", "default"]);
     }
     if (protocol === "shadowsocks") {
       return omitKeys(settings, [
@@ -203,7 +203,7 @@ function settingsExtra(
         "password",
         "level",
         "email",
-        "clients",
+        "users",
       ]);
     }
     if (protocol === "socks") {
@@ -477,7 +477,7 @@ function buildInboundProtocolSettings(values: Record<string, any>) {
   if (protocol === "vless") {
     return mergeSettings(
       {
-        clients: safeJsonParse(values.vless_clients_json || "", []),
+        users: safeJsonParse(values.vless_clients_json || "", []),
         decryption: values.vless_decryption || "none",
         fallbacks: safeJsonParse(values.fallbacks_json || "", []),
       },
@@ -487,7 +487,7 @@ function buildInboundProtocolSettings(values: Record<string, any>) {
   if (protocol === "vmess") {
     return mergeSettings(
       {
-        clients: safeJsonParse(values.vmess_clients_json || "", []),
+        users: safeJsonParse(values.vmess_clients_json || "", []),
         default: safeJsonParse(values.vmess_default_json || "", {}),
       },
       values.settings_json
@@ -496,7 +496,7 @@ function buildInboundProtocolSettings(values: Record<string, any>) {
   if (protocol === "trojan") {
     return mergeSettings(
       {
-        clients: safeJsonParse(values.trojan_clients_json || "", []),
+        users: safeJsonParse(values.trojan_clients_json || "", []),
         fallbacks: safeJsonParse(values.fallbacks_json || "", []),
       },
       values.settings_json
@@ -510,7 +510,7 @@ function buildInboundProtocolSettings(values: Record<string, any>) {
         password: emptyToUndefined(values.ss_password),
         level: numberToUndefined(values.user_level),
         email: emptyToUndefined(values.email),
-        clients: safeJsonParse(values.ss_clients_json || "", []),
+        users: safeJsonParse(values.ss_clients_json || "", []),
       },
       values.settings_json
     );
@@ -922,16 +922,16 @@ export function configToFormValues(
     sniffing_metadata_only: !!value.sniffing?.metadataOnly,
     sniffing_route_only: !!value.sniffing?.routeOnly,
     sniffing_domains_excluded: joinCsv(value.sniffing?.domainsExcluded || []),
-    vless_clients_json: formatJson(settings.clients || []),
+    vless_clients_json: formatJson(settings.users || []),
     vless_decryption: settings.decryption || "none",
-    vmess_clients_json: formatJson(settings.clients || []),
+    vmess_clients_json: formatJson(settings.users || []),
     vmess_default_json: formatJson(settings.default || {}),
-    trojan_clients_json: formatJson(settings.clients || []),
+    trojan_clients_json: formatJson(settings.users || []),
     fallbacks_json: formatJson(settings.fallbacks || []),
     ss_network: settings.network || "tcp",
     ss_method: settings.method || "",
     ss_password: settings.password || "",
-    ss_clients_json: formatJson(settings.clients || []),
+    ss_clients_json: formatJson(settings.users || []),
     socks_auth: settings.auth || "noauth",
     socks_udp: !!settings.udp,
     socks_ip: settings.ip || "",
