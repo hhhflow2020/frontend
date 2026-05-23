@@ -155,6 +155,7 @@ export function splitCsv(value?: string) {
 }
 
 export function joinCsv(value?: unknown) {
+  if (typeof value === "string") return value;
   return Array.isArray(value) ? value.join(", ") : "";
 }
 
@@ -182,6 +183,186 @@ function omitKeys(value: Record<string, any>, keys: string[]) {
     delete result[key];
   }
   return result;
+}
+
+function hasConfigValue(value: unknown) {
+  return value !== undefined && value !== null && value !== "";
+}
+
+function copyConfigVariable(
+  target: Record<string, any>,
+  key: string,
+  value: unknown
+) {
+  if (hasConfigValue(value)) {
+    target[key] = value;
+  }
+}
+
+function extractSettingsVariables(
+  target: Record<string, any>,
+  settings: Record<string, any>,
+  protocol: string,
+  type?: XrayTemplateType
+) {
+  if (type === "outbound") {
+    copyConfigVariable(target, "out_address", settings.address);
+    copyConfigVariable(target, "out_port", settings.port);
+    copyConfigVariable(target, "out_id", settings.id);
+    copyConfigVariable(target, "out_encryption", settings.encryption);
+    copyConfigVariable(target, "out_security", settings.security);
+    copyConfigVariable(target, "out_flow", settings.flow);
+    copyConfigVariable(target, "out_password", settings.password);
+    copyConfigVariable(target, "out_user", settings.user);
+    copyConfigVariable(target, "out_pass", settings.pass);
+    if (protocol === "shadowsocks") {
+      copyConfigVariable(target, "ss_method", settings.method);
+      copyConfigVariable(target, "ss_password", settings.password);
+    }
+  } else {
+    if (protocol === "dokodemo-door") {
+      copyConfigVariable(target, "dokodemo_address", settings.address);
+      copyConfigVariable(target, "dokodemo_port", settings.port);
+    } else {
+      copyConfigVariable(target, "address", settings.address);
+    }
+    if (protocol === "shadowsocks") {
+      copyConfigVariable(target, "ss_method", settings.method);
+      copyConfigVariable(target, "ss_password", settings.password);
+    } else {
+      copyConfigVariable(target, "method", settings.method);
+      copyConfigVariable(target, "password", settings.password);
+    }
+    copyConfigVariable(target, "id", settings.id);
+    copyConfigVariable(target, "flow", settings.flow);
+  }
+  copyConfigVariable(target, "hysteria_version", settings.version);
+}
+
+function extractStreamVariables(
+  target: Record<string, any>,
+  stream: Record<string, any>,
+  type?: XrayTemplateType
+) {
+  copyConfigVariable(target, "transport", stream.network);
+  copyConfigVariable(target, "security", stream.security);
+
+  const tls = stream.tlsSettings || {};
+  copyConfigVariable(target, "sni", tls.serverName);
+  copyConfigVariable(target, "server_name", tls.serverName);
+  copyConfigVariable(target, "fingerprint", tls.fingerprint);
+  copyConfigVariable(target, "allow_insecure", tls.allowInsecure);
+
+  const reality = stream.realitySettings || {};
+  if (type === "inbound") {
+    copyConfigVariable(target, "reality_target", reality.target);
+    copyConfigVariable(target, "reality_private_key", reality.privateKey);
+    copyConfigVariable(target, "reality_server_names", reality.serverNames);
+    copyConfigVariable(target, "reality_short_ids", reality.shortIds);
+  }
+  if (type === "outbound") {
+    copyConfigVariable(target, "reality_public_key", reality.password);
+    copyConfigVariable(target, "reality_short_id", reality.shortId);
+    copyConfigVariable(target, "sni", reality.serverName);
+  }
+
+  const ws = stream.wsSettings || {};
+  const grpc = stream.grpcSettings || {};
+  const xhttp = stream.xhttpSettings || {};
+  const hysteria = stream.hysteriaSettings || {};
+  const httpupgrade = stream.httpupgradeSettings || {};
+  if (stream.network === "ws") {
+    copyConfigVariable(target, "path", ws.path);
+    copyConfigVariable(target, "host", ws.headers?.Host);
+  }
+  if (stream.network === "grpc") {
+    copyConfigVariable(target, "service_name", grpc.serviceName);
+    copyConfigVariable(target, "grpc_service_name", grpc.serviceName);
+    copyConfigVariable(target, "grpc_authority", grpc.authority);
+  }
+  if (stream.network === "xhttp") {
+    copyConfigVariable(target, "host", xhttp.host);
+    copyConfigVariable(target, "path", xhttp.path);
+    copyConfigVariable(target, "xhttp_mode", xhttp.mode);
+    copyConfigVariable(target, "xhttp_extra", xhttp.extra);
+  }
+  if (stream.network === "hysteria") {
+    copyConfigVariable(target, "hysteria_version", hysteria.version);
+    copyConfigVariable(target, "udp_idle_timeout", hysteria.udpIdleTimeout);
+    copyConfigVariable(target, "hysteria_masquerade", hysteria.masquerade);
+  }
+  if (stream.network === "httpupgrade") {
+    copyConfigVariable(target, "host", httpupgrade.host);
+    copyConfigVariable(target, "path", httpupgrade.path);
+  }
+}
+
+export function extractTemplateConfigVariables(template: {
+  type?: XrayTemplateType;
+  config?: Record<string, any>;
+}) {
+  const type = template.type;
+  const config = template.config || {};
+  const variables: Record<string, any> = {};
+  copyConfigVariable(variables, "tag", config.tag);
+  copyConfigVariable(variables, "listen", config.listen);
+  copyConfigVariable(variables, "port", config.port);
+  copyConfigVariable(variables, "protocol", config.protocol);
+  copyConfigVariable(variables, "sendThrough", config.sendThrough);
+
+  if (type === "dns") {
+    copyConfigVariable(variables, "dns_servers", config.servers);
+    copyConfigVariable(variables, "hosts", config.hosts);
+    copyConfigVariable(variables, "query_strategy", config.queryStrategy);
+    copyConfigVariable(variables, "disable_cache", config.disableCache);
+    copyConfigVariable(variables, "serve_stale", config.serveStale);
+    copyConfigVariable(variables, "serve_expired_ttl", config.serveExpiredTTL);
+    copyConfigVariable(variables, "disable_fallback", config.disableFallback);
+    copyConfigVariable(
+      variables,
+      "disable_fallback_if_match",
+      config.disableFallbackIfMatch
+    );
+    copyConfigVariable(
+      variables,
+      "enable_parallel_query",
+      config.enableParallelQuery
+    );
+    copyConfigVariable(variables, "use_system_hosts", config.useSystemHosts);
+    copyConfigVariable(variables, "client_ip", config.clientIp);
+    return variables;
+  }
+
+  if (type === "routing") {
+    copyConfigVariable(
+      variables,
+      "routing_domain_strategy",
+      config.domainStrategy
+    );
+    copyConfigVariable(variables, "routing_rules", config.rules);
+    copyConfigVariable(variables, "routing_balancers", config.balancers);
+    return variables;
+  }
+
+  if (type === "geodata") {
+    copyConfigVariable(variables, "geodata_cron", config.cron);
+    copyConfigVariable(variables, "geodata_outbound", config.outbound);
+    copyConfigVariable(variables, "geodata_assets", config.assets);
+    return variables;
+  }
+
+  if (config.settings && typeof config.settings === "object") {
+    extractSettingsVariables(
+      variables,
+      config.settings,
+      config.protocol || "",
+      type
+    );
+  }
+  if (config.streamSettings && typeof config.streamSettings === "object") {
+    extractStreamVariables(variables, config.streamSettings, type);
+  }
+  return variables;
 }
 
 function settingsExtra(

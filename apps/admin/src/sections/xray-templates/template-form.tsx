@@ -51,6 +51,7 @@ import {
   buildOutboundConfig,
   buildRoutingConfig,
   configToFormValues,
+  extractTemplateConfigVariables,
   formatJson,
   INBOUND_PROTOCOLS,
   linesToArray,
@@ -543,6 +544,38 @@ function SummaryPill({
 function jsonArrayCount(value?: string) {
   const parsed = safeJsonParse<unknown>(value || "", []);
   return Array.isArray(parsed) ? parsed.length : 0;
+}
+
+function sortJsonValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(sortJsonValue);
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => [key, sortJsonValue(entry)])
+    );
+  }
+  return value;
+}
+
+function stableJsonKey(value: unknown) {
+  return JSON.stringify(sortJsonValue(value));
+}
+
+function findDefaultVariableConflicts(
+  type: XrayTemplateType,
+  config: Record<string, any>,
+  defaultVariables: Record<string, any>
+) {
+  const configVariables = extractTemplateConfigVariables({ type, config });
+  return Object.keys(defaultVariables).filter(
+    (key) =>
+      Object.hasOwn(configVariables, key) &&
+      stableJsonKey(configVariables[key]) !==
+        stableJsonKey(defaultVariables[key])
+  );
 }
 
 function objectJsonField(name: keyof FormValues, label: string): JsonFieldRule {
@@ -1955,6 +1988,21 @@ export default function XrayTemplateForm({
       ? (initialValues.config as Record<string, any>)
       : buildConfig(values);
     if (!validateXrayConfig(values, config)) return;
+    const defaultVariables = safeJsonParse<Record<string, any>>(
+      values.default_variables_json || "",
+      {}
+    );
+    const conflicts = findDefaultVariableConflicts(
+      values.type,
+      config,
+      defaultVariables
+    );
+    if (conflicts.length) {
+      form.setError("default_variables_json", {
+        message: `Default Variables 与模板配置存在冲突：${conflicts.join(", ")}。请移除重复默认值或保持一致。`,
+      });
+      return;
+    }
     const ok = await onSubmit({
       name: values.name,
       type: values.type,
@@ -1963,7 +2011,7 @@ export default function XrayTemplateForm({
       config,
       config_template: values.config_template,
       variables_schema: safeJsonParse(values.variables_schema_json || "", {}),
-      default_variables: safeJsonParse(values.default_variables_json || "", {}),
+      default_variables: defaultVariables,
       subscription_meta: safeJsonParse(values.subscription_meta_json || "", {}),
     });
     if (ok) {

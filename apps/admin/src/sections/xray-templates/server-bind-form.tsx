@@ -29,7 +29,12 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { formatJson, safeJsonParse, type XrayTemplateType } from "./config";
+import {
+  extractTemplateConfigVariables,
+  formatJson,
+  safeJsonParse,
+  type XrayTemplateType,
+} from "./config";
 import { JsonObjectEditor, parseJsonObjectText } from "./json-form-controls";
 
 type BindingRow = {
@@ -49,6 +54,8 @@ type VariableHint = {
   title?: string;
   description?: string;
   defaultValue?: unknown;
+  configValue?: unknown;
+  templateDefaultValue?: unknown;
   required?: boolean;
 };
 
@@ -93,6 +100,13 @@ const TYPE_ACCENTS: Record<XrayTemplateType, string> = {
   routing: "border-amber-200 bg-amber-50 text-amber-700",
   geodata: "border-violet-200 bg-violet-50 text-violet-700",
 };
+
+const VARIABLE_SOURCE_STYLES = {
+  override: "border-blue-200 bg-blue-50 text-blue-700",
+  config: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  default: "border-amber-200 bg-amber-50 text-amber-700",
+  empty: "border-muted bg-muted/40 text-muted-foreground",
+} as const;
 
 type BindingStatusKey =
   | "effective"
@@ -178,9 +192,41 @@ function stringifyHintValue(value: unknown) {
   return JSON.stringify(value);
 }
 
+function hasOwnValue(source: Record<string, any>, key: string) {
+  return Object.hasOwn(source, key);
+}
+
+function inferHintType(value: unknown) {
+  if (Array.isArray(value)) return "array";
+  if (typeof value === "boolean") return "boolean";
+  if (typeof value === "number") return "number";
+  if (value && typeof value === "object") return "object";
+  return "string";
+}
+
+function compactValue(value: unknown) {
+  const text = stringifyHintValue(value);
+  if (!text) return "未设置";
+  return text.length > 96 ? `${text.slice(0, 96)}...` : text;
+}
+
+function inheritedVariables(template: API.XrayTemplate) {
+  return {
+    ...((template.default_variables || {}) as Record<string, any>),
+    ...extractTemplateConfigVariables({
+      type: template.type as XrayTemplateType,
+      config: (template.config || {}) as Record<string, any>,
+    }),
+  };
+}
+
 function collectVariableHints(template: API.XrayTemplate): VariableHint[] {
   const schema = (template.variables_schema || {}) as Record<string, any>;
   const defaults = (template.default_variables || {}) as Record<string, any>;
+  const configDefaults = extractTemplateConfigVariables({
+    type: template.type as XrayTemplateType,
+    config: (template.config || {}) as Record<string, any>,
+  });
   const required = Array.isArray(schema.required) ? schema.required : [];
   const properties =
     schema.properties && typeof schema.properties === "object"
@@ -188,6 +234,7 @@ function collectVariableHints(template: API.XrayTemplate): VariableHint[] {
       : schema;
 
   const keys = new Set<string>([
+    ...Object.keys(configDefaults),
     ...Object.keys(defaults),
     ...Object.keys(properties || {}),
   ]);
@@ -197,12 +244,21 @@ function collectVariableHints(template: API.XrayTemplate): VariableHint[] {
       properties?.[key] && typeof properties[key] === "object"
         ? properties[key]
         : {};
+    const configValue = configDefaults[key];
+    const templateDefaultValue = defaults[key];
+    const inheritedValue = hasOwnValue(configDefaults, key)
+      ? configValue
+      : hasOwnValue(defaults, key)
+        ? templateDefaultValue
+        : item.default;
     return {
       key,
-      type: item.type,
+      type: item.type || inferHintType(inheritedValue),
       title: item.title || item.label,
       description: item.description || item.desc || item.help,
-      defaultValue: defaults[key] !== undefined ? defaults[key] : item.default,
+      defaultValue: inheritedValue,
+      configValue,
+      templateDefaultValue,
       required: required.includes(key) || item.required === true,
     };
   });
@@ -368,7 +424,7 @@ function createBinding(
     sort: bindings.length + 1,
     enabled: true,
     alias: uniqueAlias(template, bindings),
-    variables_json: formatJson(template.default_variables || {}),
+    variables_json: "{}",
     subscription_enabled: true,
     subscription_name: "",
     subscription_variables_json: "{}",
@@ -742,6 +798,10 @@ function groupPreview(bindings: BindingRow[], templates: API.XrayTemplate[]) {
   for (const { binding, template } of selected) {
     const variables = {
       ...(template.default_variables || {}),
+      ...extractTemplateConfigVariables({
+        type: template.type as XrayTemplateType,
+        config: (template.config || {}) as Record<string, any>,
+      }),
       ...safeJsonParse(binding.variables_json || "", {}),
     };
     const source = template.config_template?.trim()
@@ -1129,7 +1189,53 @@ export default function ServerXrayTemplateBindForm({
     binding: BindingRow | undefined
   ) {
     const hints = collectVariableHints(template);
-    const variables = parseJsonObjectText(binding?.variables_json || "{}");
+    const bindingVariables = parseJsonObjectText(
+      binding?.variables_json || "{}"
+    );
+    const configVariables = extractTemplateConfigVariables({
+      type: template.type as XrayTemplateType,
+      config: (template.config || {}) as Record<string, any>,
+    });
+    const defaultVariables = (template.default_variables || {}) as Record<
+      string,
+      any
+    >;
+    const inherited = inheritedVariables(template);
+
+    function sourceMeta(key: string) {
+      if (hasOwnValue(bindingVariables, key)) {
+        return {
+          label: "服务器覆盖",
+          className: VARIABLE_SOURCE_STYLES.override,
+        };
+      }
+      if (hasOwnValue(configVariables, key)) {
+        return {
+          label: "模板配置",
+          className: VARIABLE_SOURCE_STYLES.config,
+        };
+      }
+      if (hasOwnValue(defaultVariables, key)) {
+        return {
+          label: "模板默认",
+          className: VARIABLE_SOURCE_STYLES.default,
+        };
+      }
+      return {
+        label: "未设置",
+        className: VARIABLE_SOURCE_STYLES.empty,
+      };
+    }
+
+    function SourceBadge({ fieldKey }: { fieldKey: string }) {
+      const source = sourceMeta(fieldKey);
+      return (
+        <Badge className={cn("border px-1.5 py-0", source.className)}>
+          {source.label}
+        </Badge>
+      );
+    }
+
     if (!hints.length) {
       return (
         <JsonObjectEditor
@@ -1145,10 +1251,10 @@ export default function ServerXrayTemplateBindForm({
 
     const hintKeys = new Set(hints.map((hint) => hint.key));
     const knownValues = Object.fromEntries(
-      Object.entries(variables).filter(([key]) => hintKeys.has(key))
+      Object.entries(bindingVariables).filter(([key]) => hintKeys.has(key))
     );
     const extraValues = Object.fromEntries(
-      Object.entries(variables).filter(([key]) => !hintKeys.has(key))
+      Object.entries(bindingVariables).filter(([key]) => !hintKeys.has(key))
     );
 
     function commitExtraVariables(value: string) {
@@ -1164,38 +1270,63 @@ export default function ServerXrayTemplateBindForm({
       <div className="space-y-3">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {hints.map((hint) => {
-            const currentValue = variables[hint.key];
+            const hasOverride = hasOwnValue(bindingVariables, hint.key);
+            const currentValue = bindingVariables[hint.key];
+            const inheritedValue = inherited[hint.key] ?? hint.defaultValue;
+            const effectiveValue = hasOverride ? currentValue : inheritedValue;
             const value =
-              currentValue === undefined || currentValue === null
+              !hasOverride ||
+              currentValue === undefined ||
+              currentValue === null
                 ? ""
                 : String(currentValue);
-            const placeholder = stringifyHintValue(hint.defaultValue);
+            const placeholder = stringifyHintValue(inheritedValue);
 
             if (hint.type === "boolean") {
               return (
                 <div
-                  className="flex items-center justify-between rounded-md border bg-background px-3 py-2"
+                  className="rounded-md border bg-background px-3 py-2"
                   key={hint.key}
                 >
-                  <div className="min-w-0">
-                    <div className="font-medium text-sm">
-                      {hint.title || hint.key}
-                      {hint.required ? (
-                        <span className="text-destructive"> *</span>
-                      ) : null}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 font-medium text-sm">
+                        <span>
+                          {hint.title || hint.key}
+                          {hint.required ? (
+                            <span className="text-destructive"> *</span>
+                          ) : null}
+                        </span>
+                        <SourceBadge fieldKey={hint.key} />
+                      </div>
+                      <div className="truncate text-muted-foreground text-xs">
+                        {hint.description || hint.key}
+                      </div>
                     </div>
-                    <div className="truncate text-muted-foreground text-xs">
-                      {hint.description || hint.key}
-                    </div>
+                    <Switch
+                      checked={!!effectiveValue}
+                      onCheckedChange={(checked) =>
+                        updateBindingVariables(template, binding, {
+                          [hint.key]: checked,
+                        })
+                      }
+                    />
                   </div>
-                  <Switch
-                    checked={!!currentValue}
-                    onCheckedChange={(checked) =>
-                      updateBindingVariables(template, binding, {
-                        [hint.key]: checked,
-                      })
-                    }
-                  />
+                  <div className="mt-2 flex items-center justify-between gap-2 text-muted-foreground text-xs">
+                    <span>生效值：{effectiveValue ? "开启" : "关闭"}</span>
+                    {hasOverride ? (
+                      <Button
+                        className="h-6 px-2 text-xs"
+                        onClick={() =>
+                          removeBindingVariable(template, binding, hint.key)
+                        }
+                        type="button"
+                        variant="ghost"
+                      >
+                        继承模板
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               );
             }
@@ -1203,11 +1334,14 @@ export default function ServerXrayTemplateBindForm({
             if (hint.type === "array" || hint.type === "object") {
               return (
                 <div className="space-y-1.5" key={hint.key}>
-                  <div className="text-muted-foreground text-xs">
-                    {hint.title || hint.key}
-                    {hint.required ? (
-                      <span className="text-destructive"> *</span>
-                    ) : null}
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                    <span>
+                      {hint.title || hint.key}
+                      {hint.required ? (
+                        <span className="text-destructive"> *</span>
+                      ) : null}
+                    </span>
+                    <SourceBadge fieldKey={hint.key} />
                   </div>
                   <Textarea
                     className="min-h-20 font-mono text-xs"
@@ -1227,24 +1361,44 @@ export default function ServerXrayTemplateBindForm({
                         });
                       }
                     }}
-                    placeholder={placeholder || "JSON"}
+                    placeholder={placeholder || "继承模板 JSON"}
                     value={
-                      currentValue === undefined
+                      !hasOverride || currentValue === undefined
                         ? ""
                         : JSON.stringify(currentValue, null, 2)
                     }
                   />
+                  <div className="flex items-center justify-between gap-2 text-muted-foreground text-xs">
+                    <span className="truncate">
+                      生效值：{compactValue(effectiveValue)}
+                    </span>
+                    {hasOverride ? (
+                      <Button
+                        className="h-6 px-2 text-xs"
+                        onClick={() =>
+                          removeBindingVariable(template, binding, hint.key)
+                        }
+                        type="button"
+                        variant="ghost"
+                      >
+                        继承模板
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               );
             }
 
             return (
               <div className="space-y-1.5" key={hint.key}>
-                <div className="text-muted-foreground text-xs">
-                  {hint.title || hint.key}
-                  {hint.required ? (
-                    <span className="text-destructive"> *</span>
-                  ) : null}
+                <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                  <span>
+                    {hint.title || hint.key}
+                    {hint.required ? (
+                      <span className="text-destructive"> *</span>
+                    ) : null}
+                  </span>
+                  <SourceBadge fieldKey={hint.key} />
                 </div>
                 <EnhancedInput
                   onValueChange={(nextValue) => {
@@ -1261,11 +1415,24 @@ export default function ServerXrayTemplateBindForm({
                   type={hint.type === "number" ? "number" : "text"}
                   value={value}
                 />
-                {hint.description ? (
-                  <div className="text-muted-foreground text-xs">
-                    {hint.description}
-                  </div>
-                ) : null}
+                <div className="flex items-center justify-between gap-2 text-muted-foreground text-xs">
+                  <span className="truncate">
+                    {hint.description ? `${hint.description} · ` : ""}
+                    生效值：{compactValue(effectiveValue)}
+                  </span>
+                  {hasOverride ? (
+                    <Button
+                      className="h-6 px-2 text-xs"
+                      onClick={() =>
+                        removeBindingVariable(template, binding, hint.key)
+                      }
+                      type="button"
+                      variant="ghost"
+                    >
+                      继承模板
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             );
           })}
