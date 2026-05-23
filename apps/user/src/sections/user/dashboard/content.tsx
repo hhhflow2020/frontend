@@ -112,6 +112,8 @@ function SubscriptionCard({
   const [selectedItemKeys, setSelectedItemKeys] = useState<Set<string>>(
     () => new Set()
   );
+  const [scopeFeedback, setScopeFeedback] = useState(false);
+  const scopeFeedbackReadyRef = React.useRef(false);
   const nodes = scopeInfo?.nodes || [];
   const profiles = scopeInfo?.profiles || [];
   const presets = (scopeInfo?.presets || []).filter((preset) => preset.enabled);
@@ -121,6 +123,7 @@ function SubscriptionCard({
       : scope.mode === "preset"
         ? { preset: scope.key }
         : undefined;
+  const scopeKey = scope.mode === "all" ? "all" : `${scope.mode}:${scope.key}`;
   const subscribeUrls =
     getUserSubscribe(item.short, item.token, selectedScopeParams) || [];
   const currentScopeLabel =
@@ -161,6 +164,16 @@ function SubscriptionCard({
       setScope({ mode: "all" });
     }
   }, [presets, profiles, scope]);
+
+  React.useEffect(() => {
+    if (!scopeFeedbackReadyRef.current) {
+      scopeFeedbackReadyRef.current = true;
+      return;
+    }
+    setScopeFeedback(true);
+    const timer = window.setTimeout(() => setScopeFeedback(false), 900);
+    return () => window.clearTimeout(timer);
+  }, [scopeKey]);
 
   const openCustomPreset = () => {
     const editingPreset =
@@ -808,8 +821,21 @@ function SubscriptionCard({
                 }}
                 text={url}
               >
-                <Button className="h-9 flex-1 rounded-xl bg-gradient-to-r from-primary to-cyan-600 font-bold text-[13px] text-white shadow-xs transition-all hover:brightness-105 active:scale-95">
-                  <Icon className="mr-1.5 size-4" icon="uil:copy" />
+                <Button
+                  className={cn(
+                    "h-9 flex-1 rounded-xl bg-gradient-to-r font-bold text-[13px] text-white shadow-xs transition-all duration-300 hover:brightness-105 active:scale-95",
+                    scopeFeedback
+                      ? "scale-[1.015] from-emerald-500 via-cyan-500 to-blue-600 shadow-emerald-500/25 ring-2 ring-emerald-300/70"
+                      : "from-primary to-cyan-600"
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      "mr-1.5 size-4 transition-transform duration-300",
+                      scopeFeedback && "scale-110"
+                    )}
+                    icon={scopeFeedback ? "uil:check" : "uil:copy"}
+                  />
                   {t("copySubscriptionLink", "Copy Subscription Link")}{" "}
                   {idx > 0 ? `#${idx + 1}` : ""}
                 </Button>
@@ -818,10 +844,21 @@ function SubscriptionCard({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    className="size-9 rounded-xl border border-blue-100 bg-blue-50/70 p-0 text-blue-500 shadow-xs hover:bg-blue-100/80 dark:border-blue-500/20 dark:bg-blue-500/5 dark:hover:bg-blue-500/10"
+                    className={cn(
+                      "size-9 rounded-xl border p-0 shadow-xs transition-all duration-300",
+                      scopeFeedback
+                        ? "scale-105 border-emerald-200 bg-emerald-50 text-emerald-600 shadow-emerald-500/15 ring-2 ring-emerald-200/70 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300"
+                        : "border-blue-100 bg-blue-50/70 text-blue-500 hover:bg-blue-100/80 dark:border-blue-500/20 dark:bg-blue-500/5 dark:hover:bg-blue-500/10"
+                    )}
                     variant="outline"
                   >
-                    <Icon className="size-4" icon="uil:qrcode-scan" />
+                    <Icon
+                      className={cn(
+                        "size-4 transition-transform duration-300",
+                        scopeFeedback && "scale-110"
+                      )}
+                      icon={scopeFeedback ? "uil:check" : "uil:qrcode-scan"}
+                    />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="flex w-44 flex-col items-center gap-2 rounded-2xl border-slate-200 bg-popover/95 p-3 shadow-xl backdrop-blur-xl dark:border-border/30">
