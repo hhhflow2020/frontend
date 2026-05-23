@@ -862,12 +862,14 @@ function JsonObjectField({
   label,
   description,
   addLabel,
+  className,
 }: {
   control: any;
   name: keyof FormValues;
   label: string;
   description?: string;
   addLabel?: string;
+  className?: string;
 }) {
   const translatedLabel = useXrayFieldLabel(label);
 
@@ -876,7 +878,7 @@ function JsonObjectField({
       control={control}
       name={name as any}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={className}>
           <FormLabel>{translatedLabel}</FormLabel>
           {description ? (
             <FormDescription>{description}</FormDescription>
@@ -897,6 +899,7 @@ function JsonObjectField({
 
 function JsonArrayObjectField({
   addLabel,
+  className,
   columns,
   control,
   defaultItem,
@@ -906,6 +909,7 @@ function JsonArrayObjectField({
   name,
 }: {
   addLabel?: string;
+  className?: string;
   columns: JsonArrayColumn[];
   control: any;
   defaultItem?: Record<string, any>;
@@ -921,7 +925,7 @@ function JsonArrayObjectField({
       control={control}
       name={name as any}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={className}>
           <FormLabel>{translatedLabel}</FormLabel>
           {description ? (
             <FormDescription>{description}</FormDescription>
@@ -1010,94 +1014,105 @@ function VariableSchemaField({
                 {rows.length ? (
                   rows.map(([key, item]) => (
                     <div
-                      className="grid grid-cols-1 gap-2 rounded-md border bg-background p-2 md:grid-cols-[120px_120px_1fr_1fr_1fr_auto]"
+                      className="space-y-2 rounded-md border bg-background p-2"
                       key={key}
                     >
-                      <EnhancedInput
-                        onValueChange={(nextKey) => {
-                          const normalized = nextKey.trim();
-                          if (!normalized || normalized === key) return;
-                          const next = { ...properties };
-                          delete next[key];
-                          next[normalized] = item;
-                          commit(
-                            next,
-                            required.map((requiredKey: string) =>
-                              requiredKey === key ? normalized : requiredKey
-                            )
-                          );
-                        }}
-                        placeholder="变量名"
-                        value={key}
-                      />
-                      <Select
-                        onValueChange={(typeValue) =>
-                          commit({
-                            ...properties,
-                            [key]: { ...item, type: typeValue },
-                          })
-                        }
-                        value={item?.type || "string"}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="string">文本</SelectItem>
-                          <SelectItem value="number">数字</SelectItem>
-                          <SelectItem value="boolean">开关</SelectItem>
-                          <SelectItem value="array">数组</SelectItem>
-                          <SelectItem value="object">对象</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <EnhancedInput
-                        onValueChange={(titleValue) =>
-                          commit({
-                            ...properties,
-                            [key]: { ...item, title: titleValue },
-                          })
-                        }
-                        placeholder="显示名"
-                        value={item?.title || item?.label || ""}
-                      />
-                      <EnhancedInput
-                        onValueChange={(descriptionValue) =>
-                          commit({
-                            ...properties,
-                            [key]: {
-                              ...item,
-                              description: descriptionValue,
-                            },
-                          })
-                        }
-                        placeholder="说明"
-                        value={item?.description || item?.desc || ""}
-                      />
-                      <EnhancedInput
-                        onValueChange={(defaultValue) =>
-                          commit({
-                            ...properties,
-                            [key]: { ...item, default: defaultValue },
-                          })
-                        }
-                        placeholder="默认值"
-                        value={item?.default ?? ""}
-                      />
-                      <div className="flex items-center justify-end gap-2">
-                        <Switch
-                          checked={required.includes(key)}
-                          onCheckedChange={(checked) =>
+                      <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_140px]">
+                        <EnhancedInput
+                          onValueChange={(nextKey) => {
+                            const normalized = nextKey.trim();
+                            if (!normalized || normalized === key) return;
+                            const next = { ...properties };
+                            delete next[key];
+                            next[normalized] = item;
                             commit(
-                              properties,
-                              checked
-                                ? [...required, key]
-                                : required.filter(
-                                    (requiredKey: string) => requiredKey !== key
-                                  )
-                            )
-                          }
+                              next,
+                              required.map((requiredKey: string) =>
+                                requiredKey === key ? normalized : requiredKey
+                              )
+                            );
+                          }}
+                          placeholder="变量名"
+                          value={key}
                         />
+                        <Select
+                          onValueChange={(typeValue) =>
+                            commit({
+                              ...properties,
+                              [key]: { ...item, type: typeValue },
+                            })
+                          }
+                          value={item?.type || "string"}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="string">文本</SelectItem>
+                            <SelectItem value="number">数字</SelectItem>
+                            <SelectItem value="boolean">开关</SelectItem>
+                            <SelectItem value="array">数组</SelectItem>
+                            <SelectItem value="object">对象</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
+                        <EnhancedInput
+                          onValueChange={(titleValue) =>
+                            commit({
+                              ...properties,
+                              [key]: { ...item, title: titleValue },
+                            })
+                          }
+                          placeholder="显示名"
+                          value={item?.title || item?.label || ""}
+                        />
+                        <EnhancedInput
+                          onValueChange={(descriptionValue) =>
+                            commit({
+                              ...properties,
+                              [key]: {
+                                ...item,
+                                description: descriptionValue,
+                              },
+                            })
+                          }
+                          placeholder="说明"
+                          value={item?.description || item?.desc || ""}
+                        />
+                        <EnhancedInput
+                          onValueChange={(defaultValue) =>
+                            commit({
+                              ...properties,
+                              [key]: { ...item, default: defaultValue },
+                            })
+                          }
+                          placeholder="默认值"
+                          value={item?.default ?? ""}
+                        />
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
+                          <Switch
+                            checked={required.includes(key)}
+                            onCheckedChange={(checked) =>
+                              commit(
+                                properties,
+                                checked
+                                  ? [...required, key]
+                                  : required.filter(
+                                      (requiredKey: string) =>
+                                        requiredKey !== key
+                                    )
+                              )
+                            }
+                          />
+                          <span className="text-muted-foreground text-xs">
+                            必填
+                          </span>
+                        </div>
                         <Button
+                          className="h-9 px-3"
                           onClick={() => {
                             const next = { ...properties };
                             delete next[key];
@@ -2615,6 +2630,7 @@ export default function XrayTemplateForm({
                               placeholder="auto / packet-up / stream-up / stream-one"
                             />
                             <JsonObjectField
+                              className="md:col-span-2"
                               control={form.control}
                               description="XHTTP extra 对象。需要 xmux.maxConnections 这类嵌套字段时，值类型选择 JSON。"
                               label={t("form.xhttpExtra", "XHTTP Extra")}

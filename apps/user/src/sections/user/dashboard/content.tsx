@@ -86,6 +86,71 @@ type ScopeSelection =
   | { mode: "profile"; key: string }
   | { mode: "preset"; key: string };
 
+const SCOPE_VISUALS = [
+  {
+    copy: "from-sky-500 via-blue-500 to-indigo-600",
+    copyRing: "shadow-sky-500/25 ring-sky-300/70",
+    qr: "border-sky-100 bg-sky-50/80 text-sky-600 hover:bg-sky-100/80 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300",
+    qrRing: "shadow-sky-500/15 ring-sky-200/70",
+    qrBox: "border-sky-100",
+    qrFg: "rgb(2, 132, 199)",
+    qrLabel: "text-sky-500",
+  },
+  {
+    copy: "from-emerald-500 via-teal-500 to-cyan-600",
+    copyRing: "shadow-emerald-500/25 ring-emerald-300/70",
+    qr: "border-emerald-100 bg-emerald-50/80 text-emerald-600 hover:bg-emerald-100/80 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
+    qrRing: "shadow-emerald-500/15 ring-emerald-200/70",
+    qrBox: "border-emerald-100",
+    qrFg: "rgb(5, 150, 105)",
+    qrLabel: "text-emerald-500",
+  },
+  {
+    copy: "from-violet-500 via-fuchsia-500 to-rose-500",
+    copyRing: "shadow-violet-500/25 ring-violet-300/70",
+    qr: "border-violet-100 bg-violet-50/80 text-violet-600 hover:bg-violet-100/80 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300",
+    qrRing: "shadow-violet-500/15 ring-violet-200/70",
+    qrBox: "border-violet-100",
+    qrFg: "rgb(124, 58, 237)",
+    qrLabel: "text-violet-500",
+  },
+  {
+    copy: "from-amber-500 via-orange-500 to-red-500",
+    copyRing: "shadow-amber-500/25 ring-amber-300/70",
+    qr: "border-amber-100 bg-amber-50/80 text-amber-600 hover:bg-amber-100/80 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300",
+    qrRing: "shadow-amber-500/15 ring-amber-200/70",
+    qrBox: "border-amber-100",
+    qrFg: "rgb(217, 119, 6)",
+    qrLabel: "text-amber-500",
+  },
+  {
+    copy: "from-rose-500 via-pink-500 to-purple-600",
+    copyRing: "shadow-rose-500/25 ring-rose-300/70",
+    qr: "border-rose-100 bg-rose-50/80 text-rose-600 hover:bg-rose-100/80 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300",
+    qrRing: "shadow-rose-500/15 ring-rose-200/70",
+    qrBox: "border-rose-100",
+    qrFg: "rgb(225, 29, 72)",
+    qrLabel: "text-rose-500",
+  },
+] as const;
+
+function scopeHash(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index++) {
+    hash = (hash * 31 + value.charCodeAt(index)) % SCOPE_VISUALS.length;
+  }
+  return hash;
+}
+
+function scopeVisual(scope: ScopeSelection) {
+  if (scope.mode === "all") return SCOPE_VISUALS[0];
+  const offset = scope.mode === "preset" ? 2 : 1;
+  return (
+    SCOPE_VISUALS[(scopeHash(scope.key) + offset) % SCOPE_VISUALS.length] ??
+    SCOPE_VISUALS[0]
+  );
+}
+
 function SubscriptionCard({
   item,
   index,
@@ -124,6 +189,7 @@ function SubscriptionCard({
         ? { preset: scope.key }
         : undefined;
   const scopeKey = scope.mode === "all" ? "all" : `${scope.mode}:${scope.key}`;
+  const visual = React.useMemo(() => scopeVisual(scope), [scope]);
   const subscribeUrls =
     getUserSubscribe(item.short, item.token, selectedScopeParams) || [];
   const currentScopeLabel =
@@ -812,7 +878,14 @@ function SubscriptionCard({
           </div>
 
           {subscribeUrls.map((url: string, idx: number) => (
-            <div className="flex items-center gap-2" key={url}>
+            <div
+              className={cn(
+                "flex items-center gap-2",
+                scopeFeedback &&
+                  "fade-in slide-in-from-bottom-1 zoom-in-95 animate-in duration-300"
+              )}
+              key={`${scopeKey}:${url}`}
+            >
               <CopyToClipboard
                 onCopy={(_, result) => {
                   if (result) {
@@ -825,16 +898,16 @@ function SubscriptionCard({
                   className={cn(
                     "h-9 flex-1 rounded-xl bg-gradient-to-r font-bold text-[13px] text-white shadow-xs transition-all duration-300 hover:brightness-105 active:scale-95",
                     scopeFeedback
-                      ? "scale-[1.015] from-emerald-500 via-cyan-500 to-blue-600 shadow-emerald-500/25 ring-2 ring-emerald-300/70"
-                      : "from-primary to-cyan-600"
+                      ? `scale-[1.015] ${visual.copy} ${visual.copyRing} ring-2`
+                      : visual.copy
                   )}
                 >
                   <Icon
                     className={cn(
                       "mr-1.5 size-4 transition-transform duration-300",
-                      scopeFeedback && "scale-110"
+                      scopeFeedback && "scale-110 animate-pulse"
                     )}
-                    icon={scopeFeedback ? "uil:check" : "uil:copy"}
+                    icon={scopeFeedback ? "uil:filter" : "uil:copy"}
                   />
                   {t("copySubscriptionLink", "Copy Subscription Link")}{" "}
                   {idx > 0 ? `#${idx + 1}` : ""}
@@ -847,28 +920,38 @@ function SubscriptionCard({
                     className={cn(
                       "size-9 rounded-xl border p-0 shadow-xs transition-all duration-300",
                       scopeFeedback
-                        ? "scale-105 border-emerald-200 bg-emerald-50 text-emerald-600 shadow-emerald-500/15 ring-2 ring-emerald-200/70 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300"
-                        : "border-blue-100 bg-blue-50/70 text-blue-500 hover:bg-blue-100/80 dark:border-blue-500/20 dark:bg-blue-500/5 dark:hover:bg-blue-500/10"
+                        ? `scale-105 ${visual.qr} ${visual.qrRing} ring-2`
+                        : visual.qr
                     )}
                     variant="outline"
                   >
                     <Icon
                       className={cn(
                         "size-4 transition-transform duration-300",
-                        scopeFeedback && "scale-110"
+                        scopeFeedback && "scale-110 animate-pulse"
                       )}
-                      icon={scopeFeedback ? "uil:check" : "uil:qrcode-scan"}
+                      icon={scopeFeedback ? "uil:filter" : "uil:qrcode-scan"}
                     />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="flex w-44 flex-col items-center gap-2 rounded-2xl border-slate-200 bg-popover/95 p-3 shadow-xl backdrop-blur-xl dark:border-border/30">
-                  <span className="text-center font-black text-[9px] text-blue-500 uppercase tracking-widest">
+                  <span
+                    className={cn(
+                      "text-center font-black text-[9px] uppercase tracking-widest",
+                      visual.qrLabel
+                    )}
+                  >
                     {t("scanToSubscribe", "Scan to Subscribe")}
                   </span>
-                  <div className="relative flex size-28 items-center justify-center rounded-xl border border-blue-100 bg-white p-2 shadow-inner">
+                  <div
+                    className={cn(
+                      "relative flex size-28 items-center justify-center rounded-xl border bg-white p-2 shadow-inner transition-colors duration-300",
+                      visual.qrBox
+                    )}
+                  >
                     <QRCodeCanvas
                       bgColor="transparent"
-                      fgColor="rgb(59, 130, 246)"
+                      fgColor={visual.qrFg}
                       size={96}
                       value={url}
                     />

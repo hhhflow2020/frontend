@@ -117,7 +117,7 @@ function MultilineCsvTextarea({
   return (
     <div className="space-y-1">
       <Textarea
-        className="min-h-24 resize-y whitespace-pre-wrap font-mono text-xs leading-5"
+        className="min-h-32 resize-y whitespace-pre-wrap font-mono text-xs leading-5"
         onBlur={() => {
           setFocused(false);
           commit();
@@ -209,89 +209,94 @@ export function JsonObjectEditor({
           const type = inferValueType(currentValue);
           return (
             <div
-              className="grid grid-cols-1 gap-2 rounded-md border bg-background p-2 md:grid-cols-[150px_110px_minmax(0,1fr)_auto]"
+              className="space-y-2 rounded-md border bg-background p-2"
               key={key}
             >
-              <EnhancedInput
-                onValueChange={(nextKey) => {
-                  const normalized = nextKey.trim();
-                  if (!normalized || normalized === key) return;
-                  const next = { ...objectValue };
-                  delete next[key];
-                  next[normalized] = currentValue;
-                  commit(next);
-                }}
-                placeholder="字段名"
-                value={key}
-              />
-              <Select
-                onValueChange={(nextType) => {
-                  const next = {
-                    ...objectValue,
-                    [key]: parseTypedValue(
-                      valueToText(currentValue, type),
-                      nextType as JsonValueType
-                    ),
-                  };
-                  commit(next);
-                }}
-                value={type}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="string">文本</SelectItem>
-                  <SelectItem value="number">数字</SelectItem>
-                  <SelectItem value="boolean">开关</SelectItem>
-                  <SelectItem value="json">JSON</SelectItem>
-                </SelectContent>
-              </Select>
-              {type === "boolean" ? (
-                <div className="flex h-9 items-center rounded-md border px-3">
-                  <Switch
-                    checked={!!currentValue}
-                    onCheckedChange={(checked) =>
-                      commit({ ...objectValue, [key]: checked })
-                    }
-                  />
-                </div>
-              ) : type === "json" ? (
-                <Textarea
-                  className="min-h-16 font-mono text-xs"
-                  onChange={(event) =>
-                    commit({
-                      ...objectValue,
-                      [key]: parseTypedValue(event.target.value, "json"),
-                    })
-                  }
-                  placeholder='{"enabled":true}'
-                  value={valueToText(currentValue, type)}
-                />
-              ) : (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_120px]">
                 <EnhancedInput
-                  onValueChange={(text) =>
-                    commit({
-                      ...objectValue,
-                      [key]: parseTypedValue(text, type),
-                    })
-                  }
-                  placeholder={valuePlaceholder}
-                  type={type === "number" ? "number" : "text"}
-                  value={valueToText(currentValue, type)}
+                  onValueChange={(nextKey) => {
+                    const normalized = nextKey.trim();
+                    if (!normalized || normalized === key) return;
+                    const next = { ...objectValue };
+                    delete next[key];
+                    next[normalized] = currentValue;
+                    commit(next);
+                  }}
+                  placeholder="字段名"
+                  value={key}
                 />
-              )}
-              <Button
-                onClick={() => {
-                  const next = { ...objectValue };
-                  delete next[key];
-                  commit(next);
-                }}
-                type="button"
-                variant="outline"
-              >
-                删除
-              </Button>
+                <Select
+                  onValueChange={(nextType) => {
+                    const next = {
+                      ...objectValue,
+                      [key]: parseTypedValue(
+                        valueToText(currentValue, type),
+                        nextType as JsonValueType
+                      ),
+                    };
+                    commit(next);
+                  }}
+                  value={type}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="string">文本</SelectItem>
+                    <SelectItem value="number">数字</SelectItem>
+                    <SelectItem value="boolean">开关</SelectItem>
+                    <SelectItem value="json">JSON</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                {type === "boolean" ? (
+                  <div className="flex h-9 items-center rounded-md border px-3">
+                    <Switch
+                      checked={!!currentValue}
+                      onCheckedChange={(checked) =>
+                        commit({ ...objectValue, [key]: checked })
+                      }
+                    />
+                  </div>
+                ) : type === "json" ? (
+                  <Textarea
+                    className="min-h-20 font-mono text-xs"
+                    onChange={(event) =>
+                      commit({
+                        ...objectValue,
+                        [key]: parseTypedValue(event.target.value, "json"),
+                      })
+                    }
+                    placeholder='{"enabled":true}'
+                    value={valueToText(currentValue, type)}
+                  />
+                ) : (
+                  <EnhancedInput
+                    onValueChange={(text) =>
+                      commit({
+                        ...objectValue,
+                        [key]: parseTypedValue(text, type),
+                      })
+                    }
+                    placeholder={valuePlaceholder}
+                    type={type === "number" ? "number" : "text"}
+                    value={valueToText(currentValue, type)}
+                  />
+                )}
+                <Button
+                  className="h-9 sm:px-3"
+                  onClick={() => {
+                    const next = { ...objectValue };
+                    delete next[key];
+                    commit(next);
+                  }}
+                  type="button"
+                  variant="outline"
+                >
+                  删除
+                </Button>
+              </div>
             </div>
           );
         })
