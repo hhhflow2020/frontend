@@ -36,6 +36,7 @@ import {
   type XrayTemplateType,
 } from "./config";
 import { JsonObjectEditor, parseJsonObjectText } from "./json-form-controls";
+import { getXrayFieldHelp, XrayFieldHelp } from "./xray-field-help";
 
 type BindingRow = {
   template_id: number;
@@ -1274,6 +1275,8 @@ export default function ServerXrayTemplateBindForm({
             const currentValue = bindingVariables[hint.key];
             const inheritedValue = inherited[hint.key] ?? hint.defaultValue;
             const effectiveValue = hasOverride ? currentValue : inheritedValue;
+            const docHelp = getXrayFieldHelp(hint.key);
+            const helperText = hint.description || docHelp?.hint || hint.key;
             const value =
               !hasOverride ||
               currentValue === undefined ||
@@ -1298,9 +1301,10 @@ export default function ServerXrayTemplateBindForm({
                           ) : null}
                         </span>
                         <SourceBadge fieldKey={hint.key} />
+                        <XrayFieldHelp fieldKey={hint.key} />
                       </div>
                       <div className="truncate text-muted-foreground text-xs">
-                        {hint.description || hint.key}
+                        {helperText}
                       </div>
                     </div>
                     <Switch
@@ -1342,6 +1346,7 @@ export default function ServerXrayTemplateBindForm({
                       ) : null}
                     </span>
                     <SourceBadge fieldKey={hint.key} />
+                    <XrayFieldHelp fieldKey={hint.key} />
                   </div>
                   <Textarea
                     className="min-h-20 font-mono text-xs"
@@ -1370,6 +1375,7 @@ export default function ServerXrayTemplateBindForm({
                   />
                   <div className="flex items-center justify-between gap-2 text-muted-foreground text-xs">
                     <span className="truncate">
+                      {helperText !== hint.key ? `${helperText} · ` : ""}
                       生效值：{compactValue(effectiveValue)}
                     </span>
                     {hasOverride ? (
@@ -1399,6 +1405,7 @@ export default function ServerXrayTemplateBindForm({
                     ) : null}
                   </span>
                   <SourceBadge fieldKey={hint.key} />
+                  <XrayFieldHelp fieldKey={hint.key} />
                 </div>
                 <EnhancedInput
                   onValueChange={(nextValue) => {
@@ -1417,7 +1424,7 @@ export default function ServerXrayTemplateBindForm({
                 />
                 <div className="flex items-center justify-between gap-2 text-muted-foreground text-xs">
                   <span className="truncate">
-                    {hint.description ? `${hint.description} · ` : ""}
+                    {helperText !== hint.key ? `${helperText} · ` : ""}
                     生效值：{compactValue(effectiveValue)}
                   </span>
                   {hasOverride ? (

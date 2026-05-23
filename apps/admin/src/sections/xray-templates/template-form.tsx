@@ -71,6 +71,7 @@ import {
   JsonObjectEditor,
   parseJsonObjectText,
 } from "./json-form-controls";
+import { XrayFieldDescription, XrayFieldLabel } from "./xray-field-help";
 
 const formSchema = z.object({
   name: z.string().min(1),
@@ -738,10 +739,12 @@ function SwitchField({
   control,
   name,
   label,
+  description,
 }: {
   control: any;
   name: keyof FormValues;
   label: string;
+  description?: string;
 }) {
   const translatedLabel = useXrayFieldLabel(label);
 
@@ -751,7 +754,10 @@ function SwitchField({
       name={name as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{translatedLabel}</FormLabel>
+          <FormLabel>
+            <XrayFieldLabel fieldKey={name}>{translatedLabel}</XrayFieldLabel>
+          </FormLabel>
+          <XrayFieldDescription description={description} fieldKey={name} />
           <FormControl>
             <div className="pt-2">
               <Switch
@@ -790,10 +796,10 @@ function InputField({
       name={name as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{translatedLabel}</FormLabel>
-          {description ? (
-            <FormDescription>{description}</FormDescription>
-          ) : null}
+          <FormLabel>
+            <XrayFieldLabel fieldKey={name}>{translatedLabel}</XrayFieldLabel>
+          </FormLabel>
+          <XrayFieldDescription description={description} fieldKey={name} />
           <FormControl>
             <EnhancedInput
               onValueChange={field.onChange}
@@ -814,11 +820,13 @@ function SelectField({
   name,
   label,
   options,
+  description,
 }: {
   control: any;
   name: keyof FormValues;
   label: string;
   options: string[];
+  description?: string;
 }) {
   const translatedLabel = useXrayFieldLabel(label);
 
@@ -828,7 +836,10 @@ function SelectField({
       name={name as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{translatedLabel}</FormLabel>
+          <FormLabel>
+            <XrayFieldLabel fieldKey={name}>{translatedLabel}</XrayFieldLabel>
+          </FormLabel>
+          <XrayFieldDescription description={description} fieldKey={name} />
           <Select onValueChange={field.onChange} value={field.value}>
             <FormControl>
               <SelectTrigger>
@@ -871,10 +882,10 @@ function JsonField({
       name={name as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{translatedLabel}</FormLabel>
-          {description ? (
-            <FormDescription>{description}</FormDescription>
-          ) : null}
+          <FormLabel>
+            <XrayFieldLabel fieldKey={name}>{translatedLabel}</XrayFieldLabel>
+          </FormLabel>
+          <XrayFieldDescription description={description} fieldKey={name} />
           <FormControl>
             <JsonTextarea
               onChange={field.onChange}
@@ -912,10 +923,10 @@ function JsonObjectField({
       name={name as any}
       render={({ field }) => (
         <FormItem className={className}>
-          <FormLabel>{translatedLabel}</FormLabel>
-          {description ? (
-            <FormDescription>{description}</FormDescription>
-          ) : null}
+          <FormLabel>
+            <XrayFieldLabel fieldKey={name}>{translatedLabel}</XrayFieldLabel>
+          </FormLabel>
+          <XrayFieldDescription description={description} fieldKey={name} />
           <FormControl>
             <JsonObjectEditor
               addLabel={addLabel}
@@ -959,10 +970,10 @@ function JsonArrayObjectField({
       name={name as any}
       render={({ field }) => (
         <FormItem className={className}>
-          <FormLabel>{translatedLabel}</FormLabel>
-          {description ? (
-            <FormDescription>{description}</FormDescription>
-          ) : null}
+          <FormLabel>
+            <XrayFieldLabel fieldKey={name}>{translatedLabel}</XrayFieldLabel>
+          </FormLabel>
+          <XrayFieldDescription description={description} fieldKey={name} />
           <FormControl>
             <JsonArrayObjectEditor
               addLabel={addLabel}
@@ -1944,6 +1955,60 @@ export default function XrayTemplateForm({
   }
 
   function validateXrayConfig(values: FormValues, config: Record<string, any>) {
+    form.clearErrors([
+      "vless_decryption",
+      "hysteria_version",
+      "reality_target",
+      "reality_server_names",
+      "reality_private_key",
+      "reality_short_ids",
+      "dns_servers_json",
+    ] as any);
+
+    if (values.type === "inbound" && values.protocol === "vless") {
+      const decryption = config.settings?.decryption ?? values.vless_decryption;
+      if (!String(decryption || "").trim()) {
+        form.setError("vless_decryption", {
+          message: "VLESS decryption 不能留空；禁用加密请填写 none。",
+        });
+        return false;
+      }
+    }
+
+    if (values.protocol === "hysteria") {
+      const version = config.settings?.version ?? values.hysteria_version;
+      if (Number(version) !== 2) {
+        form.setError("hysteria_version", {
+          message: "Hysteria version 必须为 2。",
+        });
+        return false;
+      }
+    }
+
+    if (values.type === "dns") {
+      const objectServers = safeJsonParse<any[]>(
+        values.dns_servers_json || "",
+        []
+      );
+      const hasQueryStrategyConflict = objectServers.some((server) => {
+        if (!server || typeof server !== "object") return false;
+        if (values.query_strategy === "UseIPv4") {
+          return server.queryStrategy === "UseIPv6";
+        }
+        if (values.query_strategy === "UseIPv6") {
+          return server.queryStrategy === "UseIPv4";
+        }
+        return false;
+      });
+      if (hasQueryStrategyConflict) {
+        form.setError("dns_servers_json", {
+          message:
+            "DNS Server Object 的 queryStrategy 与全局 Query Strategy 冲突，可能返回空响应。",
+        });
+        return false;
+      }
+    }
+
     const stream = config.streamSettings || {};
     const reality = stream.realitySettings || {};
     if (values.type !== "inbound" || stream.security !== "reality") {
@@ -1972,6 +2037,21 @@ export default function XrayTemplateForm({
     if (!reality.shortIds?.length) {
       form.setError("reality_short_ids", {
         message: "REALITY 入站必须填写 Short IDs。",
+      });
+      return false;
+    }
+    const invalidShortId = reality.shortIds.find(
+      (shortId: unknown) =>
+        typeof shortId !== "string" ||
+        (shortId !== "" &&
+          (!/^[0-9a-f]+$/i.test(shortId) ||
+            shortId.length % 2 !== 0 ||
+            shortId.length > 16))
+    );
+    if (invalidShortId !== undefined) {
+      form.setError("reality_short_ids", {
+        message:
+          "REALITY Short IDs 必须为十六进制，非空值需为偶数位且最长 16 位。",
       });
       return false;
     }
@@ -2345,8 +2425,11 @@ export default function XrayTemplateForm({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>
-                                {t("form.domainStrategy", "Domain Strategy")}
+                                <XrayFieldLabel fieldKey="routing_domain_strategy">
+                                  {t("form.domainStrategy", "Domain Strategy")}
+                                </XrayFieldLabel>
                               </FormLabel>
+                              <XrayFieldDescription fieldKey="routing_domain_strategy" />
                               <Select
                                 onValueChange={field.onChange}
                                 value={field.value}
@@ -2474,8 +2557,11 @@ export default function XrayTemplateForm({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  {t("form.protocol", "Protocol")}
+                                  <XrayFieldLabel fieldKey="protocol">
+                                    {t("form.protocol", "Protocol")}
+                                  </XrayFieldLabel>
                                 </FormLabel>
+                                <XrayFieldDescription fieldKey="protocol" />
                                 <Select
                                   onValueChange={field.onChange}
                                   value={field.value}
@@ -2502,7 +2588,12 @@ export default function XrayTemplateForm({
                             name="tag"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t("form.tag", "Tag")}</FormLabel>
+                                <FormLabel>
+                                  <XrayFieldLabel fieldKey="tag">
+                                    {t("form.tag", "Tag")}
+                                  </XrayFieldLabel>
+                                </FormLabel>
+                                <XrayFieldDescription fieldKey="tag" />
                                 <FormControl>
                                   <EnhancedInput
                                     onValueChange={field.onChange}
@@ -2521,8 +2612,11 @@ export default function XrayTemplateForm({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>
-                                    {t("form.port", "Port")}
+                                    <XrayFieldLabel fieldKey="port">
+                                      {t("form.port", "Port")}
+                                    </XrayFieldLabel>
                                   </FormLabel>
+                                  <XrayFieldDescription fieldKey="port" />
                                   <FormControl>
                                     <EnhancedInput
                                       max={65_535}
@@ -2545,8 +2639,11 @@ export default function XrayTemplateForm({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>
-                                    {t("form.listen", "Listen")}
+                                    <XrayFieldLabel fieldKey="listen">
+                                      {t("form.listen", "Listen")}
+                                    </XrayFieldLabel>
                                   </FormLabel>
+                                  <XrayFieldDescription fieldKey="listen" />
                                   <FormControl>
                                     <EnhancedInput
                                       onValueChange={field.onChange}
@@ -2567,8 +2664,11 @@ export default function XrayTemplateForm({
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>
-                                      {t("form.network", "Network")}
+                                      <XrayFieldLabel fieldKey="network">
+                                        {t("form.network", "Network")}
+                                      </XrayFieldLabel>
                                     </FormLabel>
+                                    <XrayFieldDescription fieldKey="network" />
                                     <Select
                                       onValueChange={field.onChange}
                                       value={field.value}
@@ -2596,8 +2696,11 @@ export default function XrayTemplateForm({
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>
-                                      {t("form.security", "Security")}
+                                      <XrayFieldLabel fieldKey="security">
+                                        {t("form.security", "Security")}
+                                      </XrayFieldLabel>
                                     </FormLabel>
+                                    <XrayFieldDescription fieldKey="security" />
                                     <Select
                                       onValueChange={field.onChange}
                                       value={field.value}
@@ -2634,8 +2737,11 @@ export default function XrayTemplateForm({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>
-                                    {t("form.host", "Host")}
+                                    <XrayFieldLabel fieldKey="host">
+                                      {t("form.host", "Host")}
+                                    </XrayFieldLabel>
                                   </FormLabel>
+                                  <XrayFieldDescription fieldKey="host" />
                                   <FormControl>
                                     <EnhancedInput
                                       onValueChange={field.onChange}
@@ -2653,8 +2759,11 @@ export default function XrayTemplateForm({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>
-                                    {t("form.path", "Path")}
+                                    <XrayFieldLabel fieldKey="path">
+                                      {t("form.path", "Path")}
+                                    </XrayFieldLabel>
                                   </FormLabel>
+                                  <XrayFieldDescription fieldKey="path" />
                                   <FormControl>
                                     <EnhancedInput
                                       onValueChange={field.onChange}
@@ -2778,22 +2887,41 @@ export default function XrayTemplateForm({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  {network === "kcp"
-                                    ? t("form.kcpSettings", "KCP Settings")
-                                    : network === "hysteria"
-                                      ? t(
-                                          "form.hysteriaSettings",
-                                          "Hysteria Settings"
-                                        )
-                                      : t("form.rawSettings", "Raw Settings")}
+                                  <XrayFieldLabel
+                                    fieldKey={
+                                      network === "kcp"
+                                        ? "kcp_settings_json"
+                                        : network === "hysteria"
+                                          ? "hysteria_settings_json"
+                                          : "raw_settings_json"
+                                    }
+                                  >
+                                    {network === "kcp"
+                                      ? t("form.kcpSettings", "KCP Settings")
+                                      : network === "hysteria"
+                                        ? t(
+                                            "form.hysteriaSettings",
+                                            "Hysteria Settings"
+                                          )
+                                        : t("form.rawSettings", "Raw Settings")}
+                                  </XrayFieldLabel>
                                 </FormLabel>
-                                <FormDescription>
-                                  {network === "kcp"
-                                    ? "KcpObject advanced fields. Form values above are merged first, this JSON can override or add rare fields."
-                                    : network === "hysteria"
-                                      ? "HysteriaObject for streamSettings.hysteriaSettings."
-                                      : "RawObject for streamSettings.rawSettings."}
-                                </FormDescription>
+                                <XrayFieldDescription
+                                  description={
+                                    network === "kcp"
+                                      ? "KcpObject advanced fields. Form values above are merged first, this JSON can override or add rare fields."
+                                      : network === "hysteria"
+                                        ? "HysteriaObject for streamSettings.hysteriaSettings."
+                                        : "RawObject for streamSettings.rawSettings."
+                                  }
+                                  fieldKey={
+                                    network === "kcp"
+                                      ? "kcp_settings_json"
+                                      : network === "hysteria"
+                                        ? "hysteria_settings_json"
+                                        : "raw_settings_json"
+                                  }
+                                />
                                 <FormControl>
                                   <JsonObjectEditor
                                     onChange={field.onChange}
@@ -2815,7 +2943,12 @@ export default function XrayTemplateForm({
                               name="sni"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>{t("form.sni", "SNI")}</FormLabel>
+                                  <FormLabel>
+                                    <XrayFieldLabel fieldKey="sni">
+                                      {t("form.sni", "SNI")}
+                                    </XrayFieldLabel>
+                                  </FormLabel>
+                                  <XrayFieldDescription fieldKey="sni" />
                                   <FormControl>
                                     <EnhancedInput
                                       onValueChange={field.onChange}
@@ -2835,8 +2968,11 @@ export default function XrayTemplateForm({
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>
-                                      {t("form.fingerprint", "Fingerprint")}
+                                      <XrayFieldLabel fieldKey="fingerprint">
+                                        {t("form.fingerprint", "Fingerprint")}
+                                      </XrayFieldLabel>
                                     </FormLabel>
+                                    <XrayFieldDescription fieldKey="fingerprint" />
                                     <FormControl>
                                       <EnhancedInput
                                         onValueChange={field.onChange}
@@ -2999,14 +3135,21 @@ export default function XrayTemplateForm({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>
-                                    {t("form.sockopt", "Sockopt")}
+                                    <XrayFieldLabel fieldKey="sockopt_json">
+                                      {t("form.sockopt", "Sockopt")}
+                                    </XrayFieldLabel>
                                   </FormLabel>
-                                  <FormDescription>
-                                    SockoptObject JSON, e.g.{" "}
-                                    {
-                                      '{"mark":255,"tproxy":"tproxy","dialerProxy":"proxy"}'
+                                  <XrayFieldDescription
+                                    description={
+                                      <>
+                                        SockoptObject JSON, e.g.{" "}
+                                        {
+                                          '{"mark":255,"tproxy":"tproxy","dialerProxy":"proxy"}'
+                                        }
+                                      </>
                                     }
-                                  </FormDescription>
+                                    fieldKey="sockopt_json"
+                                  />
                                   <FormControl>
                                     <JsonObjectEditor
                                       onChange={field.onChange}
@@ -3023,12 +3166,14 @@ export default function XrayTemplateForm({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>
-                                    {t("form.finalmask", "Final Mask")}
+                                    <XrayFieldLabel fieldKey="finalmask_json">
+                                      {t("form.finalmask", "Final Mask")}
+                                    </XrayFieldLabel>
                                   </FormLabel>
-                                  <FormDescription>
-                                    FinalMaskObject JSON with tcp/udp/quicParams
-                                    fields.
-                                  </FormDescription>
+                                  <XrayFieldDescription
+                                    description="FinalMaskObject JSON with tcp/udp/quicParams fields."
+                                    fieldKey="finalmask_json"
+                                  />
                                   <FormControl>
                                     <JsonObjectEditor
                                       onChange={field.onChange}
@@ -3068,8 +3213,11 @@ export default function XrayTemplateForm({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>
-                                    {t("form.destOverride", "Dest Override")}
+                                    <XrayFieldLabel fieldKey="dest_override">
+                                      {t("form.destOverride", "Dest Override")}
+                                    </XrayFieldLabel>
                                   </FormLabel>
+                                  <XrayFieldDescription fieldKey="dest_override" />
                                   <FormControl>
                                     <EnhancedInput
                                       onValueChange={field.onChange}
@@ -3087,11 +3235,14 @@ export default function XrayTemplateForm({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>
-                                    {t(
-                                      "form.sniffingDomainsExcluded",
-                                      "Domains Excluded"
-                                    )}
+                                    <XrayFieldLabel fieldKey="sniffing_domains_excluded">
+                                      {t(
+                                        "form.sniffingDomainsExcluded",
+                                        "Domains Excluded"
+                                      )}
+                                    </XrayFieldLabel>
                                   </FormLabel>
+                                  <XrayFieldDescription fieldKey="sniffing_domains_excluded" />
                                   <FormControl>
                                     <EnhancedInput
                                       onValueChange={field.onChange}
@@ -3115,11 +3266,14 @@ export default function XrayTemplateForm({
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>
-                                      {t(
-                                        "form.domainStrategy",
-                                        "Domain Strategy"
-                                      )}
+                                      <XrayFieldLabel fieldKey="domain_strategy">
+                                        {t(
+                                          "form.domainStrategy",
+                                          "Domain Strategy"
+                                        )}
+                                      </XrayFieldLabel>
                                     </FormLabel>
+                                    <XrayFieldDescription fieldKey="domain_strategy" />
                                     <FormControl>
                                       <EnhancedInput
                                         onValueChange={field.onChange}
@@ -3137,8 +3291,11 @@ export default function XrayTemplateForm({
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>
-                                      {t("form.redirect", "Redirect")}
+                                      <XrayFieldLabel fieldKey="redirect">
+                                        {t("form.redirect", "Redirect")}
+                                      </XrayFieldLabel>
                                     </FormLabel>
+                                    <XrayFieldDescription fieldKey="redirect" />
                                     <FormControl>
                                       <EnhancedInput
                                         onValueChange={field.onChange}
@@ -3189,8 +3346,11 @@ export default function XrayTemplateForm({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  {t("form.responseType", "Response Type")}
+                                  <XrayFieldLabel fieldKey="response_type">
+                                    {t("form.responseType", "Response Type")}
+                                  </XrayFieldLabel>
                                 </FormLabel>
+                                <XrayFieldDescription fieldKey="response_type" />
                                 <FormControl>
                                   <EnhancedInput
                                     onValueChange={field.onChange}
@@ -3216,14 +3376,17 @@ export default function XrayTemplateForm({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>
-                                {t("form.settingsJson", "Settings JSON")}
+                                <XrayFieldLabel fieldKey="settings_json">
+                                  {t("form.settingsJson", "Settings JSON")}
+                                </XrayFieldLabel>
                               </FormLabel>
-                              <FormDescription>
-                                {t(
+                              <XrayFieldDescription
+                                description={t(
                                   "form.settingsJsonDesc",
                                   "Protocol-specific Xray settings. These fields are kept as JSON so advanced protocol details are not lost."
                                 )}
-                              </FormDescription>
+                                fieldKey="settings_json"
+                              />
                               <FormControl>
                                 <JsonObjectEditor
                                   addLabel="添加覆盖字段"
@@ -3245,7 +3408,12 @@ export default function XrayTemplateForm({
                             name="tag"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t("form.tag", "Tag")}</FormLabel>
+                                <FormLabel>
+                                  <XrayFieldLabel fieldKey="tag">
+                                    {t("form.tag", "Tag")}
+                                  </XrayFieldLabel>
+                                </FormLabel>
+                                <XrayFieldDescription fieldKey="tag" />
                                 <FormControl>
                                   <EnhancedInput
                                     onValueChange={field.onChange}
@@ -3263,8 +3431,11 @@ export default function XrayTemplateForm({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  {t("form.clientIp", "Client IP")}
+                                  <XrayFieldLabel fieldKey="client_ip">
+                                    {t("form.clientIp", "Client IP")}
+                                  </XrayFieldLabel>
                                 </FormLabel>
+                                <XrayFieldDescription fieldKey="client_ip" />
                                 <FormControl>
                                   <EnhancedInput
                                     onValueChange={field.onChange}
@@ -3283,14 +3454,17 @@ export default function XrayTemplateForm({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>
-                                {t("form.dnsServers", "DNS Servers")}
+                                <XrayFieldLabel fieldKey="servers">
+                                  {t("form.dnsServers", "DNS Servers")}
+                                </XrayFieldLabel>
                               </FormLabel>
-                              <FormDescription>
-                                {t(
+                              <XrayFieldDescription
+                                description={t(
                                   "form.dnsServersDesc",
                                   "One server per line. Plain strings are supported, e.g. 1.1.1.1, https://dns.google/dns-query."
                                 )}
-                              </FormDescription>
+                                fieldKey="servers"
+                              />
                               <FormControl>
                                 <Textarea
                                   className="min-h-28"
@@ -3323,8 +3497,11 @@ export default function XrayTemplateForm({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  {t("form.queryStrategy", "Query Strategy")}
+                                  <XrayFieldLabel fieldKey="query_strategy">
+                                    {t("form.queryStrategy", "Query Strategy")}
+                                  </XrayFieldLabel>
                                 </FormLabel>
+                                <XrayFieldDescription fieldKey="query_strategy" />
                                 <Select
                                   onValueChange={field.onChange}
                                   value={field.value}
@@ -3362,11 +3539,14 @@ export default function XrayTemplateForm({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  {t(
-                                    "form.serveExpiredTtl",
-                                    "Serve Expired TTL"
-                                  )}
+                                  <XrayFieldLabel fieldKey="serve_expired_ttl">
+                                    {t(
+                                      "form.serveExpiredTtl",
+                                      "Serve Expired TTL"
+                                    )}
+                                  </XrayFieldLabel>
                                 </FormLabel>
+                                <XrayFieldDescription fieldKey="serve_expired_ttl" />
                                 <FormControl>
                                   <EnhancedInput
                                     min={0}
