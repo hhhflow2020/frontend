@@ -32,6 +32,40 @@ import ServerInstall from "./server-install";
 
 const SERVER_STATUS_TTL_MS = 30_000;
 
+const REALTIME_STATUS_DEFAULTS: Partial<API.ServerStatus> = {
+  connections: 0,
+  system_connections: 0,
+  system_inbound_connections: 0,
+  system_outbound_connections: 0,
+  xray_connections: 0,
+  xray_inbound_connections: 0,
+  xray_outbound_connections: 0,
+  online_users: 0,
+  net_rx_bps: 0,
+  net_tx_bps: 0,
+  net_rx_bytes: 0,
+  net_tx_bytes: 0,
+  xray_rx_bps: 0,
+  xray_tx_bps: 0,
+  xray_rx_bytes: 0,
+  xray_tx_bytes: 0,
+  load1: 0,
+  load5: 0,
+  load15: 0,
+  uptime: 0,
+  xray_stats_error: "",
+  pending_config_hash: "",
+  last_config_error: "",
+  last_apply_error: "",
+};
+
+function normalizeRealtimeStatus(status: Partial<API.ServerStatus>) {
+  return {
+    ...REALTIME_STATUS_DEFAULTS,
+    ...status,
+  };
+}
+
 function usageColor(value: number) {
   if (value >= 90) {
     return "bg-red-500/80";
@@ -391,10 +425,7 @@ export default function Servers() {
     ) => {
       if (!item.server_id) return;
       const { server_id: serverId, ...incomingStatus } = item;
-      const status = {
-        xray_stats_error: "",
-        ...incomingStatus,
-      };
+      const status = normalizeRealtimeStatus(incomingStatus);
       setRealtimeStatus((prev) => {
         const previous = prev[serverId];
         const previousVersion = serverStatusVersion(previous);

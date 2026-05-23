@@ -202,6 +202,10 @@ function appendRealtimeNetworkPoints(
     .sort((a, b) => a.timestamp - b.timestamp);
 }
 
+function hasPatchField(patch: DashboardRealtimePatch, key: string) {
+  return Object.hasOwn(patch, key);
+}
+
 function mergeDashboardRealtime(
   previous: API.DashboardRealtimeResponse,
   patch: DashboardRealtimePatch
@@ -226,8 +230,12 @@ function mergeDashboardRealtime(
   return {
     ...previous,
     ...patch,
-    activities: patch.activities ?? previous.activities,
-    alerts: patch.alerts ?? previous.alerts,
+    activities: hasPatchField(patch, "activities")
+      ? patch.activities || []
+      : previous.activities,
+    alerts: hasPatchField(patch, "alerts")
+      ? patch.alerts || []
+      : previous.alerts,
     business: {
       ...previous.business,
       ...(patch.business || {}),
