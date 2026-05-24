@@ -278,6 +278,22 @@ export const XRAY_FIELD_HELP: Record<string, XrayFieldHelpInfo> = {
     hint: "官方要求必须为 2。",
     warning: "不是 2 的值会导致配置无效。",
   }),
+  hysteria_auth: help("hysteria", {
+    title: "Hysteria Auth",
+    hint: "Hysteria 传输层认证字符串。",
+    detail:
+      "作为出站客户端密码使用；入站存在 settings.users 时会被用户列表覆盖。",
+  }),
+  udp_idle_timeout: help("hysteria", {
+    title: "UDP Idle Timeout",
+    hint: "QUIC UDP 连接空闲等待时间，单位秒。",
+    detail: "官方默认 60，通常不需要调整。",
+  }),
+  hysteria_masquerade_json: help("hysteria", {
+    title: "Masquerade",
+    hint: "HTTP/3 页面伪装对象。",
+    detail: "支持 string、file、proxy 三种 type；留空则使用默认 404 页面。",
+  }),
   hysteria_users_json: help("hysteria", {
     title: "Hysteria Users",
     hint: "服务端认可的 Hysteria 用户数组。",

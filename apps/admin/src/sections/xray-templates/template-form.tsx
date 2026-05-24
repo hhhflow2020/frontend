@@ -113,6 +113,9 @@ const formSchema = z.object({
   raw_settings_json: z.string().optional(),
   kcp_settings_json: z.string().optional(),
   hysteria_settings_json: z.string().optional(),
+  hysteria_auth: z.string().optional(),
+  udp_idle_timeout: z.coerce.number().optional(),
+  hysteria_masquerade_json: z.string().optional(),
   sockopt_json: z.string().optional(),
   finalmask_json: z.string().optional(),
   reality_show: z.boolean().optional(),
@@ -439,6 +442,9 @@ function defaultValues(type: XrayTemplateType = "inbound"): FormValues {
     raw_settings_json: "{}",
     kcp_settings_json: "{}",
     hysteria_settings_json: "{}",
+    hysteria_auth: "",
+    udp_idle_timeout: 60,
+    hysteria_masquerade_json: "{}",
     sockopt_json: "{}",
     finalmask_json: "{}",
     vless_clients_json: "[]",
@@ -2870,6 +2876,32 @@ export default function XrayTemplateForm({
                               label="Header Type"
                               name="kcp_header_type"
                               placeholder="none / srtp / utp / wechat-video"
+                            />
+                          </div>
+                        ) : null}
+
+                        {supportsStreamSettings && network === "hysteria" ? (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <InputField
+                              control={form.control}
+                              description="Hysteria 传输层认证；入站存在 users 时会被 users 覆盖。"
+                              label="Auth"
+                              name="hysteria_auth"
+                              placeholder="{{ .Vars.password }}"
+                            />
+                            <InputField
+                              control={form.control}
+                              description="QUIC UDP 空闲等待时间，单位秒；官方默认 60。"
+                              label="UDP Idle Timeout"
+                              name="udp_idle_timeout"
+                              type="number"
+                            />
+                            <JsonObjectField
+                              className="md:col-span-2"
+                              control={form.control}
+                              description="Hysteria HTTP/3 伪装对象；支持 string、file、proxy 三种 type。"
+                              label="Masquerade"
+                              name="hysteria_masquerade_json"
                             />
                           </div>
                         ) : null}

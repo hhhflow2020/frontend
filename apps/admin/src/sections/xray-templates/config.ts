@@ -604,10 +604,14 @@ export function buildStreamSettings(values: Record<string, any>) {
   }
 
   if (values.network === "hysteria") {
-    stream.hysteriaSettings = safeJsonParse(
-      values.hysteria_settings_json || "",
-      {}
-    );
+    const masquerade = safeJsonParse(values.hysteria_masquerade_json || "", {});
+    stream.hysteriaSettings = compactObject({
+      version: numberToUndefined(values.hysteria_version) || 2,
+      auth: emptyToUndefined(values.hysteria_auth),
+      udpIdleTimeout: numberToUndefined(values.udp_idle_timeout),
+      masquerade: Object.keys(masquerade).length ? masquerade : undefined,
+      ...safeJsonParse(values.hysteria_settings_json || "", {}),
+    });
   }
 
   if (values.security === "tls") {
@@ -1080,7 +1084,19 @@ export function configToFormValues(
     kcp_header_type: stream.kcpSettings?.header?.type || "",
     raw_settings_json: formatJson(stream.rawSettings || {}),
     kcp_settings_json: formatJson(stream.kcpSettings || {}),
-    hysteria_settings_json: formatJson(stream.hysteriaSettings || {}),
+    hysteria_auth: stream.hysteriaSettings?.auth || "",
+    udp_idle_timeout: stream.hysteriaSettings?.udpIdleTimeout || undefined,
+    hysteria_masquerade_json: formatJson(
+      stream.hysteriaSettings?.masquerade || {}
+    ),
+    hysteria_settings_json: formatJson(
+      omitKeys(stream.hysteriaSettings || {}, [
+        "version",
+        "auth",
+        "udpIdleTimeout",
+        "masquerade",
+      ])
+    ),
     sockopt_json: formatJson(stream.sockopt || {}),
     finalmask_json: formatJson(stream.finalmask || {}),
     sni: tls.serverName || reality.serverName || "",
