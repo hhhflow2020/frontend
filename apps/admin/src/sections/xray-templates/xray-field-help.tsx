@@ -161,11 +161,29 @@ export const XRAY_FIELD_HELP: Record<string, XrayFieldHelpInfo> = {
     hint: "VLESS decryption 不能留空；禁用加密时也要显式填写 none。",
     example: "none",
   }),
+  flow: help("vless", {
+    title: "Flow",
+    hint: "VLESS 流控参数，常见值为 xtls-rprx-vision。",
+    detail:
+      "只在 VLESS + TCP/RAW + TLS/REALITY 这类直连传输中填写。XHTTP、gRPC、WebSocket、HTTPUpgrade 等传输不要填写 flow。",
+    warning:
+      "如果 XHTTP 节点填写 xtls-rprx-vision，客户端和服务端即使配置一致也可能无法建立连接。",
+    example: "xtls-rprx-vision",
+  }),
+  out_flow: help("vless", {
+    title: "Flow",
+    hint: "VLESS 出站流控参数，常见值为 xtls-rprx-vision。",
+    detail:
+      "只在 VLESS + TCP/RAW + TLS/REALITY 这类直连传输中填写。XHTTP、gRPC、WebSocket、HTTPUpgrade 等传输不要填写 flow。",
+    warning:
+      "传输方式不是 TCP/RAW 时通常应留空，避免客户端生成不可连接的配置。",
+    example: "xtls-rprx-vision",
+  }),
   vless_clients_json: help("vless", {
     title: "VLESS Users",
     hint: "服务端认可的 VLESS 用户数组。",
     detail:
-      "xray-agent 会把真实订阅用户注入 settings.clients；模板里保留默认用户用于提供 flow 等默认值。",
+      "xray-agent 会把真实订阅用户注入 settings.clients；模板里保留默认用户用于提供 flow 等默认值。flow 仅适用于 VLESS TCP/RAW + TLS/REALITY，XHTTP/gRPC/WS 场景请留空。",
   }),
   vmess_clients_json: help("config", {
     title: "VMess Users",
