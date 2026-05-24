@@ -199,6 +199,12 @@ function copyConfigVariable(
   }
 }
 
+function firstUserField(settings: Record<string, any>, key: string) {
+  const firstUser = Array.isArray(settings.users) ? settings.users[0] : null;
+  if (!firstUser || typeof firstUser !== "object") return;
+  return (firstUser as Record<string, any>)[key];
+}
+
 function extractSettingsVariables(
   target: Record<string, any>,
   settings: Record<string, any>,
@@ -235,6 +241,9 @@ function extractSettingsVariables(
     }
     copyConfigVariable(target, "id", settings.id);
     copyConfigVariable(target, "flow", settings.flow);
+    if (protocol === "vless") {
+      copyConfigVariable(target, "flow", firstUserField(settings, "flow"));
+    }
   }
   copyConfigVariable(target, "hysteria_version", settings.version);
 }
