@@ -165,17 +165,17 @@ export const XRAY_FIELD_HELP: Record<string, XrayFieldHelpInfo> = {
     title: "VLESS Users",
     hint: "服务端认可的 VLESS 用户数组。",
     detail:
-      "xray-agent 会把真实订阅用户注入 settings.users；模板里保留默认用户用于提供 flow 等默认值。",
+      "xray-agent 会把真实订阅用户注入 settings.clients；模板里保留默认用户用于提供 flow 等默认值。",
   }),
   vmess_clients_json: help("config", {
     title: "VMess Users",
     hint: "服务端认可的 VMess 用户数组。",
-    detail: "xray-agent 会把真实订阅用户注入 settings.users。",
+    detail: "xray-agent 会把真实订阅用户注入 settings.clients。",
   }),
   trojan_clients_json: help("config", {
     title: "Trojan Users",
     hint: "服务端认可的 Trojan 用户数组。",
-    detail: "xray-agent 会把真实订阅用户注入 settings.users。",
+    detail: "xray-agent 会把真实订阅用户注入 settings.clients。",
   }),
   ss_clients_json: help("config", {
     title: "Shadowsocks Users",
@@ -282,7 +282,7 @@ export const XRAY_FIELD_HELP: Record<string, XrayFieldHelpInfo> = {
     title: "Hysteria Auth",
     hint: "Hysteria 传输层认证字符串。",
     detail:
-      "作为出站客户端密码使用；入站存在 settings.users 时会被用户列表覆盖。",
+      "作为出站客户端密码使用；入站存在 settings.clients 时会被用户列表覆盖。",
   }),
   udp_idle_timeout: help("hysteria", {
     title: "UDP Idle Timeout",

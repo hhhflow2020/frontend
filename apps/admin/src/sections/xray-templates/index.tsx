@@ -59,9 +59,9 @@ const DEFAULT_DESCRIPTION_KEYS: Record<string, string> = {
     "vlessRealityXhttp",
   "VLESS Reality XHTTP 入站模板，XHTTP extra 已限制 XMUX maxConnections 为 1，客户端仅复用一条 TCP 连接。":
     "vlessRealityXhttp",
-  "Default Hysteria2 inbound. xray-agent injects real users into settings.users with auth, level and email.":
+  "Default Hysteria2 inbound. xray-agent injects real users into settings.clients with auth, level and email.":
     "hysteria2",
-  "Hysteria2 入站模板，xray-agent 会将真实用户注入 settings.users。":
+  "Hysteria2 入站模板，xray-agent 会将真实用户注入 settings.clients。":
     "hysteria2",
   "Default DNS template.": "dns",
   "DNS 模板。": "dns",

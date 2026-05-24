@@ -40,7 +40,7 @@
     "dns": "Default DNS template.",
     "freedom": "Default freedom outbound.",
     "geodata": "Xray geodata template for geoip.dat and geosite.dat auto-update metadata.",
-    "hysteria2": "Hysteria2 inbound. xray-agent injects real users into settings.users.",
+    "hysteria2": "Hysteria2 inbound. xray-agent injects real users into settings.clients.",
     "routing": "Default routing template.",
     "safetyRouting": "Default safety routing template.",
     "vlessReality": "VLESS Reality inbound. Replace the Reality key pair and camouflage target before production.",

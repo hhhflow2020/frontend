@@ -40,7 +40,7 @@
     "dns": "DNS 模板。",
     "freedom": "直连出站模板。",
     "geodata": "Xray 地理数据模板，用于声明 geoip.dat 与 geosite.dat 的自动更新信息。",
-    "hysteria2": "Hysteria2 入站模板，xray-agent 会将真实用户注入 settings.users。",
+    "hysteria2": "Hysteria2 入站模板，xray-agent 会将真实用户注入 settings.clients。",
     "routing": "路由模板。",
     "safetyRouting": "安全路由模板。",
     "vlessReality": "VLESS Reality 入站模板，生产环境请替换密钥和伪装目标。",

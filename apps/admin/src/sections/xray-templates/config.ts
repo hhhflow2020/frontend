@@ -199,10 +199,12 @@ function copyConfigVariable(
   }
 }
 
-function firstUserField(settings: Record<string, any>, key: string) {
-  const firstUser = Array.isArray(settings.users) ? settings.users[0] : null;
-  if (!firstUser || typeof firstUser !== "object") return;
-  return (firstUser as Record<string, any>)[key];
+function firstClientField(settings: Record<string, any>, key: string) {
+  const firstClient = Array.isArray(settings.clients)
+    ? settings.clients[0]
+    : null;
+  if (!firstClient || typeof firstClient !== "object") return;
+  return (firstClient as Record<string, any>)[key];
 }
 
 function extractSettingsVariables(
@@ -242,7 +244,7 @@ function extractSettingsVariables(
     copyConfigVariable(target, "id", settings.id);
     copyConfigVariable(target, "flow", settings.flow);
     if (protocol === "vless") {
-      copyConfigVariable(target, "flow", firstUserField(settings, "flow"));
+      copyConfigVariable(target, "flow", firstClientField(settings, "flow"));
     }
   }
   copyConfigVariable(target, "hysteria_version", settings.version);
@@ -381,10 +383,10 @@ function settingsExtra(
 ) {
   if (type === "inbound") {
     if (["vless", "trojan"].includes(protocol)) {
-      return omitKeys(settings, ["users", "decryption", "fallbacks"]);
+      return omitKeys(settings, ["clients", "decryption", "fallbacks"]);
     }
     if (protocol === "vmess") {
-      return omitKeys(settings, ["users", "default"]);
+      return omitKeys(settings, ["clients", "default"]);
     }
     if (protocol === "shadowsocks") {
       return omitKeys(settings, [
@@ -393,7 +395,7 @@ function settingsExtra(
         "password",
         "level",
         "email",
-        "users",
+        "clients",
       ]);
     }
     if (protocol === "socks") {
@@ -416,7 +418,7 @@ function settingsExtra(
       return omitKeys(settings, ["secretKey", "peers", "mtu"]);
     }
     if (protocol === "hysteria") {
-      return omitKeys(settings, ["version", "users"]);
+      return omitKeys(settings, ["version", "clients"]);
     }
     if (protocol === "tun") {
       return omitKeys(settings, ["name", "MTU", "UserLevel", "userLevel"]);
@@ -671,7 +673,7 @@ function buildInboundProtocolSettings(values: Record<string, any>) {
   if (protocol === "vless") {
     return mergeSettings(
       {
-        users: safeJsonParse(values.vless_clients_json || "", []),
+        clients: safeJsonParse(values.vless_clients_json || "", []),
         decryption: values.vless_decryption || "none",
         fallbacks: safeJsonParse(values.fallbacks_json || "", []),
       },
@@ -681,7 +683,7 @@ function buildInboundProtocolSettings(values: Record<string, any>) {
   if (protocol === "vmess") {
     return mergeSettings(
       {
-        users: safeJsonParse(values.vmess_clients_json || "", []),
+        clients: safeJsonParse(values.vmess_clients_json || "", []),
         default: safeJsonParse(values.vmess_default_json || "", {}),
       },
       values.settings_json
@@ -690,7 +692,7 @@ function buildInboundProtocolSettings(values: Record<string, any>) {
   if (protocol === "trojan") {
     return mergeSettings(
       {
-        users: safeJsonParse(values.trojan_clients_json || "", []),
+        clients: safeJsonParse(values.trojan_clients_json || "", []),
         fallbacks: safeJsonParse(values.fallbacks_json || "", []),
       },
       values.settings_json
@@ -704,7 +706,7 @@ function buildInboundProtocolSettings(values: Record<string, any>) {
         password: emptyToUndefined(values.ss_password),
         level: numberToUndefined(values.user_level),
         email: emptyToUndefined(values.email),
-        users: safeJsonParse(values.ss_clients_json || "", []),
+        clients: safeJsonParse(values.ss_clients_json || "", []),
       },
       values.settings_json
     );
@@ -758,7 +760,7 @@ function buildInboundProtocolSettings(values: Record<string, any>) {
     return mergeSettings(
       {
         version: numberToUndefined(values.hysteria_version),
-        users: safeJsonParse(values.hysteria_users_json || "", []),
+        clients: safeJsonParse(values.hysteria_users_json || "", []),
       },
       values.settings_json
     );
@@ -1128,16 +1130,16 @@ export function configToFormValues(
     sniffing_metadata_only: !!value.sniffing?.metadataOnly,
     sniffing_route_only: !!value.sniffing?.routeOnly,
     sniffing_domains_excluded: joinCsv(value.sniffing?.domainsExcluded || []),
-    vless_clients_json: formatJson(settings.users || []),
+    vless_clients_json: formatJson(settings.clients || []),
     vless_decryption: settings.decryption || "none",
-    vmess_clients_json: formatJson(settings.users || []),
+    vmess_clients_json: formatJson(settings.clients || []),
     vmess_default_json: formatJson(settings.default || {}),
-    trojan_clients_json: formatJson(settings.users || []),
+    trojan_clients_json: formatJson(settings.clients || []),
     fallbacks_json: formatJson(settings.fallbacks || []),
     ss_network: settings.network || "tcp",
     ss_method: settings.method || "",
     ss_password: settings.password || "",
-    ss_clients_json: formatJson(settings.users || []),
+    ss_clients_json: formatJson(settings.clients || []),
     socks_auth: settings.auth || "noauth",
     socks_udp: !!settings.udp,
     socks_ip: settings.ip || "",
@@ -1157,7 +1159,7 @@ export function configToFormValues(
     wg_workers: settings.workers || undefined,
     wg_domain_strategy: settings.domainStrategy || "ForceIP",
     hysteria_version: settings.version || 2,
-    hysteria_users_json: formatJson(settings.users || []),
+    hysteria_users_json: formatJson(settings.clients || []),
     tun_name: settings.name || "xray0",
     tun_mtu: settings.MTU || 1500,
     out_address: settings.address || "",
