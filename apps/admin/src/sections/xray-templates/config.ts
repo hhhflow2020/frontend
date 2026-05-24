@@ -263,6 +263,16 @@ function extractStreamVariables(
   copyConfigVariable(target, "server_name", tls.serverName);
   copyConfigVariable(target, "fingerprint", tls.fingerprint);
   copyConfigVariable(target, "allow_insecure", tls.allowInsecure);
+  copyConfigVariable(
+    target,
+    "pinned_peer_cert_sha256",
+    tls.pinnedPeerCertSha256
+  );
+  copyConfigVariable(
+    target,
+    "verify_peer_cert_by_name",
+    tls.verifyPeerCertByName
+  );
 
   const reality = stream.realitySettings || {};
   if (type === "inbound") {
@@ -628,7 +638,8 @@ export function buildStreamSettings(values: Record<string, any>) {
   if (values.security === "tls") {
     stream.tlsSettings = compactObject({
       serverName: emptyToUndefined(values.sni),
-      allowInsecure: values.allow_insecure || undefined,
+      pinnedPeerCertSha256: emptyToUndefined(values.pinned_peer_cert_sha256),
+      verifyPeerCertByName: emptyToUndefined(values.verify_peer_cert_by_name),
       fingerprint: emptyToUndefined(values.fingerprint),
     });
   }
@@ -1112,6 +1123,8 @@ export function configToFormValues(
     finalmask_json: formatJson(stream.finalmask || {}),
     sni: tls.serverName || reality.serverName || "",
     allow_insecure: !!tls.allowInsecure,
+    pinned_peer_cert_sha256: tls.pinnedPeerCertSha256 || "",
+    verify_peer_cert_by_name: tls.verifyPeerCertByName || "",
     fingerprint: tls.fingerprint || reality.fingerprint || "chrome",
     reality_show: !!reality.show,
     reality_target: reality.target || reality.dest || "",

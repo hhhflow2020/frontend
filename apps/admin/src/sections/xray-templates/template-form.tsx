@@ -103,6 +103,8 @@ const formSchema = z.object({
   xhttp_extra_json: z.string().optional(),
   sni: z.string().optional(),
   allow_insecure: z.boolean().optional(),
+  pinned_peer_cert_sha256: z.string().optional(),
+  verify_peer_cert_by_name: z.string().optional(),
   fingerprint: z.string().optional(),
   kcp_mtu: z.coerce.number().optional(),
   kcp_tti: z.coerce.number().optional(),
@@ -426,6 +428,8 @@ function defaultValues(type: XrayTemplateType = "inbound"): FormValues {
     network: "raw",
     security: "none",
     fingerprint: "chrome",
+    pinned_peer_cert_sha256: "",
+    verify_peer_cert_by_name: "",
     grpc_multi_mode: false,
     xhttp_mode: "auto",
     xhttp_extra_json: "{}",
@@ -3018,15 +3022,59 @@ export default function XrayTemplateForm({
                                 )}
                               />
                             ) : null}
-                            {security === "tls" ? (
-                              <SwitchField
-                                control={form.control}
-                                label={t(
-                                  "form.allowInsecure",
-                                  "Allow Insecure"
-                                )}
-                                name="allow_insecure"
-                              />
+                            {security === "tls" && type === "outbound" ? (
+                              <>
+                                <FormField
+                                  control={form.control}
+                                  name="pinned_peer_cert_sha256"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>
+                                        <XrayFieldLabel fieldKey="pinned_peer_cert_sha256">
+                                          {t(
+                                            "form.pinnedPeerCertSha256",
+                                            "Pinned Cert SHA-256"
+                                          )}
+                                        </XrayFieldLabel>
+                                      </FormLabel>
+                                      <XrayFieldDescription fieldKey="pinned_peer_cert_sha256" />
+                                      <FormControl>
+                                        <EnhancedInput
+                                          onValueChange={field.onChange}
+                                          placeholder="AA:BB:CC:..."
+                                          value={field.value || ""}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name="verify_peer_cert_by_name"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>
+                                        <XrayFieldLabel fieldKey="verify_peer_cert_by_name">
+                                          {t(
+                                            "form.verifyPeerCertByName",
+                                            "Verify Cert Name"
+                                          )}
+                                        </XrayFieldLabel>
+                                      </FormLabel>
+                                      <XrayFieldDescription fieldKey="verify_peer_cert_by_name" />
+                                      <FormControl>
+                                        <EnhancedInput
+                                          onValueChange={field.onChange}
+                                          placeholder="example.com"
+                                          value={field.value || ""}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </>
                             ) : null}
                           </div>
                         ) : null}

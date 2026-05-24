@@ -28,12 +28,19 @@ export const subscribeSchema = {
         },
         AllowInsecure: {
           type: "boolean",
-          description:
-            "Allow insecure connections (skip certificate verification)",
+          description: "Deprecated Xray-core insecure TLS verification flag",
         },
         Fingerprint: {
           type: "string",
           description: "Client fingerprint for TLS connections",
+        },
+        PinnedPeerCertSha256: {
+          type: "string",
+          description: "Pinned TLS peer certificate SHA-256 for Xray-core",
+        },
+        VerifyPeerCertByName: {
+          type: "string",
+          description: "TLS certificate name override for Xray-core",
         },
         RealityServerAddr: {
           type: "string",

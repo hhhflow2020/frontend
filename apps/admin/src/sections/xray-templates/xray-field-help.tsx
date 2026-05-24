@@ -32,6 +32,10 @@ const SOURCES = {
     label: "REALITY",
     url: "https://xtls.github.io/config/transports/reality.html",
   },
+  tls: {
+    label: "TLS",
+    url: "https://xtls.github.io/config/transports/tls.html",
+  },
   grpc: {
     label: "gRPC 传输",
     url: "https://xtls.github.io/config/transports/grpc.html",
@@ -209,7 +213,23 @@ export const XRAY_FIELD_HELP: Record<string, XrayFieldHelpInfo> = {
   allow_insecure: help("reality", {
     title: "Allow Insecure",
     hint: "TLS 客户端是否允许不安全证书。",
-    warning: "REALITY 不使用该字段；TLS 场景也不建议长期启用。",
+    warning:
+      "Xray-core 将在 2026-06-01 后移除该字段；请改用 pinnedPeerCertSha256 或 verifyPeerCertByName。",
+  }),
+  pinned_peer_cert_sha256: help("tls", {
+    title: "Pinned Peer Cert SHA-256",
+    hint: "TLS 出站用于固定服务端证书的 SHA-256 指纹。",
+    detail:
+      "用于替代 allowInsecure。可通过 xray tls hash --cert cert.pem 或 openssl x509 -noout -fingerprint -sha256 -in cert.pem 获取。",
+    warning: "仅在需要连接自签名或私有 CA 证书时填写。",
+    example: "AA:BB:CC:DD:...",
+  }),
+  verify_peer_cert_by_name: help("tls", {
+    title: "Verify Peer Cert By Name",
+    hint: "TLS 出站用于指定证书 SAN 校验名称。",
+    detail:
+      "多个名称可用英文逗号分隔。普通公网证书通常只需要填写 SNI，不需要额外配置。",
+    example: "example.com",
   }),
   reality_target: help("reality", {
     title: "REALITY Target",
