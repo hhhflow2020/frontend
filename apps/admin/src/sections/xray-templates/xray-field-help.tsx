@@ -1,4 +1,5 @@
 import { Badge } from "@workspace/ui/components/badge";
+import { FormDescription } from "@workspace/ui/components/form";
 import {
   HoverCard,
   HoverCardContent,
@@ -470,17 +471,11 @@ export function XrayFieldHelp({
 
 export function XrayFieldLabel({
   children,
-  fieldKey,
 }: {
   children: ReactNode;
   fieldKey?: string;
 }) {
-  return (
-    <span className="inline-flex min-w-0 items-center gap-1.5">
-      <span className="truncate">{children}</span>
-      <XrayFieldHelp fieldKey={fieldKey} />
-    </span>
-  );
+  return <span className="truncate">{children}</span>;
 }
 
 export function XrayFieldDescription({
@@ -498,10 +493,12 @@ export function XrayFieldDescription({
       (typeof description === "string" && description.trim() !== info.hint));
 
   return (
-    <div className="space-y-1 text-muted-foreground text-xs">
-      {description ? <p>{description}</p> : null}
-      {shouldShowHint ? <p>{info?.hint}</p> : null}
-      {info?.warning ? <p className="text-amber-600">{info.warning}</p> : null}
-    </div>
+    <FormDescription className="space-y-1 text-xs">
+      {description ? <span className="block">{description}</span> : null}
+      {shouldShowHint ? <span className="block">{info?.hint}</span> : null}
+      {info?.warning ? (
+        <span className="block text-amber-600">{info.warning}</span>
+      ) : null}
+    </FormDescription>
   );
 }

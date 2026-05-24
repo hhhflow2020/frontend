@@ -4,6 +4,7 @@ import { Button } from "@workspace/ui/components/button";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -1804,6 +1805,10 @@ export default function ServerXrayTemplateBindForm({
             </Badge>
             <BindingStatusBadge status={configStatus} />
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            Bind Xray templates to this server, edit binding variables, and
+            preview the rendered configuration.
+          </SheetDescription>
         </SheetHeader>
 
         <div className="grid max-h-[calc(100dvh-132px)] grid-cols-1 gap-4 overflow-hidden px-6 pt-4 lg:grid-cols-[310px_minmax(0,1fr)]">

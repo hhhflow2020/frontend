@@ -21,6 +21,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -36,9 +37,10 @@ import {
 import { Textarea } from "@workspace/ui/components/textarea";
 import { EnhancedInput } from "@workspace/ui/composed/enhanced-input";
 import { Icon } from "@workspace/ui/composed/icon";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { z } from "zod";
 import {
   generateRealityKeyPair,
@@ -735,6 +737,10 @@ function useXrayFieldLabel(label: string) {
   return t(`fieldLabels.${key}`, label);
 }
 
+function CompositeFieldLabel({ children }: { children: ReactNode }) {
+  return <div className="font-medium text-sm">{children}</div>;
+}
+
 function SwitchField({
   control,
   name,
@@ -759,12 +765,11 @@ function SwitchField({
           </FormLabel>
           <XrayFieldDescription description={description} fieldKey={name} />
           <FormControl>
-            <div className="pt-2">
-              <Switch
-                checked={!!field.value}
-                onCheckedChange={field.onChange}
-              />
-            </div>
+            <Switch
+              checked={!!field.value}
+              className="mt-2"
+              onCheckedChange={field.onChange}
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -923,17 +928,15 @@ function JsonObjectField({
       name={name as any}
       render={({ field }) => (
         <FormItem className={className}>
-          <FormLabel>
+          <CompositeFieldLabel>
             <XrayFieldLabel fieldKey={name}>{translatedLabel}</XrayFieldLabel>
-          </FormLabel>
+          </CompositeFieldLabel>
           <XrayFieldDescription description={description} fieldKey={name} />
-          <FormControl>
-            <JsonObjectEditor
-              addLabel={addLabel}
-              onChange={field.onChange}
-              value={field.value}
-            />
-          </FormControl>
+          <JsonObjectEditor
+            addLabel={addLabel}
+            onChange={field.onChange}
+            value={field.value}
+          />
           <FormMessage />
         </FormItem>
       )}
@@ -970,20 +973,18 @@ function JsonArrayObjectField({
       name={name as any}
       render={({ field }) => (
         <FormItem className={className}>
-          <FormLabel>
+          <CompositeFieldLabel>
             <XrayFieldLabel fieldKey={name}>{translatedLabel}</XrayFieldLabel>
-          </FormLabel>
+          </CompositeFieldLabel>
           <XrayFieldDescription description={description} fieldKey={name} />
-          <FormControl>
-            <JsonArrayObjectEditor
-              addLabel={addLabel}
-              columns={columns}
-              defaultItem={defaultItem}
-              emptyText={emptyText}
-              onChange={field.onChange}
-              value={field.value}
-            />
-          </FormControl>
+          <JsonArrayObjectEditor
+            addLabel={addLabel}
+            columns={columns}
+            defaultItem={defaultItem}
+            emptyText={emptyText}
+            onChange={field.onChange}
+            value={field.value}
+          />
           <FormMessage />
         </FormItem>
       )}
@@ -1049,153 +1050,150 @@ function VariableSchemaField({
 
         return (
           <FormItem>
-            <FormLabel>变量结构</FormLabel>
+            <CompositeFieldLabel>变量结构</CompositeFieldLabel>
             <FormDescription>
               定义绑定服务器时要填写的变量，绑定页会自动生成对应表单。
             </FormDescription>
-            <FormControl>
-              <div className="space-y-2 rounded-md border bg-muted/20 p-3">
-                {rows.length ? (
-                  rows.map(([key, item]) => (
-                    <div
-                      className="space-y-2 rounded-md border bg-background p-2"
-                      key={key}
-                    >
-                      <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_140px]">
-                        <EnhancedInput
-                          onValueChange={(nextKey) => {
-                            const normalized = nextKey.trim();
-                            if (!normalized || normalized === key) return;
-                            const next = { ...properties };
-                            delete next[key];
-                            next[normalized] = item;
-                            commit(
-                              next,
-                              required.map((requiredKey: string) =>
-                                requiredKey === key ? normalized : requiredKey
-                              )
-                            );
-                          }}
-                          placeholder="变量名"
-                          value={key}
-                        />
-                        <Select
-                          onValueChange={(typeValue) =>
-                            commit({
-                              ...properties,
-                              [key]: { ...item, type: typeValue },
-                            })
-                          }
-                          value={item?.type || "string"}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="string">文本</SelectItem>
-                            <SelectItem value="number">数字</SelectItem>
-                            <SelectItem value="boolean">开关</SelectItem>
-                            <SelectItem value="array">数组</SelectItem>
-                            <SelectItem value="object">对象</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
-                        <EnhancedInput
-                          onValueChange={(titleValue) =>
-                            commit({
-                              ...properties,
-                              [key]: { ...item, title: titleValue },
-                            })
-                          }
-                          placeholder="显示名"
-                          value={item?.title || item?.label || ""}
-                        />
-                        <EnhancedInput
-                          onValueChange={(descriptionValue) =>
-                            commit({
-                              ...properties,
-                              [key]: {
-                                ...item,
-                                description: descriptionValue,
-                              },
-                            })
-                          }
-                          placeholder="说明"
-                          value={item?.description || item?.desc || ""}
-                        />
-                        <EnhancedInput
-                          onValueChange={(defaultValue) =>
-                            commit({
-                              ...properties,
-                              [key]: { ...item, default: defaultValue },
-                            })
-                          }
-                          placeholder="默认值"
-                          value={item?.default ?? ""}
-                        />
-                      </div>
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
-                          <Switch
-                            checked={required.includes(key)}
-                            onCheckedChange={(checked) =>
-                              commit(
-                                properties,
-                                checked
-                                  ? [...required, key]
-                                  : required.filter(
-                                      (requiredKey: string) =>
-                                        requiredKey !== key
-                                    )
-                              )
-                            }
-                          />
-                          <span className="text-muted-foreground text-xs">
-                            必填
-                          </span>
-                        </div>
-                        <Button
-                          className="h-9 px-3"
-                          onClick={() => {
-                            const next = { ...properties };
-                            delete next[key];
-                            commit(
-                              next,
-                              required.filter(
-                                (requiredKey: string) => requiredKey !== key
-                              )
-                            );
-                          }}
-                          type="button"
-                          variant="outline"
-                        >
-                          删除
-                        </Button>
-                      </div>
+            <div className="space-y-2 rounded-md border bg-muted/20 p-3">
+              {rows.length ? (
+                rows.map(([key, item]) => (
+                  <div
+                    className="space-y-2 rounded-md border bg-background p-2"
+                    key={key}
+                  >
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_140px]">
+                      <EnhancedInput
+                        onValueChange={(nextKey) => {
+                          const normalized = nextKey.trim();
+                          if (!normalized || normalized === key) return;
+                          const next = { ...properties };
+                          delete next[key];
+                          next[normalized] = item;
+                          commit(
+                            next,
+                            required.map((requiredKey: string) =>
+                              requiredKey === key ? normalized : requiredKey
+                            )
+                          );
+                        }}
+                        placeholder="变量名"
+                        value={key}
+                      />
+                      <Select
+                        onValueChange={(typeValue) =>
+                          commit({
+                            ...properties,
+                            [key]: { ...item, type: typeValue },
+                          })
+                        }
+                        value={item?.type || "string"}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="string">文本</SelectItem>
+                          <SelectItem value="number">数字</SelectItem>
+                          <SelectItem value="boolean">开关</SelectItem>
+                          <SelectItem value="array">数组</SelectItem>
+                          <SelectItem value="object">对象</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  ))
-                ) : (
-                  <div className="rounded-md border border-dashed p-4 text-center text-muted-foreground text-sm">
-                    还没有变量定义。
+                    <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
+                      <EnhancedInput
+                        onValueChange={(titleValue) =>
+                          commit({
+                            ...properties,
+                            [key]: { ...item, title: titleValue },
+                          })
+                        }
+                        placeholder="显示名"
+                        value={item?.title || item?.label || ""}
+                      />
+                      <EnhancedInput
+                        onValueChange={(descriptionValue) =>
+                          commit({
+                            ...properties,
+                            [key]: {
+                              ...item,
+                              description: descriptionValue,
+                            },
+                          })
+                        }
+                        placeholder="说明"
+                        value={item?.description || item?.desc || ""}
+                      />
+                      <EnhancedInput
+                        onValueChange={(defaultValue) =>
+                          commit({
+                            ...properties,
+                            [key]: { ...item, default: defaultValue },
+                          })
+                        }
+                        placeholder="默认值"
+                        value={item?.default ?? ""}
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
+                        <Switch
+                          checked={required.includes(key)}
+                          onCheckedChange={(checked) =>
+                            commit(
+                              properties,
+                              checked
+                                ? [...required, key]
+                                : required.filter(
+                                    (requiredKey: string) => requiredKey !== key
+                                  )
+                            )
+                          }
+                        />
+                        <span className="text-muted-foreground text-xs">
+                          必填
+                        </span>
+                      </div>
+                      <Button
+                        className="h-9 px-3"
+                        onClick={() => {
+                          const next = { ...properties };
+                          delete next[key];
+                          commit(
+                            next,
+                            required.filter(
+                              (requiredKey: string) => requiredKey !== key
+                            )
+                          );
+                        }}
+                        type="button"
+                        variant="outline"
+                      >
+                        删除
+                      </Button>
+                    </div>
                   </div>
-                )}
-                <Button
-                  onClick={() => {
-                    const nextKey = `var_${rows.length + 1}`;
-                    commit({
-                      ...properties,
-                      [nextKey]: { type: "string", title: nextKey },
-                    });
-                  }}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  添加变量
-                </Button>
-              </div>
-            </FormControl>
+                ))
+              ) : (
+                <div className="rounded-md border border-dashed p-4 text-center text-muted-foreground text-sm">
+                  还没有变量定义。
+                </div>
+              )}
+              <Button
+                onClick={() => {
+                  const nextKey = `var_${rows.length + 1}`;
+                  commit({
+                    ...properties,
+                    [nextKey]: { type: "string", title: nextKey },
+                  });
+                }}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                添加变量
+              </Button>
+            </div>
             <FormMessage />
           </FormItem>
         );
@@ -1933,25 +1931,24 @@ export default function XrayTemplateForm({
           continue;
         }
         if (rule.shape === "array" && !Array.isArray(parsed)) {
-          form.setError(rule.name as any, {
-            message: `${rule.label} 必须是 JSON 数组。`,
-          });
+          setSubmitError(rule.name, `${rule.label} 必须是 JSON 数组。`);
           return false;
         }
         if (rule.shape === "object" && !isPlainJsonObject(parsed)) {
-          form.setError(rule.name as any, {
-            message: `${rule.label} 必须是 JSON 对象。`,
-          });
+          setSubmitError(rule.name, `${rule.label} 必须是 JSON 对象。`);
           return false;
         }
       } catch {
-        form.setError(rule.name as any, {
-          message: `${rule.label} 不是合法 JSON。`,
-        });
+        setSubmitError(rule.name, `${rule.label} 不是合法 JSON。`);
         return false;
       }
     }
     return true;
+  }
+
+  function setSubmitError(name: keyof FormValues, message: string) {
+    form.setError(name as any, { message });
+    toast.error(message);
   }
 
   function validateXrayConfig(values: FormValues, config: Record<string, any>) {
@@ -1968,19 +1965,21 @@ export default function XrayTemplateForm({
     if (values.type === "inbound" && values.protocol === "vless") {
       const decryption = config.settings?.decryption ?? values.vless_decryption;
       if (!String(decryption || "").trim()) {
-        form.setError("vless_decryption", {
-          message: "VLESS decryption 不能留空；禁用加密请填写 none。",
-        });
+        setSubmitError(
+          "vless_decryption",
+          "VLESS decryption 不能留空；禁用加密请填写 none。"
+        );
         return false;
       }
     }
 
-    if (values.protocol === "hysteria") {
+    if (
+      (values.type === "inbound" || values.type === "outbound") &&
+      values.protocol === "hysteria"
+    ) {
       const version = config.settings?.version ?? values.hysteria_version;
       if (Number(version) !== 2) {
-        form.setError("hysteria_version", {
-          message: "Hysteria version 必须为 2。",
-        });
+        setSubmitError("hysteria_version", "Hysteria version 必须为 2。");
         return false;
       }
     }
@@ -2001,10 +2000,10 @@ export default function XrayTemplateForm({
         return false;
       });
       if (hasQueryStrategyConflict) {
-        form.setError("dns_servers_json", {
-          message:
-            "DNS Server Object 的 queryStrategy 与全局 Query Strategy 冲突，可能返回空响应。",
-        });
+        setSubmitError(
+          "dns_servers_json",
+          "DNS Server Object 的 queryStrategy 与全局 Query Strategy 冲突，可能返回空响应。"
+        );
         return false;
       }
     }
@@ -2015,29 +2014,28 @@ export default function XrayTemplateForm({
       return true;
     }
     if (!(reality.target || reality.dest)) {
-      form.setError("reality_target", {
-        message:
-          "REALITY 入站必须填写 Target，例如 ebay.com:443。缺少 target 时 xray-core 会把它当成客户端配置解析。",
-      });
+      setSubmitError(
+        "reality_target",
+        "REALITY 入站必须填写 Target，例如 ebay.com:443。缺少 target 时 xray-core 会把它当成客户端配置解析。"
+      );
       return false;
     }
     if (!reality.serverNames?.length) {
-      form.setError("reality_server_names", {
-        message:
-          "REALITY 入站必须填写 Server Names，例如 ebay.com, www.ebay.com。",
-      });
+      setSubmitError(
+        "reality_server_names",
+        "REALITY 入站必须填写 Server Names，例如 ebay.com, www.ebay.com。"
+      );
       return false;
     }
     if (!reality.privateKey) {
-      form.setError("reality_private_key", {
-        message: "REALITY 入站必须填写 Private Key。",
-      });
+      setSubmitError(
+        "reality_private_key",
+        "REALITY 入站必须填写 Private Key。"
+      );
       return false;
     }
     if (!reality.shortIds?.length) {
-      form.setError("reality_short_ids", {
-        message: "REALITY 入站必须填写 Short IDs。",
-      });
+      setSubmitError("reality_short_ids", "REALITY 入站必须填写 Short IDs。");
       return false;
     }
     const invalidShortId = reality.shortIds.find(
@@ -2049,10 +2047,10 @@ export default function XrayTemplateForm({
             shortId.length > 16))
     );
     if (invalidShortId !== undefined) {
-      form.setError("reality_short_ids", {
-        message:
-          "REALITY Short IDs 必须为十六进制，非空值需为偶数位且最长 16 位。",
-      });
+      setSubmitError(
+        "reality_short_ids",
+        "REALITY Short IDs 必须为十六进制，非空值需为偶数位且最长 16 位。"
+      );
       return false;
     }
     return true;
@@ -2078,9 +2076,10 @@ export default function XrayTemplateForm({
       defaultVariables
     );
     if (conflicts.length) {
-      form.setError("default_variables_json", {
-        message: `Default Variables 与模板配置存在冲突：${conflicts.join(", ")}。请移除重复默认值或保持一致。`,
-      });
+      setSubmitError(
+        "default_variables_json",
+        `Default Variables 与模板配置存在冲突：${conflicts.join(", ")}。请移除重复默认值或保持一致。`
+      );
       return;
     }
     const ok = await onSubmit({
@@ -2236,6 +2235,10 @@ export default function XrayTemplateForm({
               {advancedTouched ? "高级 JSON 生效" : "表单配置生效"}
             </Badge>
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            Edit Xray template configuration, subscription metadata, and
+            generated JSON preview.
+          </SheetDescription>
         </SheetHeader>
 
         <div className="grid h-[calc(100dvh-148px)] grid-cols-1 gap-4 overflow-hidden px-6 pt-4 lg:grid-cols-[300px_minmax(0,1fr)]">
@@ -2886,7 +2889,7 @@ export default function XrayTemplateForm({
                             }
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>
+                                <CompositeFieldLabel>
                                   <XrayFieldLabel
                                     fieldKey={
                                       network === "kcp"
@@ -2905,7 +2908,7 @@ export default function XrayTemplateForm({
                                           )
                                         : t("form.rawSettings", "Raw Settings")}
                                   </XrayFieldLabel>
-                                </FormLabel>
+                                </CompositeFieldLabel>
                                 <XrayFieldDescription
                                   description={
                                     network === "kcp"
@@ -2922,12 +2925,10 @@ export default function XrayTemplateForm({
                                         : "raw_settings_json"
                                   }
                                 />
-                                <FormControl>
-                                  <JsonObjectEditor
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                  />
-                                </FormControl>
+                                <JsonObjectEditor
+                                  onChange={field.onChange}
+                                  value={field.value}
+                                />
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -3134,11 +3135,11 @@ export default function XrayTemplateForm({
                               name="sockopt_json"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>
+                                  <CompositeFieldLabel>
                                     <XrayFieldLabel fieldKey="sockopt_json">
                                       {t("form.sockopt", "Sockopt")}
                                     </XrayFieldLabel>
-                                  </FormLabel>
+                                  </CompositeFieldLabel>
                                   <XrayFieldDescription
                                     description={
                                       <>
@@ -3150,12 +3151,10 @@ export default function XrayTemplateForm({
                                     }
                                     fieldKey="sockopt_json"
                                   />
-                                  <FormControl>
-                                    <JsonObjectEditor
-                                      onChange={field.onChange}
-                                      value={field.value}
-                                    />
-                                  </FormControl>
+                                  <JsonObjectEditor
+                                    onChange={field.onChange}
+                                    value={field.value}
+                                  />
                                   <FormMessage />
                                 </FormItem>
                               )}
@@ -3165,21 +3164,19 @@ export default function XrayTemplateForm({
                               name="finalmask_json"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>
+                                  <CompositeFieldLabel>
                                     <XrayFieldLabel fieldKey="finalmask_json">
                                       {t("form.finalmask", "Final Mask")}
                                     </XrayFieldLabel>
-                                  </FormLabel>
+                                  </CompositeFieldLabel>
                                   <XrayFieldDescription
                                     description="FinalMaskObject JSON with tcp/udp/quicParams fields."
                                     fieldKey="finalmask_json"
                                   />
-                                  <FormControl>
-                                    <JsonObjectEditor
-                                      onChange={field.onChange}
-                                      value={field.value}
-                                    />
-                                  </FormControl>
+                                  <JsonObjectEditor
+                                    onChange={field.onChange}
+                                    value={field.value}
+                                  />
                                   <FormMessage />
                                 </FormItem>
                               )}
@@ -3375,11 +3372,11 @@ export default function XrayTemplateForm({
                           name="settings_json"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>
+                              <CompositeFieldLabel>
                                 <XrayFieldLabel fieldKey="settings_json">
                                   {t("form.settingsJson", "Settings JSON")}
                                 </XrayFieldLabel>
-                              </FormLabel>
+                              </CompositeFieldLabel>
                               <XrayFieldDescription
                                 description={t(
                                   "form.settingsJsonDesc",
@@ -3387,14 +3384,12 @@ export default function XrayTemplateForm({
                                 )}
                                 fieldKey="settings_json"
                               />
-                              <FormControl>
-                                <JsonObjectEditor
-                                  addLabel="添加覆盖字段"
-                                  emptyText="没有高级覆盖字段。"
-                                  onChange={field.onChange}
-                                  value={field.value}
-                                />
-                              </FormControl>
+                              <JsonObjectEditor
+                                addLabel="添加覆盖字段"
+                                emptyText="没有高级覆盖字段。"
+                                onChange={field.onChange}
+                                value={field.value}
+                              />
                               <FormMessage />
                             </FormItem>
                           )}
