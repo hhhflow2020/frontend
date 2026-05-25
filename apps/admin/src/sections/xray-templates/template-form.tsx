@@ -255,6 +255,8 @@ const ROUTING_RULE_COLUMNS: JsonArrayColumn[] = [
     type: "csv",
     placeholder: "geosite:cn\ndomain:example.com",
     multiline: true,
+    splitMode: "line",
+    decodeJsonStringEscapes: true,
   },
   {
     key: "ip",
@@ -308,6 +310,8 @@ const DNS_SERVER_OBJECT_COLUMNS: JsonArrayColumn[] = [
     type: "csv",
     placeholder: "geosite:cn\ndomain:example.com",
     multiline: true,
+    splitMode: "line",
+    decodeJsonStringEscapes: true,
   },
   {
     key: "expectedIPs",
@@ -392,6 +396,8 @@ const DNS_OUT_RULE_COLUMNS: JsonArrayColumn[] = [
     type: "csv",
     placeholder: "domain:example.com\ngeosite:cn",
     multiline: true,
+    splitMode: "line",
+    decodeJsonStringEscapes: true,
   },
   {
     key: "ip",

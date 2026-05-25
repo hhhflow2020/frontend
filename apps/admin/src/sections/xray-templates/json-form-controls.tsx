@@ -20,6 +20,8 @@ export type JsonArrayColumn = {
   options?: string[];
   placeholder?: string;
   multiline?: boolean;
+  splitMode?: "csv" | "line";
+  decodeJsonStringEscapes?: boolean;
   span?: "normal" | "full";
 };
 
@@ -70,10 +72,31 @@ function hasInvalidJson(
   }
 }
 
-function csvToArray(value: string) {
-  return value
-    .split(/[\n,]+/)
-    .map((item) => item.trim())
+function decodeJsonStringEscapes(value: string) {
+  if (!value.includes("\\")) return value;
+  try {
+    const decoded = JSON.parse(`"${value.replace(/"/g, '\\"')}"`);
+    return typeof decoded === "string" ? decoded : value;
+  } catch {
+    return value;
+  }
+}
+
+function splitListText(value: string, splitMode: JsonArrayColumn["splitMode"]) {
+  return splitMode === "line" ? value.split(/\r?\n+/) : value.split(/[\n,]+/);
+}
+
+function normalizeListItem(value: string, column?: JsonArrayColumn) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return column?.decodeJsonStringEscapes
+    ? decodeJsonStringEscapes(trimmed)
+    : trimmed;
+}
+
+function csvToArray(value: string, column?: JsonArrayColumn) {
+  return splitListText(value, column?.splitMode)
+    .map((item) => normalizeListItem(item, column))
     .filter(Boolean);
 }
 
@@ -92,10 +115,12 @@ function columnClassName(column: JsonArrayColumn) {
 }
 
 function MultilineCsvTextarea({
+  column,
   onValueChange,
   placeholder,
   value,
 }: {
+  column: JsonArrayColumn;
   onValueChange: (value: string[]) => void;
   placeholder?: string;
   value: unknown;
@@ -111,7 +136,7 @@ function MultilineCsvTextarea({
   }, [externalValue, focused]);
 
   function commit(text = draft) {
-    onValueChange(csvToArray(text));
+    onValueChange(csvToArray(text, column));
   }
 
   return (
@@ -132,7 +157,9 @@ function MultilineCsvTextarea({
         value={draft}
       />
       <div className="text-[11px] text-muted-foreground">
-        每行一条，也支持逗号分隔。
+        {column.splitMode === "line"
+          ? "每行一条。"
+          : "每行一条，也支持逗号分隔。"}
       </div>
     </div>
   );
@@ -438,6 +465,7 @@ export function JsonArrayObjectEditor({
                     </div>
                     {column.multiline ? (
                       <MultilineCsvTextarea
+                        column={column}
                         onValueChange={(nextValue) =>
                           updateItem(index, column.key, nextValue)
                         }
@@ -461,7 +489,9 @@ export function JsonArrayObjectEditor({
                           updateItem(
                             index,
                             column.key,
-                            column.type === "csv" ? csvToArray(text) : text
+                            column.type === "csv"
+                              ? csvToArray(text, column)
+                              : text
                           );
                         }}
                         placeholder={column.placeholder}
